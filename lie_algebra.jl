@@ -21,9 +21,9 @@ function is_independent(matrix_list::Vector{<:SparseMatrixCSC{ComplexF64, Int}},
 end
 
 function construct_lie_basis(generators::Tuple{Vararg{SparseMatrixCSC{ComplexF64, Int}}}, depth::Int)
-    gen1, gen2 = generators
-    bracket = br(im*gen1, im*gen2)
-    basis_elements = SparseMatrixCSC{ComplexF64,Int}[im*gen1, im*gen2]
+    gen1, gen2 = im .* generators
+    bracket = br(gen1, gen2)
+    basis_elements = SparseMatrixCSC{ComplexF64,Int}[gen1, gen2]
     if is_independent(basis_elements, bracket)
         push!(basis_elements, bracket)
     end
@@ -43,5 +43,24 @@ function construct_lie_basis(generators::Tuple{Vararg{SparseMatrixCSC{ComplexF64
         end
         new_elements = next_layer
     end 
+    basis_elements = [X / norm(X) for X in basis_elements]
     return basis_elements
+end
+
+function construct_repr_elements(lie_basis::Vector{SparseMatrixCSC{ComplexF64,Int}})
+    n = length(lie_basis)
+    repr_elements = zeros(ComplexF64, n, n, n)
+    for alpha in 1:n
+        for beta in 1:n
+            for gamma in 1:n
+                repr_elements[alpha,beta,gamma] = tr(im*lie_basis[beta] * br(lie_basis[gamma], im*lie_basis[alpha]))
+            end
+        end
+    end
+    return repr_elements
+end
+
+function transform_observable_adjoint(observable::SparseMatrixCSC{ComplexF64, Int}, lie_basis::Vector{SparseMatrixCSC{ComplexF64,Int}})
+    coeffs = [tr(observable * im*element) for element in lie_basis]
+    return coeffs
 end
