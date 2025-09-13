@@ -47,13 +47,13 @@ function operator(op::Union{PauliOp, RydbergOp}, n_qubits::Int)
     return result
 end
 
-function sparse_generators(n_qubits::Int)
+function construct_sparse_generators(n_qubits::Int)
     A = sum(operator(Zop([i]), n_qubits) * operator(Zop([i+1]), n_qubits) for i in 1:n_qubits-1)
     B = sum(operator(Xop([i]), n_qubits) for i in 1:n_qubits)
     return (A, B)
 end
 
-function dense_generators(n_qubits::Int)
+function construct_dense_generators(n_qubits::Int)
     A = spzeros(ComplexF64, 2^n_qubits, 2^n_qubits)
     for i in 1:n_qubits-1
         for j in i+1:n_qubits
@@ -65,7 +65,7 @@ function dense_generators(n_qubits::Int)
     return (A, B)
 end
 
-function Ryd_generators(n_qubits::Int)
+function construct_Ryd_generators(n_qubits::Int)
     A = spzeros(ComplexF64, 3^n_qubits, 3^n_qubits)
     for i in 1:n_qubits
         Qnot = sparse(Matrix{ComplexF64}(I, 3^n_qubits, 3^n_qubits))
