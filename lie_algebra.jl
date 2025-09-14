@@ -60,7 +60,35 @@ function construct_repr_elements(lie_basis::Vector{SparseMatrixCSC{ComplexF64,In
     return repr_elements
 end
 
+function construct_repr_element_matrix(lie_basis::Vector{SparseMatrixCSC{ComplexF64,Int}}, element::SparseMatrixCSC{ComplexF64, Int})
+    n = length(lie_basis)
+    repr_elements = zeros(ComplexF64, n, n)
+    for alpha in 1:n
+        for beta in 1:n
+            repr_elements[alpha,beta] = tr(im*lie_basis[beta] * br(element, im*lie_basis[alpha]))
+        end
+    end
+    return repr_elements
+end
+
 function transform_observable_adjoint(observable::SparseMatrixCSC{ComplexF64, Int}, lie_basis::Vector{SparseMatrixCSC{ComplexF64,Int}})
     coeffs = [tr(observable * im*element) for element in lie_basis]
     return coeffs
+end
+
+
+function observable_expectation(
+    observable::SparseMatrixCSC{ComplexF64, Int}, 
+    lie_basis::Vector{SparseMatrixCSC{ComplexF64,Int}},
+    input::SparseMatrixCSC{Float64, Int},
+    theta::Vector{Float64})
+
+    adjoint_repr_gen1 = construct_repr_element_matrix(lie_basis, -im*lie_basis[1])
+    adjoint_repr_gen2 = construct_repr_element_matrix(lie_basis, -im*lie_basis[2])
+    circuit = exp(-im*(theta[1]*adjoint_repr_gen1 + theta[2]*adjoint_repr_gen2))
+    adjoint_vec_in = [tr(-im*element * input) for element in lie_basis]
+    adjoint_vec_out = circuit * adjoint_vec_in
+    adjoint_observable_vec = [tr(observable * im*element) for element in lie_basis]
+    result = dot(vec(adjoint_observable_vec), vec(adjoint_vec_out))
+    return result
 end

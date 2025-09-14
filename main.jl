@@ -12,7 +12,10 @@ println("Number of Lie algebra basis elements: $(length(lie_basis))")
 repr_elements = construct_repr_elements(lie_basis)
 observable = operator(XopRyd([2]), n_qubits)
 adjoint_observable = transform_observable_adjoint(observable, lie_basis)
-println(adjoint_observable)
+# println(adjoint_observable)
+
+input = construct_input_matrix(n_qubits)
+println(observable_expectation(observable, lie_basis, input, [1.0, 0.5]))
 
 
 # commutation_depth = 10

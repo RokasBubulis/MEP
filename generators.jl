@@ -79,3 +79,16 @@ function construct_Ryd_generators(n_qubits::Int)
     B = sum(operator(ZopRyd([i]), n_qubits) for i in 1:n_qubits)
     return (A, B)
 end
+
+function construct_input_matrix(n_qubits::Int)
+    v = sparsevec([1, 0, 0])
+    result = copy(v)
+    if n_qubits >= 3
+        println("a")
+        for _ in 1:n_qubits-2
+            result = kron(result, v)
+        end
+    end
+    result = kron(result, 1/sqrt(2)*sparsevec([1, 1, 0]))
+    return result * transpose(result)
+end
