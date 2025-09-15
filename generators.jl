@@ -84,7 +84,6 @@ function construct_input_matrix(n_qubits::Int)
     v = sparsevec([1, 0, 0])
     result = copy(v)
     if n_qubits >= 3
-        println("a")
         for _ in 1:n_qubits-2
             result = kron(result, v)
         end

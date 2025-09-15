@@ -1,21 +1,43 @@
-using Plots
+using Plots, BenchmarkTools
 include("generators.jl")
 include("lie_algebra.jl")
 
+function standard_expectation_value(
+    observable::SparseMatrixCSC{ComplexF64, Int}, 
+    input_matrix::SparseMatrixCSC{Float64, Int}, 
+    theta::Vector{Float64}, 
+    generators::Tuple{Vararg{SparseMatrixCSC{ComplexF64, Int}}})
+
+    unitary = exp(-im*Matrix(theta[1] * generators[1] + theta[2] * generators[2]))
+    expectation_value = tr(observable * unitary * input_matrix * unitary')
+    return expectation_value
+end 
+
 n_qubits = 2
 commutation_depth = 10
-
-generators = construct_Ryd_generators(n_qubits)
-lie_basis = construct_lie_basis(generators, commutation_depth)
-println("Number of Lie algebra basis elements: $(length(lie_basis))")
-#println(Matrix(lie_basis[1]))
-repr_elements = construct_repr_elements(lie_basis)
 observable = operator(XopRyd([2]), n_qubits)
-adjoint_observable = transform_observable_adjoint(observable, lie_basis)
-# println(adjoint_observable)
+theta = [1.0, 0.5]
+input_matrix = construct_input_matrix(n_qubits)
+generators = construct_Ryd_generators(n_qubits)
 
-input = construct_input_matrix(n_qubits)
-println(observable_expectation(observable, lie_basis, input, [1.0, 0.5]))
+# @btime standard_expectation_value(observable, input_matrix, theta, generators)
+# @btime gsim_expectation_value(observable, input_matrix, theta, generators, commutation_depth)
+
+println("<O> using standard approach: $(standard_expectation_value(observable, input_matrix, theta, generators))")
+println("<O> using gsim approach: $(gsim_expectation_value(observable, input_matrix, theta, generators, commutation_depth))")
+
+
+# generators = construct_Ryd_generators(n_qubits)
+# lie_basis = construct_lie_basis(generators, commutation_depth)
+# println("Number of Lie algebra basis elements: $(length(lie_basis))")
+# #println(Matrix(lie_basis[1]))
+# repr_elements = construct_repr_elements(lie_basis)
+# observable = operator(XopRyd([2]), n_qubits)
+# adjoint_observable = transform_observable_adjoint(observable, lie_basis)
+# # println(adjoint_observable)
+
+# input = construct_input_matrix(n_qubits)
+# println(gsim_expectation_value(observable, lie_basis, input, [1.0, 0.5]))
 
 
 # commutation_depth = 10
