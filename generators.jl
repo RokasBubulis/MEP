@@ -50,7 +50,7 @@ end
 function construct_sparse_generators(n_qubits::Int)
     A = sum(operator(Zop([i]), n_qubits) * operator(Zop([i+1]), n_qubits) for i in 1:n_qubits-1)
     B = sum(operator(Xop([i]), n_qubits) for i in 1:n_qubits)
-    return (A, B)
+    return [A, B]
 end
 
 function construct_dense_generators(n_qubits::Int)
@@ -62,7 +62,7 @@ function construct_dense_generators(n_qubits::Int)
         end
     end
     B = sum(operator(Xop([i]), n_qubits) for i in 1:n_qubits)
-    return (A, B)
+    return [A, B]
 end
 
 function construct_Ryd_generators(n_qubits::Int)
@@ -77,7 +77,7 @@ function construct_Ryd_generators(n_qubits::Int)
         A += operator(XopRyd([i]), n_qubits) * Qnot
     end
     B = sum(operator(ZopRyd([i]), n_qubits) for i in 1:n_qubits)
-    return (A, B)
+    return [A, B]
 end
 
 function construct_input_matrix(n_qubits::Int)

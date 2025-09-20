@@ -6,20 +6,14 @@ function is_independent(matrix_list::Vector{<:SparseMatrixCSC{ComplexF64, Int}},
     end
     M = hcat([vec(C) for C in matrix_list]...)
     d = Array(vec(candidate_matrix))
-    try
-        x = M \ d
-        residual = norm(M * x - d)  / norm(d)
-        return residual ≥ tol_rel
-    catch e
-        if isa(e, SingularException)
-            return false
-        else
-            rethrow(e)
-        end
-    end
+
+    x = M \ d
+    residual = norm(M * x - d)  / norm(d)
+    return residual ≥ tol_rel
+
 end
 
-function construct_lie_basis(generators::Tuple{Vararg{SparseMatrixCSC{ComplexF64, Int}}}, depth::Int)
+function construct_lie_basis(generators::Vector{SparseMatrixCSC{ComplexF64, Int}}, depth::Int)
     gen1, gen2 = im .* generators
     bracket = br(gen1, gen2)
     basis_elements = SparseMatrixCSC{ComplexF64,Int}[gen1, gen2]
@@ -59,38 +53,131 @@ end
 #     return repr_elements
 # end
 
-function construct_adjoint_map(lie_basis::Vector{SparseMatrixCSC{ComplexF64,Int}}, element::SparseMatrixCSC{ComplexF64, Int})
+# function construct_structure_tensor(lie_basis::Vector{SparseMatrixCSC{ComplexF64,Int}}, 
+#                                     generators::Vector{SparseMatrixCSC{ComplexF64, Int}})
+#     n = length(lie_basis)
+#     adjoint_map = zeros(ComplexF64, n, n, 2)
+#     for alpha in 1:n
+#         for beta in 1:n
+#             for gamma in 1:2
+#                 adjoint_map[alpha,beta, gamma] = tr((im*lie_basis[beta] * br(im*generators[gamma], im*lie_basis[alpha])))
+#             end
+#         end
+#     end
+#     return adjoint_map
+# end
+
+# function construct_adjoint_representations(lie_basis::Vector{SparseMatrixCSC{ComplexF64,Int}}, 
+#                                     generators::Vector{SparseMatrixCSC{ComplexF64, Int}})
+#     n = length(lie_basis)
+#     adjoint_map_1 = zeros(ComplexF64, n, n)
+#     adjoint_map_2 = zeros(ComplexF64, n, n)
+#     for alpha in 1:n
+#         for beta in 1:n
+#             adjoint_map_1[alpha, beta] = tr(im*lie_basis[beta] * br(im*generators[1], im*lie_basis[alpha]))
+#             adjoint_map_2[alpha, beta] = tr(im*lie_basis[beta] * br(im*generators[2], im*lie_basis[alpha]))
+#         end
+#     end
+#     return [adjoint_map_1, adjoint_map_2]
+
+# end
+
+# function gsim_expectation_value(
+#     observable::SparseMatrixCSC{ComplexF64, Int}, 
+#     input_matrix::SparseMatrixCSC{Float64, Int}, 
+#     theta::Vector{Float64},
+#     lie_basis::Vector{SparseMatrixCSC{ComplexF64,Int}},
+#     adjoint_map::Vector{Matrix{ComplexF64}})
+
+#     hermitian_lie_basis  = im*lie_basis
+#     println("structure tensor 1")
+#     pretty_table(adjoint_map[1])
+#     println("structure tensor 2")
+#     pretty_table(adjoint_map[2])
+
+#     circuit = exp(-im*(theta[1]*adjoint_map[1])) * exp(-im*(theta[2]*adjoint_map[2]))
+#     println("circuit")
+#     pretty_table(circuit)
+
+#     # adjoint_vec_in = Vector{eltype(observable)}(undef, length(lie_basis))
+#     # temp_element = similar(observable) 
+#     # for (i, element) in enumerate(lie_basis)
+#     #     mul!(temp_element, element', input_matrix)
+#     #     adjoint_vec_in[i] = im*tr(temp_element)
+#     # end
+#     adjoint_vec_in = [tr(element'*input_matrix) for element in hermitian_lie_basis]
+
+#     # println("ad vec in")
+#     # pretty_table(adjoint_vec_in)
+#     # adjoint_vec_out = similar(adjoint_vec_in)
+#     # mul!(adjoint_vec_out, circuit, adjoint_vec_in)
+#     adjoint_vec_out = circuit * adjoint_vec_in
+
+#     # adjoint_observable_vec = Vector{eltype(observable)}(undef, length(lie_basis))
+#     # temp_el = similar(observable) 
+#     # for (i, element) in enumerate(lie_basis)
+#     #     mul!(temp_el, observable, element)
+#     #     adjoint_observable_vec[i] = im*tr(temp_el)
+#     # end
+#     adjoint_observable_vec = [tr(observable'*element) for element in hermitian_lie_basis]
+
+#     result = dot(adjoint_observable_vec, adjoint_vec_out)
+#     println("ad vec out")
+#     pretty_table(adjoint_vec_out)
+#     println("ad obs vec")
+#     pretty_table(adjoint_observable_vec)
+
+#     return result
+# end
+
+function construct_adjoint_representations(lie_basis::Vector{SparseMatrixCSC{ComplexF64,Int}},
+                                           generators::Vector{SparseMatrixCSC{ComplexF64, Int}})
     n = length(lie_basis)
-    adjoint_map = zeros(ComplexF64, n, n)
-    for alpha in 1:n
-        for beta in 1:n
-            adjoint_map[alpha,beta] = tr(im*lie_basis[beta] * br(element, im*lie_basis[alpha]))
+    adjoint_map = [zeros(ComplexF64, n, n) for _ in 1:length(generators)]
+
+    for (gidx, g) in enumerate(generators)
+        for j in 1:n
+            commutator = br(g, lie_basis[j])
+            for i in 1:n
+                adjoint_map[gidx][i, j] = tr(lie_basis[i]' * commutator) 
+            end
         end
     end
     return adjoint_map
 end
 
-# function transform_observable_adjoint(observable::SparseMatrixCSC{ComplexF64, Int}, lie_basis::Vector{SparseMatrixCSC{ComplexF64,Int}})
-#     coeffs = [tr(observable * im*element) for element in lie_basis]
-#     return coeffs
-# end
-
-
 function gsim_expectation_value(
-    observable::SparseMatrixCSC{ComplexF64, Int}, 
-    input_matrix::SparseMatrixCSC{Float64, Int}, 
-    theta::Vector{Float64},
-    generators::Tuple{Vararg{SparseMatrixCSC{ComplexF64, Int}}},
-    commutation_depth::Int)
+        observable::SparseMatrixCSC{ComplexF64, Int},
+        input_matrix_raw::AbstractMatrix,
+        theta::Vector{Float64},
+        lie_basis::Vector{SparseMatrixCSC{ComplexF64,Int}},
+        adjoint_map::Vector{Matrix{ComplexF64}}
+    )
 
-    lie_basis = construct_lie_basis(generators, commutation_depth)
-    adjoint_repr_gen1 = construct_adjoint_map(lie_basis, generators[1])
-    adjoint_repr_gen2 = construct_adjoint_map(lie_basis, generators[2])
-    circuit = exp(-im*(theta[1]*adjoint_repr_gen1 + theta[2]*adjoint_repr_gen2))
-    adjoint_vec_in = [tr(im*element * input_matrix) for element in lie_basis]
-    adjoint_vec_out = circuit * adjoint_vec_in
-    adjoint_observable_vec = [tr(observable * im*element) for element in lie_basis]
-    result = dot(vec(adjoint_observable_vec), vec(adjoint_vec_out))
+    # # ensure complex type
+    # input_matrix = SparseMatrixCSC{ComplexF64,Int}(complex.(input_matrix_raw))
+
+    n = length(lie_basis)
+    v_in = [tr(lie_basis[j]' * input_matrix) for j in 1:n]
+    v_obs = [tr(lie_basis[j]' * observable) for j in 1:n]
+
+    A, B = adjoint_map[1], adjoint_map[2]
+    circuit = exp(-im*(theta[1]*A)) * exp(-im*(theta[2]*B))
+    v_out = circuit * v_in
+    result = sum(v_obs .* v_out)
+
+    println("adj repr of A")
+    pretty_table(A)
+    println("adj repr of B")
+    pretty_table(B)
+    println("Circuit")
+    pretty_table(circuit)
+    println("Adj v in")
+    pretty_table(v_in)
+    println("Adj v out")
+    pretty_table(v_out)
+    println("Obs v")
+    pretty_table(v_obs)
 
     return result
 end
