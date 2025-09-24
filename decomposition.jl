@@ -61,3 +61,18 @@ function decompose(op, basis::Dict{String,SparseMatrixCSC{ComplexF64, Int64}})
     end
     return coeffs
 end
+
+# for (idx, O) in enumerate(im*lie_basis)
+#     println("Decomposition of element $idx of hermitian basis")
+#     pretty_table(O)
+#     coeffs = decompose(O, basis_ops)
+#     for (name, c) in coeffsfjjdhfd
+#         println("$name : $c")
+#     end
+#     println("---")
+# end
+# println("Decomposition of input density matrix")
+# coeffs_input = decompose(convert(SparseMatrixCSC{ComplexF64, Int64}, input_matrix), basis_ops)
+# for (name, c) in coeffs_input
+#     println("$name : $c")
+# end
