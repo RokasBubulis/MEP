@@ -1,0 +1,105 @@
+Number of qubits: 2
+Global GS. Lie basis dim: 8
+Local GS. Lie basis dim: 8
+---
+Benchmarks for Lie basis construction
+global GS:
+  568.000 μs (5716 allocations: 935.07 KiB)
+local GS:
+  91.300 μs (2662 allocations: 318.48 KiB)
+---
+Observable expectation values
+Standard <O>: 1.757859225996067 + 6.938893903907228e-17im
+Lie <O>: 1.7578592259960666 + 3.30700865417124e-17im
+---
+Simulation benchmarks
+Standard:
+  8.133 μs (32 allocations: 18.41 KiB)
+Lie:
+  70.200 μs (46 allocations: 12.23 KiB)
+---
+---
+Number of qubits: 3
+Global GS. Lie basis dim: 11
+Local GS. Lie basis dim: 11
+---
+Benchmarks for Lie basis construction
+global GS:
+  2.923 ms (10136 allocations: 5.71 MiB)
+local GS:
+  466.400 μs (5337 allocations: 1.83 MiB)
+---
+Observable expectation values
+Standard <O>: 2.690951884244538 - 6.938893903907228e-17im
+Lie <O>: 2.690951884244543 + 2.681680228004015e-16im
+---
+Simulation benchmarks
+Standard:
+  69.400 μs (45 allocations: 150.52 KiB)
+Lie:
+  1.828 ms (46 allocations: 22.67 KiB)
+---
+---
+Number of qubits: 4
+Global GS. Lie basis dim: 14
+Local GS. Lie basis dim: 14
+---
+Benchmarks for Lie basis construction
+global GS:
+  24.859 ms (16751 allocations: 44.07 MiB)
+local GS:
+  1.901 ms (9363 allocations: 8.11 MiB)
+---
+Observable expectation values
+Standard <O>: 3.6244264339916383 - 2.0816681711721685e-17im
+Lie <O>: 3.624426433991626 + 3.98198455850433e-16im
+---
+Simulation benchmarks
+Standard:
+  661.199 μs (45 allocations: 1.30 MiB)
+Lie:
+  47.150 ms (57 allocations: 45.42 KiB)
+---
+---
+Number of qubits: 5
+Global GS. Lie basis dim: 17
+Local GS. Lie basis dim: 17
+---
+Benchmarks for Lie basis construction
+global GS:
+  302.398 ms (25103 allocations: 400.76 MiB)
+local GS:
+  7.320 ms (14771 allocations: 35.32 MiB)
+---
+Observable expectation values
+Standard <O>: 4.568138338689213 + 9.71445146547012e-17im
+Lie <O>: 4.568138338689971 - 1.5234582736421787e-15im
+---
+Simulation benchmarks
+Standard:
+  8.832 ms (45 allocations: 11.72 MiB)
+Lie:
+  1.634 s (59 allocations: 81.91 KiB)
+---
+---
+Number of qubits: 6
+Global GS. Lie basis dim: 20
+Local GS. Lie basis dim: 20
+---
+Benchmarks for Lie basis construction
+global GS:
+  3.894 s (35856 allocations: 3.89 GiB)
+local GS:
+  26.151 ms (22068 allocations: 123.58 MiB)
+---
+Observable expectation values
+Standard <O>: 5.5282729278908675 - 8.326672684688674e-17im
+Lie <O>: 5.528272927869367 + 2.32104610852527e-13im
+---
+Simulation benchmarks
+Standard:
+  163.349 ms (47 allocations: 105.43 MiB)
+Lie:
+  42.976 s (69 allocations: 177.81 KiB)
+---
+---
