@@ -58,6 +58,53 @@ function construct_lie_basis(generators::Vector{SparseMatrixCSC{ComplexF64, Int}
     return basis_elements
 end
 
+# Tol might need to be increased if going above 8 qubits
+function try_add_orthonormal!(basis::Vector{SparseMatrixCSC{ComplexF64,Int}}, 
+                        candidate:: SparseMatrixCSC{ComplexF64,Int};
+                        tol=1e-5)
+
+    for element in basis
+        proj_coeff = tr(element * candidate')
+        candidate = candidate - proj_coeff*element
+    end
+    nrm = norm(candidate)
+    if nrm < tol
+        return false
+    end
+    push!(basis, candidate/nrm)
+    return true
+end
+
+# Local GS orthonormalisation
+function construct_lie_basis_fast(generators::Vector{SparseMatrixCSC{ComplexF64, Int}}, depth::Int)
+    basis_elements = SparseMatrixCSC{ComplexF64,Int}[]
+    im_gens = im.*generators
+    for g in im_gens
+        try_add_orthonormal!(basis_elements, g)
+    end
+    bracket = br(im_gens[1], im_gens[2])
+    if try_add_orthonormal!(basis_elements, bracket)
+        new_elements = [bracket]
+    else
+        return basis_elements
+    end
+    d = 1
+    while d < depth
+        d += 1
+        next_layer = SparseMatrixCSC{ComplexF64, Int}[]
+        for element in new_elements
+            for gen in im_gens
+                bracket = br(gen, element)
+                if try_add_orthonormal!(basis_elements, bracket)
+                    push!(next_layer, bracket)
+                end
+            end
+        end
+        new_elements = next_layer
+    end
+    return basis_elements
+end
+
 function construct_adjoint_representations(lie_basis::Vector{SparseMatrixCSC{ComplexF64,Int}},
                                            generators::Vector{SparseMatrixCSC{ComplexF64, Int}})
     n = length(lie_basis)
@@ -79,7 +126,8 @@ function gsim_expectation_value(
         input_matrix::SparseMatrixCSC{Float64, Int},
         theta::Vector{Float64},
         lie_basis::Vector{SparseMatrixCSC{ComplexF64,Int}},
-        adjoint_map::Vector{Matrix{ComplexF64}}
+        adjoint_map::Vector{Matrix{ComplexF64}};
+        tol = 1e-2
     )
 
     v_in = Vector{eltype(observable)}(undef, length(lie_basis))
@@ -103,6 +151,15 @@ function gsim_expectation_value(
     circuit = exp(tmp)
     v_out = similar(v_in)
     mul!(v_out, circuit, v_in)
+
+    # obs = similar(observable)
+    # for i in eachindex(v_obs)
+    #     obs += v_obs[i] * lie_basis[i]/im
+    # end
+    # nrm = norm(obs-observable)
+    # if nrm > tol
+    #     println("Observable is not supported by this Lie algebra: norm(Obs - sum v_k L_k) > tol")
+    # end
 
     return dot(v_out, v_obs)
 end
