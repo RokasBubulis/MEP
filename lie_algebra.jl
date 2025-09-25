@@ -173,15 +173,5 @@ function gsim_expectation_value(
     circuit = exp(tmp)
     v_out = similar(v_in)
     mul!(v_out, circuit, v_in)
-
-    # obs = similar(observable)
-    # for i in eachindex(v_obs)
-    #     obs += v_obs[i] * lie_basis[i]/im
-    # end
-    # nrm = norm(obs-observable)
-    # if nrm > tol
-    #     println("Observable is not supported by this Lie algebra: norm(Obs - sum v_k L_k) > tol")
-    # end
-
     return dot(v_out, v_obs)
 end

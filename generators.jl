@@ -91,3 +91,14 @@ function construct_input_matrix(n_qubits::Int)
     result = kron(result, 1/sqrt(2)*sparsevec([1, 1, 0]))
     return result * transpose(result)
 end
+
+function Qnot(site::Int, n_qubits::Int)
+    @assert n_qubits >= 2 "Number of qubits must be at least 2"
+    Qnot = sparse(Matrix{ComplexF64}(I, 3^n_qubits, 3^n_qubits))
+    for j in 1:n_qubits
+        if j != site
+            Qnot *= operator(QopRyd([j]), n_qubits)
+        end
+    end
+    return Qnot
+end
