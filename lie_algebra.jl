@@ -148,22 +148,29 @@ function gsim_expectation_value(
         input_matrix::SparseMatrixCSC{Float64, Int},
         theta::Vector{Float64},
         lie_basis::Vector{SparseMatrixCSC{ComplexF64,Int}},
-        adjoint_map::Vector{Matrix{ComplexF64}};
-        tol = 1e-2
-    )
+        adjoint_map::Vector{Matrix{ComplexF64}})
 
-    v_in = Vector{eltype(observable)}(undef, length(lie_basis))
-    temp_element = similar(observable) 
-    for (i, element) in enumerate(lie_basis)
-        mul!(temp_element, element', input_matrix)
-        v_in[i] = im*tr(temp_element)
-    end
-    v_obs = Vector{eltype(observable)}(undef, length(lie_basis))
-    temp_element = similar(observable)
-    for (i, element) in enumerate(lie_basis)
-        mul!(temp_element, element', observable)
-        v_obs[i] = im*tr(temp_element)
-    end
+    # v_in = Vector{eltype(observable)}(undef, length(lie_basis))
+    # temp_element = similar(observable) 
+    # for (i, element) in enumerate(lie_basis)
+    #     mul!(temp_element, element', input_matrix)
+    #     v_in[i] = im*tr(temp_element)
+    # end
+    # v_obs = Vector{eltype(observable)}(undef, length(lie_basis))
+    # temp_element = similar(observable)
+    # for (i, element) in enumerate(lie_basis)
+    #     mul!(temp_element, element', observable)
+    #     v_obs[i] = im*tr(temp_element)
+    # end
+
+    n = size(lie_basis[1], 1)
+    n_basis = length(lie_basis)
+    vec_basis = [vec(im * b) for b in lie_basis]
+    vec_input = vec(input_matrix)
+    vec_obs   = vec(observable)
+
+    v_in  = [dot(b, vec_input) for b in vec_basis]
+    v_obs = [dot(b, vec_obs)   for b in vec_basis]
 
     A, B = adjoint_map[1], adjoint_map[2]
     tmp = similar(A)                    
