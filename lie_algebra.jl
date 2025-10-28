@@ -173,10 +173,11 @@ function gsim_expectation_value(
     v_obs = [dot(b, vec_obs)   for b in vec_basis]
 
     A, B = adjoint_map[1], adjoint_map[2]
-    tmp = similar(A)                    
-    mul!(tmp, A, theta[1])              
-    BLAS.axpy!(theta[2], B, tmp)      
-    lmul!(-im, tmp)             
+    tmp = similar(A)                      
+    tmp .= theta[1] .* A    
+    tmp .+= theta[2] .* B   
+    tmp .*= -im             
+    circuit = exp(tmp)    
     circuit = exp(tmp)
     v_out = similar(v_in)
     mul!(v_out, circuit, v_in)
