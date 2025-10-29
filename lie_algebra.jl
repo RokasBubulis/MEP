@@ -86,7 +86,7 @@ function try_add_orthonormal!(basis::Vector{SparseMatrixCSC{ComplexF64,Int}},
                         tol=1e-5)
 
     for element in basis
-        proj_coeff = tr(element * candidate')
+        proj_coeff = tr(adjoint(element) * candidate)
         candidate = candidate - proj_coeff*element
     end
     nrm = norm(candidate)
@@ -178,7 +178,6 @@ function gsim_expectation_value(
     tmp .+= theta[2] .* B   
     tmp .*= -im             
     circuit = exp(tmp)    
-    circuit = exp(tmp)
     v_out = similar(v_in)
     mul!(v_out, circuit, v_in)
     return dot(v_out, v_obs)
