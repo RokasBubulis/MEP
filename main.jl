@@ -1,48 +1,78 @@
-using BenchmarkTools
 include("generators.jl")
 include("lie_algebra.jl")
 
-function check_observable(observable::SparseMatrixCSC{ComplexF64, Int}, lie_basis::Vector{SparseMatrixCSC{ComplexF64, Int}})
-    v_obs = Vector{eltype(observable)}(undef, length(lie_basis))
-    temp_element = similar(observable)
-    for (i, element) in enumerate(lie_basis)
-        mul!(temp_element, element', observable)
-        v_obs[i] = im*tr(temp_element)
+using Plots
+
+function check_target(target::SparseMatrixCSC{ComplexF64, Int}, system_basis::Vector{SparseMatrixCSC{ComplexF64, Int}})
+
+    reconstructed_target = spzeros(ComplexF64, size(target))
+    for i in eachindex(system_basis)
+        coeff = tr(adjoint(system_basis[i]) * target)
+        reconstructed_target += coeff * system_basis[i]
     end
-    reconstructed_obs = similar(observable)
-    for i in eachindex(v_obs)
-        reconstructed_obs += v_obs[i] * lie_basis[i]/im
-    end
-    return norm(reconstructed_obs - observable)
+
+    residual = reconstructed_target - target
+    return norm(residual), residual
 end
 
+
+function construct_target(n_qubits::Int)
+    I3 = sparse(ComplexF64[1 0 0; 0 1 0; 0 0 1])
+    target = copy(I3)
+    for n in 2:n_qubits
+        target = kron(target, I3)
+    end
+    target[3^n_qubits, 3^n_qubits] = -1.0
+    return target
+end
+
+function construct_system_subgroup_basis(H_lie::SparseMatrixCSC{ComplexF64, Int}, n_terms::Int)
+    system_basis = SparseMatrixCSC{ComplexF64,Int}[]
+    for n in 0:(n_terms - 1)
+        candidate_element = (-im*H_lie)^n / factorial(n)
+        try_add_orthonormal!(system_basis, candidate_element)
+    end
+    return system_basis
+end
+
+# generators = construct_Ryd_generators(n_qubits)
+# lie_basis = construct_lie_basis(generators, commutation_depth)
+# H_lie = im*sum(lie_basis)
+# system_basis = construct_system_subgroup_basis(H_lie, lie_power_terms)
+# target = construct_target(n_qubits)
+# println("Lie basis elements: $(length(lie_basis)), System subgroup elements: $(length(system_basis))")
+# residual_norm, residual = check_target(target, system_basis)
+# println("Residual norm: $(residual_norm)")
+
 commutation_depth = 10
-theta = [0.7, 0.6]
-n_qubits = 8
-alpha = 0.1
+qubit_lst = 2:6
+power_lst = 1:10
 
-# multiple_excitations = alpha * operator(XopRyd([1]), n_qubits) * operator(QopRyd([2]), n_qubits) * operator(XopRyd([3]), n_qubits)
-# gen1 = sum([operator(XopRyd([i]), n_qubits) * Qnot(i, n_qubits) for i in 1:n_qubits]) + multiple_excitations
-# gen2 = operator(ZopRyd([1,2]), n_qubits) + operator(ZopRyd([2,3]), n_qubits)
-# generators = [gen1, gen2]
+residuals = zeros(length(qubit_lst),length(power_lst))
 
-# lie_basis = construct_lie_basis_fast(generators, commutation_depth)
-# println("Dim lie basis: $(length(lie_basis))")
-# observable = gen2
+for (i,n_qubits) in enumerate(qubit_lst)
+    for (j,lie_power_terms) in enumerate(power_lst)
+        local generators, target, lie_basis, H_lie, system_basis
 
-# println(check_observable(observable, lie_basis))
+        generators = construct_Ryd_generators(n_qubits)
+        target = construct_target(n_qubits)
+        lie_basis = construct_lie_basis_fast(generators, commutation_depth)
+        H_lie = im*sum(lie_basis)
+        system_basis = construct_system_subgroup_basis(H_lie, lie_power_terms)
+        residuals[i,j], _ = check_target(target, system_basis)
+    end
+end
 
+plot()
+for (idx, n_qubits) in enumerate(qubit_lst)
+    plot!(power_lst, residuals[idx, :],
+          label="n_qubits = $n_qubits",
+          marker=:circle,
+        #   yscale=:log10          
+          )
+end
 
-#observable = operator(XopRyd([1,2]), n_qubits) + operator(XopRyd([2]), n_qubits)
-generators = construct_Ryd_generators(n_qubits)
-observable = generators[1]
-input_matrix = construct_input_matrix(n_qubits)
+xlabel!("Lie power terms")
+ylabel!("Residual norm")
+# savefig("Res norm log")
 
-lie_basis = construct_lie_basis_fast(generators, commutation_depth)
-adjoint_map = construct_adjoint_representations(lie_basis, generators)
-println("lie basis: $(length(lie_basis))")
-
-# @btime standard_expectation_value(observable, input_matrix, theta, generators)
-# println("<O> using standard approach: $(standard_expectation_value(observable, input_matrix, theta, generators))")
-@btime gsim_expectation_value(observable, input_matrix, theta, lie_basis, adjoint_map)
-println("<O> using gsim approach: $(gsim_expectation_value(observable, input_matrix, theta, lie_basis, adjoint_map))")
