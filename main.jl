@@ -1,7 +1,7 @@
 include("generators.jl")
 include("lie_algebra.jl")
 
-using Plots
+using Plots, BenchmarkTools
 
 function check_target(target::SparseMatrixCSC{ComplexF64, Int}, system_basis::Vector{SparseMatrixCSC{ComplexF64, Int}})
 
@@ -15,7 +15,6 @@ function check_target(target::SparseMatrixCSC{ComplexF64, Int}, system_basis::Ve
     return norm(residual), residual
 end
 
-
 function construct_target(n_qubits::Int)
     I3 = sparse(ComplexF64[1 0 0; 0 1 0; 0 0 1])
     target = copy(I3)
@@ -26,53 +25,72 @@ function construct_target(n_qubits::Int)
     return target
 end
 
-function construct_system_subgroup_basis(H_lie::SparseMatrixCSC{ComplexF64, Int}, n_terms::Int)
-    system_basis = SparseMatrixCSC{ComplexF64,Int}[]
-    for n in 0:(n_terms - 1)
-        candidate_element = (-im*H_lie)^n / factorial(n)
-        try_add_orthonormal!(system_basis, candidate_element)
+function construct_subgroup_basis(lie_basis::Vector{SparseMatrixCSC{ComplexF64, Int}}, product_depth::Int)
+    basis_elements = SparseMatrixCSC{ComplexF64,Int}[]
+    try_add_orthonormal!(basis_elements, lie_basis[1]^0) # add identity
+
+    for b in lie_basis
+        try_add_orthonormal!(basis_elements, b)
     end
-    return system_basis
+    
+    if product_depth > 1
+        for d in 2:product_depth
+            for tuple in Iterators.product(ntuple(_ -> lie_basis, d)...)
+                try_add_orthonormal!(basis_elements, foldl(*, tuple))
+            end
+        end
+    end
+    return basis_elements
 end
 
-# generators = construct_Ryd_generators(n_qubits)
-# lie_basis = construct_lie_basis(generators, commutation_depth)
-# H_lie = im*sum(lie_basis)
-# system_basis = construct_system_subgroup_basis(H_lie, lie_power_terms)
-# target = construct_target(n_qubits)
-# println("Lie basis elements: $(length(lie_basis)), System subgroup elements: $(length(system_basis))")
-# residual_norm, residual = check_target(target, system_basis)
-# println("Residual norm: $(residual_norm)")
+# a = [1, 2, 3]
+# b = 3
+# for tup in Iterators.product(ntuple(_ -> a, b)...)
+#     println(tup)
+# end
 
+n_qubits = 2
 commutation_depth = 10
-qubit_lst = 2:6
-power_lst = 1:10
+product_depth = 4
+target = construct_target(n_qubits)
+generators = construct_Ryd_generators(n_qubits)
+lie_basis = @btime construct_lie_basis_fast(generators, commutation_depth)
+subgroup_basis = @btime construct_subgroup_basis(lie_basis, product_depth)
+residual_norm, residual = check_target(target, subgroup_basis)
+println("Lie algebra dim: $(length(lie_basis)), Lie subgroup dim: $(length(subgroup_basis)), Residual norm: $residual_norm")
 
-residuals = zeros(length(qubit_lst),length(power_lst))
 
-for (i,n_qubits) in enumerate(qubit_lst)
-    for (j,lie_power_terms) in enumerate(power_lst)
-        local generators, target, lie_basis, H_lie, system_basis
+# qubit_lst = 2:3
+# product_depth = 1:4
+# residuals = zeros(length(qubit_lst), length(product_depth))
 
-        generators = construct_Ryd_generators(n_qubits)
-        target = construct_target(n_qubits)
-        lie_basis = construct_lie_basis_fast(generators, commutation_depth)
-        H_lie = im*sum(lie_basis)
-        system_basis = construct_system_subgroup_basis(H_lie, lie_power_terms)
-        residuals[i,j], _ = check_target(target, system_basis)
-    end
-end
+# for (i, n_qubits) in enumerate(qubit_lst)
 
-plot()
-for (idx, n_qubits) in enumerate(qubit_lst)
-    plot!(power_lst, residuals[idx, :],
-          label="n_qubits = $n_qubits",
-          marker=:circle,
-        #   yscale=:log10          
-          )
-end
+#     println("n qubits: $n_qubits")
+#     local generators, target, lie_basis
+#     generators = construct_Ryd_generators(n_qubits)
+#     target = construct_target(n_qubits)
+#     lie_basis = construct_lie_basis_fast(generators, commutation_depth)
 
-xlabel!("Lie power terms")
-ylabel!("Residual norm")
-# savefig("Res norm log")
+#     for (j, product_depth) in enumerate(product_depth)
+
+#         local subgroup_basis
+#         subgroup_basis = construct_subgroup_basis(lie_basis, product_depth)
+#         residuals[i,j], _ = check_target(target, subgroup_basis)
+
+#     end
+# end
+# plot()
+# for (idx, n_qubits) in enumerate(qubit_lst)
+#     plot!(product_depth, residuals[idx, :],
+#           label="n qubits = $n_qubits",
+#           marker=:circle,
+#           yscale=:log10,
+#           grid = true        
+#           )
+# end
+# xlabel!("Product depth")
+# ylabel!("Residual norm")
+# # savefig("Res norm")
+
 
