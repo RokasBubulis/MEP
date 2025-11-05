@@ -22,68 +22,67 @@ end
 # Lie-algebraic approach
 br(A, B) = A * B - B * A
 
-function is_independent(matrix_list::Vector{<:SparseMatrixCSC{ComplexF64, Int}}, candidate_matrix::SparseMatrixCSC{ComplexF64, Int}; tol_rel=1e-12,tol_abs=1e-14)
-    if isempty(matrix_list)
-        return true
-    end
-    M = hcat([vec(C) for C in matrix_list]...)
-    d = Array(vec(candidate_matrix))
-    x = M \ d
-    residual = norm(M * x - d)  / norm(d)
+# function is_independent(matrix_list::Vector{<:SparseMatrixCSC{ComplexF64, Int}}, candidate_matrix::SparseMatrixCSC{ComplexF64, Int}; tol_rel=1e-12,tol_abs=1e-14)
+#     if isempty(matrix_list)
+#         return true
+#     end
+#     M = hcat([vec(C) for C in matrix_list]...)
+#     d = Array(vec(candidate_matrix))
+#     x = M \ d
+#     residual = norm(M * x - d)  / norm(d)
 
-    return residual ≥ tol_rel
+#     return residual ≥ tol_rel
 
-end
+# end
 
-function orthonormalise_basis(basis::Vector{SparseMatrixCSC{ComplexF64, Int}}; tol=1e-14)
-    orthonormal_basis = SparseMatrixCSC{ComplexF64, Int}[]
-    for i in eachindex(basis)
-        element = copy(basis[i])
-        for orthonormal_element in orthonormal_basis
-            proj_coeff = tr(orthonormal_element' * element)
-            element .-= proj_coeff * orthonormal_element
-        end
-        nrm = sqrt(real(tr(element' * element)))
-        if nrm < tol
-            continue
-        end
-        push!(orthonormal_basis, element / nrm)
-    end
-    return orthonormal_basis
-end
+# function orthonormalise_basis(basis::Vector{SparseMatrixCSC{ComplexF64, Int}}; tol=1e-14)
+#     orthonormal_basis = SparseMatrixCSC{ComplexF64, Int}[]
+#     for i in eachindex(basis)
+#         element = copy(basis[i])
+#         for orthonormal_element in orthonormal_basis
+#             proj_coeff = tr(orthonormal_element' * element)
+#             element .-= proj_coeff * orthonormal_element
+#         end
+#         nrm = sqrt(real(tr(element' * element)))
+#         if nrm < tol
+#             continue
+#         end
+#         push!(orthonormal_basis, element / nrm)
+#     end
+#     return orthonormal_basis
+# end
 
-function construct_lie_basis(generators::Vector{SparseMatrixCSC{ComplexF64, Int}}, depth::Int)
-    gen1, gen2 = im .* generators
-    bracket = br(gen1, gen2)
-    basis_elements = SparseMatrixCSC{ComplexF64,Int}[gen1, gen2]
-    if is_independent(basis_elements, bracket)
-        push!(basis_elements, bracket)
-    end
-    new_elements = [bracket] 
-    d = 1 # first order nested commutator already included
-    while d < depth
-        d += 1
-        next_layer = SparseMatrixCSC{ComplexF64, Int}[]
-        for element in new_elements
-            for gen in generators
-                    bracket = br(im*gen, element)
-                    if is_independent(basis_elements, bracket)
-                        push!(next_layer, bracket)
-                        push!(basis_elements, bracket)
-                    end
-            end
-        end
-        new_elements = next_layer
-    end 
-    basis_elements = orthonormalise_basis(basis_elements)
+# function construct_lie_basis(generators::Vector{SparseMatrixCSC{ComplexF64, Int}}, depth::Int)
+#     gen1, gen2 = im .* generators
+#     bracket = br(gen1, gen2)
+#     basis_elements = SparseMatrixCSC{ComplexF64,Int}[gen1, gen2]
+#     if is_independent(basis_elements, bracket)
+#         push!(basis_elements, bracket)
+#     end
+#     new_elements = [bracket] 
+#     d = 1 # first order nested commutator already included
+#     while d < depth
+#         d += 1
+#         next_layer = SparseMatrixCSC{ComplexF64, Int}[]
+#         for element in new_elements
+#             for gen in generators
+#                     bracket = br(im*gen, element)
+#                     if is_independent(basis_elements, bracket)
+#                         push!(next_layer, bracket)
+#                         push!(basis_elements, bracket)
+#                     end
+#             end
+#         end
+#         new_elements = next_layer
+#     end 
+#     basis_elements = orthonormalise_basis(basis_elements)
 
-    return basis_elements
-end
+#     return basis_elements
+# end
 
-# Tol might need to be increased if going above 8 qubits
 function try_add_orthonormal!(basis::Vector{SparseMatrixCSC{ComplexF64,Int}}, 
                         candidate:: SparseMatrixCSC{ComplexF64,Int};
-                        tol=1e-5)
+                        tol = 1e-7)
 
     for element in basis
         proj_coeff = tr(adjoint(element) * candidate)
