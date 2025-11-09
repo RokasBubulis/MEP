@@ -140,20 +140,30 @@ br(A, B) = A * B - B * A
 
 function try_add_orthonormal!(basis::Vector{SparseMatrixCSC{float_type,Int}}, 
                         candidate:: SparseMatrixCSC{float_type,Int};
-                        tol = 1e-9, reorthogonalisation_loops = 2)
-
-    for _ in 1:reorthogonalisation_loops
+                        tol = 1e-9, max_loops = 4)
+    
+    prev_norm = norm(candidate)
+    for _ in 1:max_loops
         for element in basis
-            proj_coeff = tr(adjoint(element) * candidate)
-            candidate -= proj_coeff*element
+            proj_coeff = dot(element, candidate) # more efficient than trace
+            candidate .-= proj_coeff .* element
         end
+        new_norm = norm(candidate)
+        if new_norm / prev_norm > 0.5   # sufficiently stable
+            break
+        end
+        prev_norm = new_norm
     end
 
     nrm = norm(candidate)
-    if nrm < tol
+    if nrm < tol * sqrt(length(candidate))
         return false
     end
-    push!(basis, candidate/nrm)
+
+    candidate ./= nrm
+    dropzeros!(candidate)
+
+    push!(basis, candidate)
     return true
 end
 
