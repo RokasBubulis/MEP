@@ -6,6 +6,7 @@ function try_add_orthonormal!(basis::Vector{SparseMatrixCSC{float_type,Int}},
                         tol = 1e-9, max_loops = 4)
     
     prev_norm = norm(candidate)
+    new_norm = 0
     for _ in 1:max_loops
         for element in basis
             proj_coeff = dot(element, candidate) # more efficient than trace
@@ -18,15 +19,14 @@ function try_add_orthonormal!(basis::Vector{SparseMatrixCSC{float_type,Int}},
         prev_norm = new_norm
     end
 
-    nrm = norm(candidate)
-    if nrm < tol * sqrt(length(candidate))
+    if new_norm < tol * sqrt(length(candidate))
         return false
     end
 
-    candidate ./= nrm
+    candidate ./= new_norm
     dropzeros!(candidate)
-
     push!(basis, candidate)
+
     return true
 end
 

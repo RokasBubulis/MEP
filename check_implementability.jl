@@ -8,7 +8,7 @@ function check_target(target::SparseMatrixCSC{float_type, Int}, system_basis::Ve
     end
 
     residual = reconstructed_target - target
-    return norm(residual), residual
+    return norm(residual)
 end
 
 function construct_target(n_qubits::Int)
@@ -37,7 +37,7 @@ function construct_subgroup_basis(lie_basis::Vector{SparseMatrixCSC{float_type, 
             current_level = SparseMatrixCSC{float_type,Int}[]
             for last_element in last_level
                 for b_element in lie_basis
-                    mul!(tmp, last_element, b_element)
+                    mul!(tmp, last_element, b_element) # mul cannot predict sparsity patter so likely useless
                     if try_add_orthonormal!(basis_elements, tmp)
                         push!(current_level, copy(tmp))  # copy only when accepted
                     end
@@ -55,7 +55,6 @@ function check_if_implementable(lie_basis::Vector{SparseMatrixCSC{float_type, In
 
     @assert max_product_depth >= 2 "Increase max product depth"
     res_norm, last_layer = 0,0
-    res = similar(lie_basis[1])
     basis_elements = SparseMatrixCSC{float_type,Int}[]
     n = size(lie_basis[1], 1)
     try_add_orthonormal!(basis_elements, spdiagm(0 => ones(float_type, n)))
@@ -76,7 +75,7 @@ function check_if_implementable(lie_basis::Vector{SparseMatrixCSC{float_type, In
             end
         end
         last_level = current_level
-        res_norm, res = check_target(unitary_target, basis_elements)
+        res_norm = check_target(unitary_target, basis_elements)
         last_layer = d
         if res_norm < tol
             break
