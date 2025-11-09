@@ -1,8 +1,8 @@
-using LinearAlgebra
+using LinearAlgebra, MultiFloats
 
-function check_target(target::SparseMatrixCSC{ComplexF64, Int}, system_basis::Vector{SparseMatrixCSC{ComplexF64, Int}})
+function check_target(target::SparseMatrixCSC{float_type, Int}, system_basis::Vector{SparseMatrixCSC{float_type, Int}})
 
-    reconstructed_target = spzeros(ComplexF64, size(target)...)
+    reconstructed_target = spzeros(float_type, size(target)...)
     for i in eachindex(system_basis)
         coeff = tr(adjoint(system_basis[i]) * target)
         reconstructed_target += coeff * system_basis[i]
@@ -13,19 +13,19 @@ function check_target(target::SparseMatrixCSC{ComplexF64, Int}, system_basis::Ve
 end
 
 function construct_target(n_qubits::Int)
-    I3 = sparse(ComplexF64[1 0 0; 0 1 0; 0 0 1])
+    I3 = sparse(float_type[1 0 0; 0 1 0; 0 0 1])
     target = copy(I3)
     for n in 2:n_qubits
         target = kron(target, I3)
     end
-    target[3^n_qubits, 3^n_qubits] = exp(im*sqrt(3)/5*pi)
+    target[3^n_qubits, 3^n_qubits] = -1.0
     return target
 end
 
-function construct_subgroup_basis(lie_basis::Vector{SparseMatrixCSC{ComplexF64, Int}}, product_depth::Int)
-    basis_elements = SparseMatrixCSC{ComplexF64,Int}[]
+function construct_subgroup_basis(lie_basis::Vector{SparseMatrixCSC{float_type, Int}}, product_depth::Int)
+    basis_elements = SparseMatrixCSC{float_type,Int}[]
     n = size(lie_basis[1], 1)
-    try_add_orthonormal!(basis_elements, spdiagm(0 => ones(ComplexF64, n)))
+    try_add_orthonormal!(basis_elements, spdiagm(0 => ones(float_type, n)))
 
     for b in lie_basis
         try_add_orthonormal!(basis_elements, b)
@@ -35,7 +35,7 @@ function construct_subgroup_basis(lie_basis::Vector{SparseMatrixCSC{ComplexF64, 
         tmp = similar(lie_basis[1])  # allocate once
         for d in 2:product_depth
 
-            current_level = SparseMatrixCSC{ComplexF64,Int}[]
+            current_level = SparseMatrixCSC{float_type,Int}[]
             for last_element in last_level
                 for b_element in lie_basis
                     mul!(tmp, last_element, b_element)
@@ -51,15 +51,15 @@ function construct_subgroup_basis(lie_basis::Vector{SparseMatrixCSC{ComplexF64, 
     return basis_elements
 end
 
-function check_if_implementable(lie_basis::Vector{SparseMatrixCSC{ComplexF64, Int}}, 
-    unitary_target::SparseMatrixCSC{ComplexF64, Int}, max_product_depth::Int; tol=1e-6)
+function check_if_implementable(lie_basis::Vector{SparseMatrixCSC{float_type, Int}}, 
+    unitary_target::SparseMatrixCSC{float_type, Int}, max_product_depth::Int; tol=1e-6)
 
     @assert max_product_depth >= 2 "Increase max product depth"
     res_norm, last_layer = 0,0
     res = similar(lie_basis[1])
-    basis_elements = SparseMatrixCSC{ComplexF64,Int}[]
+    basis_elements = SparseMatrixCSC{float_type,Int}[]
     n = size(lie_basis[1], 1)
-    try_add_orthonormal!(basis_elements, spdiagm(0 => ones(ComplexF64, n)))
+    try_add_orthonormal!(basis_elements, spdiagm(0 => ones(float_type, n)))
     for b in lie_basis
         try_add_orthonormal!(basis_elements, b)
     end
@@ -67,7 +67,7 @@ function check_if_implementable(lie_basis::Vector{SparseMatrixCSC{ComplexF64, In
     last_level = copy(lie_basis)
     new_el = similar(lie_basis[1])
     for d in 2:max_product_depth
-        current_level = SparseMatrixCSC{ComplexF64,Int}[]
+        current_level = SparseMatrixCSC{float_type,Int}[]
         for el in last_level
             for b_el in lie_basis
                 new_el = el * b_el
