@@ -1,4 +1,8 @@
-using SparseArrays, LinearAlgebra
+using SparseArrays, LinearAlgebra, MultiFloats, IntervalArithmetic
+
+# float_type = Complex{MultiFloat{Float64, 2}}
+float_type = Complex{Float64}
+# float_type = Complex{Interval{Float64}}
 
 abstract type PauliOp end
 struct Xop<: PauliOp
@@ -19,11 +23,11 @@ struct QopRyd<: RydbergOp
     sites::Vector{Int}
 end
 
-operator_matrix(::Xop) = sparse(ComplexF64[0 1; 1 0])
-operator_matrix(::Zop) = sparse(ComplexF64[1 0; 0 -1])
-operator_matrix(::XopRyd) = sparse(ComplexF64[1 0 0; 0 0 1; 0 1 0])
-operator_matrix(::ZopRyd) = sparse(ComplexF64[1 0 0; 0 1 0; 0 0 -1])
-operator_matrix(::QopRyd) = sparse(ComplexF64[1 0 0; 0 1 0; 0 0 0])
+operator_matrix(::Xop) = sparse(float_type[0 1; 1 0])
+operator_matrix(::Zop) = sparse(float_type[1 0; 0 -1])
+operator_matrix(::XopRyd) = sparse(float_type[1 0 0; 0 0 1; 0 1 0])
+operator_matrix(::ZopRyd) = sparse(float_type[1 0 0; 0 1 0; 0 0 -1])
+operator_matrix(::QopRyd) = sparse(float_type[1 0 0; 0 1 0; 0 0 0])
 
 function n_levels(op::PauliOp)
     return 2
@@ -34,7 +38,7 @@ end
 
 function operator(op::Union{PauliOp, RydbergOp}, n_qubits::Int)
     n_lev = n_levels(op)
-    identity_matrix = sparse(Matrix{ComplexF64}(I, n_lev, n_lev))
+    identity_matrix = sparse(Matrix{float_type}(I, n_lev, n_lev))
     ops = [identity_matrix for _ in 1:n_qubits]
     mat = operator_matrix(op)
     for s in op.sites
@@ -54,7 +58,7 @@ function construct_sparse_generators(n_qubits::Int)
 end
 
 function construct_dense_generators(n_qubits::Int)
-    A = spzeros(ComplexF64, 2^n_qubits, 2^n_qubits)
+    A = spzeros(float_type, 2^n_qubits, 2^n_qubits)
     for i in 1:n_qubits-1
         for j in i+1:n_qubits
             Jij = 1 / abs(i - j)
@@ -66,9 +70,9 @@ function construct_dense_generators(n_qubits::Int)
 end
 
 function construct_Ryd_generators(n_qubits::Int)
-    A = spzeros(ComplexF64, 3^n_qubits, 3^n_qubits)
+    A = spzeros(float_type, 3^n_qubits, 3^n_qubits)
     for i in 1:n_qubits
-        Qnot = sparse(Matrix{ComplexF64}(I, 3^n_qubits, 3^n_qubits))
+        Qnot = sparse(Matrix{float_type}(I, 3^n_qubits, 3^n_qubits))
         for j in 1:n_qubits
             if j != i 
                 Qnot *= operator(QopRyd([j]), n_qubits)
@@ -94,7 +98,7 @@ end
 
 function Qnot(site::Int, n_qubits::Int)
     @assert n_qubits >= 2 "Number of qubits must be at least 2"
-    Qnot = sparse(Matrix{ComplexF64}(I, 3^n_qubits, 3^n_qubits))
+    Qnot = sparse(Matrix{float_type}(I, 3^n_qubits, 3^n_qubits))
     for j in 1:n_qubits
         if j != site
             Qnot *= operator(QopRyd([j]), n_qubits)

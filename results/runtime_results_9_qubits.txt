@@ -1,0 +1,58 @@
+N qubits: 2
+Construct algebra basis time:
+  63.900 μs (1561 allocations: 181.31 KiB)
+Construct group basis time:
+  633.001 μs (16725 allocations: 1.92 MiB)
+Subalgebra dim: 8, Subgroup dim: 11, Residual norm: 5.849336019171078e-16, required product length: 2
+---
+N qubits: 3
+Construct algebra basis time:
+  207.200 μs (2270 allocations: 745.17 KiB)
+Construct group basis time:
+  2.388 ms (26444 allocations: 8.41 MiB)
+Subalgebra dim: 11, Subgroup dim: 16, Residual norm: 2.5564384582284255e-15, required product length: 2
+---
+N qubits: 4
+Construct algebra basis time:
+  827.001 μs (3943 allocations: 2.79 MiB)
+Construct group basis time:
+  22.248 ms (84660 allocations: 65.98 MiB)
+Subalgebra dim: 14, Subgroup dim: 21, Residual norm: 1.6286245114102558e-14, required product length: 3
+---
+N qubits: 5
+Construct algebra basis time:
+  4.401 ms (7266 allocations: 13.82 MiB)
+Construct group basis time:
+  154.430 ms (219194 allocations: 418.41 MiB)
+Subalgebra dim: 17, Subgroup dim: 26, Residual norm: 6.600530263385985e-14, required product length: 4
+---
+N qubits: 6
+Construct algebra basis time:
+  14.003 ms (10043 allocations: 45.82 MiB)
+Construct group basis time:
+  726.931 ms (394201 allocations: 1.84 GiB)
+Subalgebra dim: 20, Subgroup dim: 31, Residual norm: 2.1546675328752333e-13, required product length: 5
+---
+N qubits: 7
+Construct algebra basis time:
+  59.322 ms (13254 allocations: 180.09 MiB)
+Construct group basis time:
+  3.543 s (641950 allocations: 8.32 GiB)
+Subalgebra dim: 23, Subgroup dim: 36, Residual norm: 1.4071676384082807e-12, required product length: 6
+---
+N qubits: 8
+Construct algebra basis time:
+  181.803 ms (14234 allocations: 492.45 MiB)
+Construct group basis time:
+  17.008 s (936093 allocations: 33.72 GiB)
+Subalgebra dim: 26, Subgroup dim: 41, Residual norm: 3.1718871426733213e-12, required product length: 7
+---
+N qubits: 9
+Construct algebra basis time:
+  779.266 ms (15486 allocations: 1.58 GiB)
+Construct group basis time:
+  53.634 s (1090887 allocations: 109.40 GiB)
+Subalgebra dim: 29, Subgroup dim: 46, Residual norm: 4.5675523089566824e-11, required product length: 8
+---
+N qubits: 10
+ERROR: LoadError: OutOfMemoryError()
