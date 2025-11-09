@@ -1,5 +1,4 @@
-using LinearAlgebra, MultiFloats
-
+# Check whether unitary target is implementable
 function check_target(target::SparseMatrixCSC{float_type, Int}, system_basis::Vector{SparseMatrixCSC{float_type, Int}})
 
     reconstructed_target = spzeros(float_type, size(target)...)
