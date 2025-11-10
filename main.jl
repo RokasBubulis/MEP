@@ -4,9 +4,9 @@ include("check_implementability.jl")
 using BenchmarkTools
 
 commutation_depth = 10
-max_product_depth = 15
+max_product_depth = 10
 
-qubit_lst = 2:10
+qubit_lst = 9
 for n_qubits in qubit_lst
     local target, generators, lie_basis
     println("N qubits: $n_qubits")
