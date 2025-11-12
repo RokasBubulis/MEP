@@ -3,8 +3,9 @@ function check_target(target::SparseMatrixCSC{float_type, Int}, system_basis::Ve
 
     reconstructed_target = spzeros(float_type, size(target)...)
     for i in eachindex(system_basis)
-        coeff = tr(adjoint(system_basis[i]) * target)
-        reconstructed_target += coeff * system_basis[i]
+        # coeff = tr(adjoint(system_basis[i]) * target)
+        coeff = dot(system_basis[i], target)
+        reconstructed_target .+= coeff .* system_basis[i]
     end
 
     residual = reconstructed_target - target

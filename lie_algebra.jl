@@ -51,6 +51,30 @@ function construct_lie_basis(generators::Vector{SparseMatrixCSC{float_type, Int}
     return basis_elements
 end
 
+function construct_lie_basis_general(generators::Vector{SparseMatrixCSC{float_type, Int}}, depth::Int)
+    basis_elements = SparseMatrixCSC{float_type,Int}[]
+    generators .*= im
+    for g in generators
+        try_add_orthonormal!(basis_elements, g)
+    end
+    last_level = copy(generators)
+    if depth > 1
+        for d in 1:depth 
+            next_level = SparseMatrixCSC{float_type,Int}[]
+            for gen in generators
+                for last_el in last_level
+                    bracket = br(gen, last_el)
+                    if try_add_orthonormal!(basis_elements, bracket)
+                        push!(next_level, bracket)
+                    end
+                end
+            end
+            last_level = next_level
+        end
+    end
+    return basis_elements
+end
+
 function construct_adjoint_representations(lie_basis::Vector{SparseMatrixCSC{float_type,Int}},
                                            generators::Vector{SparseMatrixCSC{float_type, Int}})
     n = length(lie_basis)
