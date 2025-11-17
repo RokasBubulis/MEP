@@ -22,7 +22,7 @@ function try_add_orthonormal!(basis::Vector{SparseMatrixCSC{float_type,Int}},
 end
 
 # Local GS orthonormalisation
-function construct_lie_basis(generators::Vector{SparseMatrixCSC{float_type, Int}}, depth::Int)
+function construct_lie_basis_2gens(generators::Vector{SparseMatrixCSC{float_type, Int}}, depth::Int)
     basis_elements = SparseMatrixCSC{float_type,Int}[]
     im_gens = im.*generators
     for g in im_gens
@@ -89,4 +89,34 @@ function construct_adjoint_representations(lie_basis::Vector{SparseMatrixCSC{flo
         end
     end
     return adjoint_map
+end
+
+function construct_subgroup_basis(lie_basis::Vector{SparseMatrixCSC{float_type, Int}}, max_product_depth::Int)
+    basis_elements = SparseMatrixCSC{float_type,Int}[]
+    n = size(lie_basis[1], 1)
+    try_add_orthonormal!(basis_elements, spdiagm(0 => ones(float_type, n)))
+
+    for b in lie_basis
+        try_add_orthonormal!(basis_elements, b)
+    end
+    last_level = copy(lie_basis)
+    if max_product_depth > 1
+        for d in 2:max_product_depth
+            old_len = length(basis_elements)
+            current_level = SparseMatrixCSC{float_type,Int}[]
+            for last_element in last_level
+                for b_element in lie_basis
+                    new_el = last_element * b_element
+                    if try_add_orthonormal!(basis_elements, new_el)
+                        push!(current_level, new_el)  # copy only when accepted
+                    end
+                end
+            end
+            last_level = current_level
+            if length(basis_elements) == old_len
+                break
+            end
+        end
+    end
+    return basis_elements
 end

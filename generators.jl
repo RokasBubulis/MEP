@@ -11,6 +11,9 @@ end
 struct Zop<: PauliOp
     sites::Vector{Int}
 end
+struct Yop<: PauliOp
+    sites::Vector{Int}
+end
 
 abstract type RydbergOp end
 struct XopRyd<: RydbergOp
@@ -25,6 +28,7 @@ end
 
 operator_matrix(::Xop) = sparse(float_type[0 1; 1 0])
 operator_matrix(::Zop) = sparse(float_type[1 0; 0 -1])
+operator_matrix(::Yop) = sparse(float_type[0 -im; im 0])
 operator_matrix(::XopRyd) = sparse(float_type[1 0 0; 0 0 1; 0 1 0])
 operator_matrix(::ZopRyd) = sparse(float_type[1 0 0; 0 1 0; 0 0 -1])
 operator_matrix(::QopRyd) = sparse(float_type[1 0 0; 0 1 0; 0 0 0])
@@ -105,4 +109,14 @@ function Qnot(site::Int, n_qubits::Int)
         end
     end
     return Qnot
+end
+
+function construct_coupled_spin_generators(n_qubits::Int)
+    @assert n_qubits >=2 "Number of qubits must be at least 2"
+    H_d = 1/2 * operator(Zop([1, 2]), n_qubits)
+    H1 = operator(Xop([1]), n_qubits)
+    H2 = operator(Yop([1]), n_qubits)
+    H3 = operator(Xop([2]), n_qubits)
+    H4 = operator(Yop([2]), n_qubits)
+    return [H_d, H1, H2, H3, H4]
 end
