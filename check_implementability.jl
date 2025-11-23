@@ -24,13 +24,23 @@ function check_if_belongs(target::SparseMatrixCSC{float_type, Int}, system_basis
     return norm(residual) < tol
 end
 
-function construct_target(n_qubits::Int)
+function construct_target_3levels(n_qubits::Int)
     I3 = sparse(float_type[1 0 0; 0 1 0; 0 0 1])
     target = copy(I3)
     for n in 2:n_qubits
         target = kron(target, I3)
     end
     target[3^n_qubits, 3^n_qubits] = -1.0
+    return target
+end
+
+function construct_target_2levels(n_qubits::Int)
+    I2 = sparse(float_type[1 0; 0 1])
+    target = copy(I2)
+    for n in 2:n_qubits
+        target = kron(target, I2)
+    end
+    target[2^n_qubits, 2^n_qubits] = -1.0
     return target
 end
 

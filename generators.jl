@@ -120,3 +120,64 @@ function construct_coupled_spin_generators(n_qubits::Int)
     H4 = operator(Yop([2]), n_qubits)
     return [H_d, H1, H2, H3, H4]
 end
+
+N_LEVELS = 2
+function construct_rydberg_drift(positions::AbstractMatrix{<:Real}; C=1, p=6, n_levels = N_LEVELS)
+    """
+    positions: row per atom
+    """
+    N = size(positions, 1)
+    dim = n_levels^N
+    H_drift = spzeros(float_type, dim, dim)
+    V = zeros(Float64, dim, dim)
+
+    for m in 1:N-1
+        for n in m+1:N
+            r = norm(positions[m,:] - positions[n,:])
+            V[m,n] = C / r^p
+            V[n,m] = V[m,n]
+        end
+    end
+
+    for state in 0:dim - 1
+        bits = digits(state; base=n_levels, pad=N)
+        for m in 1:N-1
+            for n in m+1:N
+                if (bits[m] == n_levels - 1) && (bits[n] == n_levels - 1)
+                    H_drift[state+1, state+1] += V[m,n]
+                end
+            end
+        end
+    end
+    return H_drift
+end
+
+function construct_rydberg_controls(n_qubits; n_levels = N_LEVELS)
+    dim = n_levels ^ n_qubits
+    X = spzeros(float_type, dim, dim)
+    Z = spzeros(float_type, dim, dim)
+    for i in 1:n_qubits
+        if n_levels == 2
+            X += operator(Xop([i]), n_qubits)
+            Z += operator(Zop([i]), n_qubits)
+        elseif n_levels == 3
+            X += operator(XopRyd([i]), n_qubits)
+            Z += operator(ZopRyd([i]), n_qubits)
+        end
+    end
+    return [X, Z]
+end
+
+# local Z pulses?
+# function construct_rydberg_controls(n_qubits; n_levels = N_LEVELS)
+#     dim = n_levels ^ n_qubits
+#     X = spzeros(float_type, dim, dim)
+#     Z_array = SparseMatrixCSC{float_type, Int}[]
+#     for i in 1:n_qubits
+#         if n_levels == 2
+#             X += operator(Xop([i]), n_qubits)
+#             push!(Z_array, operator(Zop([i]), n_qubits))
+#         end
+#     end
+#     return push!(Z_array,X)
+# end
