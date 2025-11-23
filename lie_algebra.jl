@@ -122,45 +122,91 @@ function construct_subgroup_basis(lie_basis::Vector{SparseMatrixCSC{float_type, 
     return basis_elements
 end
 
-function bron_kerbosch_recursive(p_c, edges, n)
-    drift_idx = 1 #drift index in p_c is by assertion 1
-    R = [drift_idx]  # clique must start with drift
-    P = [i for i in 1:n if edges[drift_idx, i] && i != drift_idx] # drift neighbours
-    X = Int[] # processed nodes
-    cliques = Vector{Vector{Int}}()
+# function bron_kerbosch_recursive(p_c, edges, n)
+#     drift_idx = 1 #drift index in p_c is by assertion 1
+#     R = [drift_idx]  # clique must start with drift
+#     P = [i for i in 1:n if edges[drift_idx, i] && i != drift_idx] # drift neighbours
+#     X = Int[] # processed nodes
+#     cliques = Vector{Vector{Int}}()
     
-    function bronk!(R, P, X)
-        if isempty(P) && isempty(X)
-            push!(cliques, copy(R))
-            return 
-        end
+#     function bronk!(R, P, X)
+#         if isempty(P) && isempty(X)
+#             push!(cliques, copy(R))
+#             return 
+#         end
 
-        for node in copy(P)
-            neighbours = [i for i in 1:n if edges[node, i]]
-            bronk!(vcat(R, node), intersect(P, neighbours), intersect(X, neighbours))
-            P = setdiff(P, [node])
-            push!(X, node)
-        end
+#         for node in copy(P)
+#             neighbours = [i for i in 1:n if edges[node, i]]
+#             bronk!(vcat(R, node), intersect(P, neighbours), intersect(X, neighbours))
+#             P = setdiff(P, [node])
+#             X = union(X, [node])
+#         end
+#     end
+#     bronk!(R, P, X)
+#     max_clique = cliques[argmax(length.(cliques))]
+#     return [p_c[i] for i in max_clique]
+# end
+
+# function construct_max_abelian_subalgebra(p_c)
+#     n = length(p_c)
+#     edges = falses(n,n)
+
+#     for i in 1:n-1
+#         for j in i+1:n
+#             if commutes(p_c[i], p_c[j])
+#                 edges[i, j] = true
+#                 edges[j, i] = true
+#             end
+#         end
+#     end
+#     a_c = bron_kerbosch_recursive(p_c, edges, n)
+#     return a_c
+# end
+
+function proj_onto_span(X, S)
+    Y = zero(X)
+    for s in S
+        Y .+= (dot(s, X) / dot(s, s)) * s
     end
-    bronk!(R, P, X)
-    max_clique = cliques[argmax(length.(cliques))]
-    return [p_c[i] for i in max_clique]
+    return Y
 end
 
-function construct_max_abelian_subalgebra(p_c)
-    n = length(p_c)
-    edges = falses(n,n)
-
-    for i in 1:n-1
-        for j in i+1:n
-            if commutes(p_c[i], p_c[j])
-                edges[i, j] = true
-                edges[j, i] = true
-            end
+function check_cartan_structure(l_c, p_c; tol=1e-8)
+    # 1) [l,l] in l
+    for A in l_c, B in l_c
+        C = br(A,B)
+        C_l = proj_onto_span(C, l_c)
+        C_p = C - C_l
+        if norm(C_p) > tol
+            #println("[l,l] condition fails, leftover in p of norm ", norm(C_p))
+            error("[l,l] condition fails at least once")
+            break
         end
     end
-    a_c = bron_kerbosch_recursive(p_c, edges, n)
-    return a_c
+
+    # 2) [l,p] in p
+    for A in l_c, B in p_c
+        C = br(A,B)
+        C_p = proj_onto_span(C, p_c)
+        C_l = C - C_p
+        if norm(C_l) > tol
+            #println("[l,p] condition fails, leftover in l of norm ", norm(C_l))
+            error("[l,p] condition fails at least once")
+            break
+        end
+    end
+
+    # 3) [p,p] in l
+    for A in p_c, B in p_c
+        C = br(A,B)
+        C_l = proj_onto_span(C, l_c)
+        C_p = C - C_l
+        if norm(C_p) > tol
+            # println("[p,p] condition fails, leftover in p of norm ", norm(C_p))
+            error("[p,p] condition fails at least once")
+            break
+        end
+    end
 end
 
 
@@ -175,37 +221,40 @@ function construct_algebras(drift, controls; commutation_depth = 10, tol = 1e-12
     if all(x->abs(dot(corrected_drift, x)) < tol, l_c) 
         p_c = SparseMatrixCSC{float_type,Int}[]
     else
-        error("No drift component in the orthogonal complement")
+        error("No drift component outside the control lie algebra")
     end
 
     gens = SparseMatrixCSC{float_type, Int}[corrected_drift, controls...]
     g_c = construct_lie_basis_general(gens, commutation_depth)
     for g in g_c
         if all(x -> abs(dot(g, x)) < tol, l_c)
-            try_add_orthonormal!(p_c, g)
+            push!(p_c, g)
         end
     end
-    @assert p_c[1] == g_c[1] "Corrected drift must be the first element of the orthogonal complement"
-    a_c = construct_max_abelian_subalgebra(p_c)
+    # @assert p_c[1] == g_c[1] "Corrected drift must be the first element of the orthogonal complement"
+    # a_c = construct_max_abelian_subalgebra(p_c)
 
-    # a_c = SparseMatrixCSC{float_type,Int}[]
-    # candidates = copy(p_c)
-    # #Construct a_c
-    # while !isempty(candidates)
-    #     new_candidates = SparseMatrixCSC{float_type,Int}[]
-    #     old_length = length(a_c)
-    #     for p_el in candidates
-    #         if all(x -> commutes(x, p_el), a_c) #&& !any(x -> x == p_el, a_c)
-    #             push!(a_c, p_el)
-    #         else
-    #             push!(new_candidates, p_el)
-    #         end
-    #     end
-    #     if length(a_c) == old_length
-    #         break
-    #     end
-    #     candidates = new_candidates
-    # end
+    # Cartan-like decomposition check
+    check_cartan_structure(l_c, p_c)
+
+    a_c = SparseMatrixCSC{float_type,Int}[]
+    candidates = copy(p_c)
+    #Construct a_c
+    while !isempty(candidates)
+        new_candidates = SparseMatrixCSC{float_type,Int}[]
+        old_length = length(a_c)
+        for p_el in candidates
+            if all(x -> commutes(x, p_el), a_c)
+                push!(a_c, p_el)
+            else
+                push!(new_candidates, p_el)
+            end
+        end
+        if length(a_c) == old_length
+            break
+        end
+        candidates = new_candidates
+    end
 
     return g_c, l_c, p_c, a_c
 end

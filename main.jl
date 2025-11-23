@@ -4,9 +4,10 @@ include("check_implementability.jl")
 include("time_optimal_solution.jl")
 using BenchmarkTools
 
-positions = [0 0; 1 0; 0.5 sqrt(3)/2]
-#positions = [0 0; 1 0; -1 0]
-# positions = [0 0; 1 0]
+positions = [0 0; 1 0]
+# positions = [0 0; 1 0; 0.5 sqrt(3)/2]
+# positions = [0 0; 1 0; 0 1; 1 1] 
+
 n_qubits = size(positions, 1)
 drift = construct_rydberg_drift(positions)
 controls = construct_rydberg_controls(n_qubits)

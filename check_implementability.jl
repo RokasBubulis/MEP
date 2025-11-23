@@ -77,8 +77,7 @@ function check_if_implementable(basis::Vector{SparseMatrixCSC{float_type, Int}},
     end
 
     if print_output
-        return ("Subalgebra dim: $(length(basis)), Subgroup dim: $(length(basis_elements)), 
-        Residual norm: $res_norm, required product length: $last_layer")
+        return ("Subalgebra dim: $(length(basis)), Subgroup dim: $(length(basis_elements)), Residual norm: $res_norm, required product length: $last_layer")
     else
         return res_norm < tol
     end

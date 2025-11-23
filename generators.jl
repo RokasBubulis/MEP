@@ -126,6 +126,7 @@ function construct_rydberg_drift(positions::AbstractMatrix{<:Real}; C=1, p=6, n_
     """
     positions: row per atom
     """
+    @assert length(unique(eachrow(positions))) == size(positions, 1) "Positions must be unique"
     N = size(positions, 1)
     dim = n_levels^N
     H_drift = spzeros(float_type, dim, dim)
