@@ -15,6 +15,10 @@ struct Yop<: PauliOp
     sites::Vector{Int}
 end
 
+struct Qop<: PauliOp
+    sites::Vector{Int}
+end
+
 abstract type RydbergOp end
 struct XopRyd<: RydbergOp
     sites::Vector{Int}
@@ -29,6 +33,7 @@ end
 operator_matrix(::Xop) = sparse(float_type[0 1; 1 0])
 operator_matrix(::Zop) = sparse(float_type[1 0; 0 -1])
 operator_matrix(::Yop) = sparse(float_type[0 -im; im 0])
+operator_matrix(::Qop) = sparse(float_type[1 0; 0 0])
 operator_matrix(::XopRyd) = sparse(float_type[1 0 0; 0 0 1; 0 1 0])
 operator_matrix(::ZopRyd) = sparse(float_type[1 0 0; 0 1 0; 0 0 -1])
 operator_matrix(::QopRyd) = sparse(float_type[1 0 0; 0 1 0; 0 0 0])
@@ -85,6 +90,21 @@ function construct_Ryd_generators(n_qubits::Int)
         A += operator(XopRyd([i]), n_qubits) * Qnot
     end
     B = sum(operator(ZopRyd([i]), n_qubits) for i in 1:n_qubits)
+    return [A, B]
+end
+
+function construct_Ryd_generators_2levels(n_qubits::Int)
+    A = spzeros(float_type, 2^n_qubits, 2^n_qubits)
+    for i in 1:n_qubits
+        Qnot = sparse(Matrix{float_type}(I, 2^n_qubits, 2^n_qubits))
+        for j in 1:n_qubits
+            if j != i 
+                Qnot *= operator(Qop([j]), n_qubits)
+            end
+        end
+        A += operator(Xop([i]), n_qubits) * Qnot
+    end
+    B = sum(operator(Zop([i]), n_qubits) for i in 1:n_qubits)
     return [A, B]
 end
 
@@ -153,7 +173,7 @@ function construct_rydberg_drift(positions::AbstractMatrix{<:Real}; C=1, p=6, n_
     return H_drift
 end
 
-function construct_rydberg_controls(n_qubits; n_levels = N_LEVELS)
+function construct_global_controls(n_qubits; n_levels = N_LEVELS)
     dim = n_levels ^ n_qubits
     X = spzeros(float_type, dim, dim)
     Z = spzeros(float_type, dim, dim)
@@ -167,6 +187,21 @@ function construct_rydberg_controls(n_qubits; n_levels = N_LEVELS)
         end
     end
     return [X, Z]
+end
+
+function construct_local_controls(n_qubits; n_levels = N_LEVELS)
+    x_lst = SparseMatrixCSC{float_type, Int}[]
+    z_lst = SparseMatrixCSC{float_type, Int}[]
+    for i in 1:n_qubits
+        if n_levels == 2
+            push!(x_lst, operator(Xop([i]), n_qubits))
+            push!(z_lst, operator(Zop([i]), n_qubits))
+        elseif n_levels == 3
+            push!(x_lst, operator(XopRyd([i]), n_qubits))
+            push!(z_lst, operator(ZopRyd([i]), n_qubits))  
+        end
+    end
+    return vcat(x_lst, z_lst)
 end
 
 # local Z pulses?

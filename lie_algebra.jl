@@ -178,8 +178,7 @@ function check_cartan_structure(l_c, p_c; tol=1e-8)
         C_l = proj_onto_span(C, l_c)
         C_p = C - C_l
         if norm(C_p) > tol
-            #println("[l,l] condition fails, leftover in p of norm ", norm(C_p))
-            error("[l,l] condition fails at least once")
+            error("[l,l] condition fails at least once in p of norm $(norm(C_p))")
             break
         end
     end
@@ -190,8 +189,7 @@ function check_cartan_structure(l_c, p_c; tol=1e-8)
         C_p = proj_onto_span(C, p_c)
         C_l = C - C_p
         if norm(C_l) > tol
-            #println("[l,p] condition fails, leftover in l of norm ", norm(C_l))
-            error("[l,p] condition fails at least once")
+            error("[l,p] condition fails at least once with leftover in l of norm $(norm(C_l))")
             break
         end
     end
@@ -202,8 +200,7 @@ function check_cartan_structure(l_c, p_c; tol=1e-8)
         C_l = proj_onto_span(C, l_c)
         C_p = C - C_l
         if norm(C_p) > tol
-            # println("[p,p] condition fails, leftover in p of norm ", norm(C_p))
-            error("[p,p] condition fails at least once")
+            println("[p,p] condition fails at least once with leftover in p of norm $(norm(C_p))")
             break
         end
     end
