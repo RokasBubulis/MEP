@@ -28,16 +28,20 @@ function obtain_target_kak_decomposition(target, drift, controls)
     end
 
     v0 = ones(2*length(l_c) + length(a_c))
-    result = optimize(cost, v0, NelderMead())#, Optim.Options(show_trace=true))
+    result = optimize(cost, v0, NelderMead(), Optim.Options(
+        iterations = 50_000
+    ))
+    #, Optim.Options(show_trace=true))
     coeffs = Optim.minimizer(result)
     x, y, z = coeffs[x_array], coeffs[y_array], coeffs[z_array]
     println("Minimum value: ", Optim.minimum(result))
     println("Converged: ", Optim.converged(result))
 
-    # U = fastExpm(sum(x[i] * l_c[i] for i in 1:dim_lc))
+    U = fastExpm(sum(x[i] * l_c[i] for i in 1:dim_lc))
     Delta0 = sum(y[i] * a_c[i] for i in 1:dim_ac)
-    # V = fastExpm(sum(z[i] * l_c[i] for i in 1:dim_lc))
-    return Delta0
+    V = fastExpm(sum(z[i] * l_c[i] for i in 1:dim_lc))
+    M = U*fastExpm(Delta0)*V
+    display(sparse(round.(M, digits=6)))
 end
 
 # control_subgroup_basis = construct_subgroup_basis(l_c, product_depth)

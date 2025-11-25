@@ -1,4 +1,4 @@
-using SparseArrays, LinearAlgebra, MultiFloats, IntervalArithmetic
+using SparseArrays, LinearAlgebra #MultiFloats, IntervalArithmetic
 
 # float_type = Complex{MultiFloat{Float64, 2}}
 float_type = Complex{Float64}
@@ -203,17 +203,3 @@ function construct_local_controls(n_qubits; n_levels = N_LEVELS)
     end
     return vcat(x_lst, z_lst)
 end
-
-# local Z pulses?
-# function construct_rydberg_controls(n_qubits; n_levels = N_LEVELS)
-#     dim = n_levels ^ n_qubits
-#     X = spzeros(float_type, dim, dim)
-#     Z_array = SparseMatrixCSC{float_type, Int}[]
-#     for i in 1:n_qubits
-#         if n_levels == 2
-#             X += operator(Xop([i]), n_qubits)
-#             push!(Z_array, operator(Zop([i]), n_qubits))
-#         end
-#     end
-#     return push!(Z_array,X)
-# end

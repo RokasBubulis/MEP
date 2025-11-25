@@ -4,7 +4,7 @@ commutes(x, y; tol = 1e-6) = maximum(abs.(br(x, y))) < tol
 
 function try_add_orthonormal!(basis::Vector{SparseMatrixCSC{float_type,Int}}, 
                         candidate:: SparseMatrixCSC{float_type,Int};
-                        tol = 1e-8)
+                        tol = 1e-6)
     
     for element in basis
         proj_coeff = dot(element, candidate) # more efficient than trace
@@ -54,15 +54,15 @@ end
 
 function construct_lie_basis_general(generators::Vector{SparseMatrixCSC{float_type, Int}}, depth::Int)
     basis_elements = SparseMatrixCSC{float_type,Int}[]
-    generators .*= im
-    for g in generators
+    gens = [im * g for g in generators]
+    for g in gens
         try_add_orthonormal!(basis_elements, g)
     end
-    last_level = copy(generators)
+    last_level = copy(gens)
     if depth > 1
         for d in 1:depth 
             next_level = SparseMatrixCSC{float_type,Int}[]
-            for gen in generators
+            for gen in gens
                 for last_el in last_level
                     bracket = br(gen, last_el)
                     if try_add_orthonormal!(basis_elements, bracket)
