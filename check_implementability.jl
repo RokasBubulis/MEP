@@ -45,7 +45,7 @@ function construct_target_2levels(n_qubits::Int)
 end
 
 function check_if_implementable(basis::Vector{SparseMatrixCSC{float_type, Int}}, 
-    target::SparseMatrixCSC{float_type, Int}, max_product_depth::Int; print_output = false, tol=1e-6)
+    target::SparseMatrixCSC{float_type, Int}; max_product_depth = 10, print_output = false, tol=1e-6)
 
     @assert max_product_depth >= 2 "Increase max product depth"
     res_norm, last_layer = 0,0
