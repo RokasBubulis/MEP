@@ -1,8 +1,7 @@
-using SparseArrays, LinearAlgebra #MultiFloats, IntervalArithmetic
+using SparseArrays, LinearAlgebra
 
-# float_type = Complex{MultiFloat{Float64, 2}}
 float_type = Complex{Float64}
-# float_type = Complex{Interval{Float64}}
+id = Matrix(float_type[1 0 0; 0 1 0; 0 0 1])
 
 abstract type PauliOp end
 struct Xop<: PauliOp
