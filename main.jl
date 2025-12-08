@@ -28,6 +28,5 @@ include("time_optimal_solver.jl")
 n_qubits = 2
 target = construct_target_3levels(n_qubits)
 gens = construct_Ryd_generators(n_qubits)
-M0 = kron(id, id)
 
-compute_optimal_time(target, gens, M0; tmax = 5)
+compute_optimal_time(target, gens)
