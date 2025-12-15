@@ -32,7 +32,7 @@ include("time_optimal_solver_constrained.jl")
 # compute_optimal_time(gens, target)
 
 
-target = operator(YopRyd([1]), 1)
+target =-im* operator(YopRyd([1]), 1)
 compute_optimal_time(target)
 
 # X = operator(XopRyd([1]), 1)
