@@ -25,6 +25,9 @@ end
 struct ZopRyd<: RydbergOp
     sites::Vector{Int}
 end
+struct YopRyd<: RydbergOp
+    sites::Vector{Int}
+end
 struct QopRyd<: RydbergOp
     sites::Vector{Int}
 end
@@ -35,6 +38,7 @@ operator_matrix(::Yop) = sparse(float_type[0 -im; im 0])
 operator_matrix(::Qop) = sparse(float_type[1 0; 0 0])
 operator_matrix(::XopRyd) = sparse(float_type[1 0 0; 0 0 1; 0 1 0])
 operator_matrix(::ZopRyd) = sparse(float_type[1 0 0; 0 1 0; 0 0 -1])
+operator_matrix(::YopRyd) = sparse(float_type[1 0 0; 0 0 -im; 0 im 0])
 operator_matrix(::QopRyd) = sparse(float_type[1 0 0; 0 1 0; 0 0 0])
 
 function n_levels(op::PauliOp)
