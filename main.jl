@@ -1,54 +1,69 @@
 include("generators.jl")
 include("lie_algebra.jl")
-include("time_optimal_solver_constrained.jl")
+include("time_optimal_solver.jl")
 
-# positions = [0 0; 1 0]
-# #positions = [0 0; 1 0; 0.5 sqrt(3)/2]
-# #positions = [0 0; 1 0; 0 1; 1 1]
+# Optimal time calculations
+# General
+tmin = 1
+tmax = 20
+coset_tolerance = 1e-5
+print_intermediate = true
+dist_coeff = 1e4
 
-# n_qubits = size(positions, 1)
-# target =  construct_target_3levels(n_qubits)
+function one_qubit_example()
+    n_levels = 2
+    n_qubits = 1
 
-# println("PXP model")
-# gens = construct_Ryd_generators(n_qubits)
-# lie_basis = construct_lie_basis_general(gens)
-# println(check_if_implementable(lie_basis, target; print_output = true))
-# obtain_target_kak_decomposition_single_control(target, gens)
-# println("---")
+    X = operator(Xop([1]), n_qubits)
+    Z = operator(Zop([1]), n_qubits)
+    gens = [Z, X]
 
-# println("General 2 controls") 
-# target = construct_target_2levels(n_qubits)
-# drift = construct_rydberg_drift(positions)
-# controls = construct_global_controls(n_qubits)
-# #controls = construct_local_controls(n_qubits)
-# gens = [drift, controls...]
-# lie_basis = construct_lie_basis_general(gens)
-# println(check_if_implementable(lie_basis, target; print_output = true))
-# obtain_target_kak_decomposition(target, drift, controls)
+    target = -im * operator(Yop([1]), n_qubits)
 
-# n_qubits = 2
-# target = construct_target_3levels(n_qubits)
-# gens = construct_Ryd_generators(n_qubits)
-# compute_optimal_time(gens, target)
+    params = Params(
+        -im * X,
+        -im * diag(Z),
+        n_levels,
+        n_qubits,
+        tmin,
+        tmax,
+        coset_tolerance,
+        dist_coeff,
+        print_intermediate,
+        Ref(1.0)
+    )
+
+    println("One qubit example")
+    compute_optimal_time(gens, target, params)
+    println("---")
+end
 
 
-target =-im* operator(YopRyd([1]), 1)
-compute_optimal_time(target)
+function two_qutrit_example()
+    n_levels = 3
+    n_qubits = 2
 
-# X = operator(XopRyd([1]), 1)
-# Z = operator(ZopRyd([1]), 1)
-# gens = [Z, X]
-# lie_basis = construct_lie_basis_general(gens)
-# @assert check_if_implementable(lie_basis, target) "Target is not implementable"
-# p_basis = lie_basis[2:end]
-# M1 = build_M(rand(length(p_basis)) .* 2 .- 1, p_basis)
-# M2 = build_M(rand(length(p_basis)) .* 2 .- 1, p_basis)
-# M3 = build_M(rand(length(p_basis)) .* 2 .- 1, p_basis)
-# params = ComponentArray(H0 = -im*X, l = -im*diag(Z), tol = 1e-3, alpha_memory = Ref(1.0)) 
-# @show display(M1), display(M2), display(M3)
-# H1 = obtain_H_opt(M1, params)
-# H2 = obtain_H_opt(M2, params)
-# H3 = obtain_H_opt(M3, params)
-# @show display(H1), display(H2), display(H3)
+    gens = construct_Ryd_generators(n_qubits)
+    target = -im * construct_CZ_target(n_qubits, n_levels)
 
+    params = Params(
+        -im * gens[2],
+        -im * diag(gens[1]),
+        n_levels,
+        n_qubits,
+        tmin,
+        tmax,
+        coset_tolerance,
+        dist_coeff,
+        print_intermediate,
+        Ref(1.0)
+    )
+
+    println("2 qutrit all symmetric example")
+    compute_optimal_time(gens, target, params)
+end
+
+
+one_qubit_example()
+two_qutrit_example()
 

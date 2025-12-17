@@ -1,7 +1,8 @@
 using SparseArrays, LinearAlgebra
 
 float_type = Complex{Float64}
-id = Matrix(float_type[1 0 0; 0 1 0; 0 0 1])
+id3 = sparse(Matrix(float_type[1 0 0; 0 1 0; 0 0 1]))
+id2 = sparse(Matrix(float_type[1 0; 0 1]))
 
 abstract type PauliOp end
 struct Xop<: PauliOp
@@ -50,7 +51,7 @@ end
 
 function operator(op::Union{PauliOp, RydbergOp}, n_qubits::Int)
     n_lev = n_levels(op)
-    identity_matrix = sparse(Matrix{float_type}(I, n_lev, n_lev))
+    identity_matrix = spdiagm(0 => ones(float_type, n_lev))
     ops = [identity_matrix for _ in 1:n_qubits]
     mat = operator_matrix(op)
     for s in op.sites
@@ -82,6 +83,7 @@ function construct_dense_generators(n_qubits::Int)
 end
 
 function construct_Ryd_generators(n_qubits::Int)
+    # returns control first and drift second
     A = spzeros(float_type, 3^n_qubits, 3^n_qubits)
     for i in 1:n_qubits
         Qnot = sparse(Matrix{float_type}(I, 3^n_qubits, 3^n_qubits))
@@ -93,7 +95,7 @@ function construct_Ryd_generators(n_qubits::Int)
         A += operator(XopRyd([i]), n_qubits) * Qnot
     end
     B = sum(operator(ZopRyd([i]), n_qubits) for i in 1:n_qubits)
-    return [A, B]
+    return [B, A]
 end
 
 function construct_Ryd_generators_2levels(n_qubits::Int)

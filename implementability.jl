@@ -1,3 +1,5 @@
+include("generators.jl")
+
 # Check whether unitary target is implementable
 function check_target(target::SparseMatrixCSC{float_type, Int}, system_basis::Vector{SparseMatrixCSC{float_type, Int}})
 
@@ -22,6 +24,23 @@ function check_if_belongs(target::SparseMatrixCSC{float_type, Int}, system_basis
 
     residual = reconstructed_target - target
     return norm(residual) < tol
+end
+
+function construct_CZ_target(n_qubits::Int, n_levels::Int)
+    if n_levels == 2
+        id = id2
+    elseif n_levels == 3
+        id = id3
+    else
+        error("Invalid number of levels")
+    end
+
+    target = copy(id)
+    for n in 2:n_qubits
+        target = kron(target, id)
+    end
+    target[n_levels^n_qubits, n_levels^n_qubits] = -1.0
+    return target
 end
 
 function construct_target_3levels(n_qubits::Int)
