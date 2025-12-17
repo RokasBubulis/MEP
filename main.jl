@@ -5,14 +5,13 @@ include("time_optimal_solver.jl")
 # Optimal time calculations
 # General
 tmin = 1
-tmax = 20
-coset_tolerance = 1e-5
+tmax = 10
 print_intermediate = true
-dist_coeff = 1e4
 
 function one_qubit_example()
     n_levels = 2
     n_qubits = 1
+    turning_point_factor = 1.05
 
     X = operator(Xop([1]), n_qubits)
     Z = operator(Zop([1]), n_qubits)
@@ -27,8 +26,7 @@ function one_qubit_example()
         n_qubits,
         tmin,
         tmax,
-        coset_tolerance,
-        dist_coeff,
+        turning_point_factor,
         print_intermediate,
         Ref(1.0)
     )
@@ -42,6 +40,7 @@ end
 function two_qutrit_example()
     n_levels = 3
     n_qubits = 2
+    turning_point_factor = 1.3
 
     gens = construct_Ryd_generators(n_qubits)
     target = -im * construct_CZ_target(n_qubits, n_levels)
@@ -53,8 +52,7 @@ function two_qutrit_example()
         n_qubits,
         tmin,
         tmax,
-        coset_tolerance,
-        dist_coeff,
+        turning_point_factor,
         print_intermediate,
         Ref(1.0)
     )

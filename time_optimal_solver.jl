@@ -1,4 +1,4 @@
-using DifferentialEquations, Optim, ComponentArrays, RecursiveArrayTools
+using DifferentialEquations, Optim, RecursiveArrayTools
 
 include("generators.jl")
 include("lie_algebra.jl")
@@ -11,8 +11,7 @@ mutable struct Params
     n_qubits::Int
     tmin::Float64
     tmax::Float64
-    coset_tolerance::Float64  
-    dist_coeff::Float64 
+    turning_point_factor::Float64
     print_intermediate::Bool               
     alpha_memory::Base.RefValue{Float64}
 end
@@ -27,34 +26,6 @@ end
         H_of_alpha[i,j] = H0[i,j] * exp(alpha * (l[j] - l[i]))
     end
 end
-
-# to be checked but that could be the way to obtain H_opt without optimisation as L is always diagonal
-# function alpha_newton(alpha, H0, M, l)
-#     h  = 0.0     # f(α)
-#     h_deriv = 0.0     # f'(α)
-
-#     @inbounds for j in axes(H0,2), i in axes(H0,1)
-#         delta = l[j] - l[i]
-#         z = H0[i,j] * M[j,i] * exp(alpha * delta)
-#         h  += real(z)
-#         h_deriv += real(delta * z)
-#     end
-
-#     return alpha - h / h_deriv
-# end
-
-# function obtain_H_opt!(M, p)
-#     H0   = p.H0
-#     l    = p.l
-#     H    = p.Hbuf         
-
-#     α = p.alpha_memory[]
-#     α = alpha_newton(α, H0, M, l)
-#     p.alpha_memory[] = α
-
-#     H_of_alpha!(H, H0, l, α)   
-#     return H                   
-# end
 
 # current way to obtain H_opt using optimisation without grad
 function obtain_H_opt(M::SparseMatrixCSC{float_type, Int}, params::Params)
@@ -102,23 +73,14 @@ end
 # Coupled ODE system, (P_opt, M)
 # dP_opt/dt = H_opt(t) * P_opt
 # dM/dt = [H_opt(t), M]
-# function f!(dX, X, p, t)
-
-#     P, M = X.P, X.M
-#     H_opt = obtain_H_opt(M, p)
-#     dX.P .= H_opt * P
-#     dX.M .= br(H_opt, M)
-# end
 function f!(dX, X, p, t)
     P = X.x[1]
     M = X.x[2]
 
     H_opt = obtain_H_opt(M, p)
-
     dP = H_opt * P
     dM = br(H_opt, M)
 
-    # Write into existing storage (do NOT reassign tuple entries)
     dX.x[1] .= dP
     dX.x[2] .= dM
 end
@@ -143,6 +105,7 @@ function compute_optimal_time(gens::Vector{SparseMatrixCSC{float_type, Int}},
     
     # Check if target is implementable and construct the basis of orthogonal complement of control subalgebra
     lie_basis = construct_lie_basis_general(gens)
+    println("dim(lie basis) = $(length(lie_basis))")
     @assert check_if_implementable(lie_basis, target) "Target is not implementable"
     p_basis = lie_basis[2:end] 
     dim = params.n_levels ^ params.n_qubits
@@ -152,60 +115,71 @@ function compute_optimal_time(gens::Vector{SparseMatrixCSC{float_type, Int}},
     function construct_ODE(m::Vector{Float64}, t::Float64)
         params.alpha_memory[] = 1.0
         M0 = build_M(m, p_basis)
+        @assert M0 !== nothing "build_M returned nothing"
         X0 = ArrayPartition(copy(P0), M0)
         ODEProblem(f!, X0, (0.0, t), params)
     end
 
-    # Objective function that drives down time and final distance to target coset
-    function objective(x::Vector{Float64})
-        m, t = x[1:end - 1], x[end]
-        prob = construct_ODE(m, t)
-        sol = solve(prob, saveat=t, abstol=1e-6, reltol=1e-6)
-        if sol.retcode != SciMLBase.ReturnCode.Success
-            return 1e20
-        end
+    function distance_at_time(m::Vector{Float64}, t::Float64)
+        m_normalised = m / max(norm(m), 1e-12)
+        prob = construct_ODE(m_normalised, t)
+        sol = solve(prob, saveat=t, abstol=1e-4, reltol=1e-4)
+        sol.retcode != SciMLBase.ReturnCode.Success && return 1e20
+
         P_T = sol.u[end].x[1]
-        dist = distance_to_target_coset(P_T, target, params)
+        return distance_to_target_coset(P_T, target, params)
+    end
+
+    function optimize_m_for_time(t, m0)
+        obj(m) = distance_at_time(m, t)
+        res = optimize(obj, m0, NelderMead(), Optim.Options(iterations = 50))
+        m_best = Optim.minimizer(res)
+        dist_best = distance_at_time(m_best, t)
+        return dist_best, m_best, res
+    end
+
+    # find the interval in which distance to target coset starts again increasing
+    t_left = 0.0
+    t_right = 0.0
+    m_best = rand(length(p_basis)) .*2 .-1
+
+    t = params.tmin
+    Δ = params.turning_point_factor
+
+    d_prev, m_prev, _ = optimize_m_for_time(t, m_best)
+    turning_point = false
+
+    while t ≤ params.tmax
+        t_new = t * Δ
+        d, m, _ = optimize_m_for_time(t_new, m_prev)
+
         if params.print_intermediate
-            println("Evaluating at m = $m, t = $t : dist = $dist")
+            println("Check at t = $t_new, dist = $d")
         end
-                
-        return params.dist_coeff * dist^2 + t
-    end
-    
-    # Ensure valid parameters by penalising large values
-    function objective_penalized(x::Vector{Float64})
-        m, t = x[1:end-1], x[end]
-        penalty = 0.0
-        penalty += sum(max.(0, abs.(m) .- 1).^2) * 1e6
-        penalty += max(0, params.tmin - t)^2 * 1e6
-        penalty += max(0, t - params.tmax)^2 * 1e6
 
-        return objective(x) + penalty
+        if d > d_prev
+            # We found the turning point
+            t_left  = t / Δ
+            t_right = t_new
+            turning_point = true
+            m_best = m_prev
+            break
+        end
+
+        t, d_prev, m_prev = t_new, d, m
     end
 
-    # Initial guess
-    m0 = rand(length(p_basis)) .*2 .-1
-    t0 = 2
-    x0 = [m0; t0]
+    turning_point || error("Change in dist relationship not observed until $(params.tmax)")
 
-    # Optimisation
-    result = optimize(
-        objective_penalized,
-        x0,
-        NelderMead()
-    )
-    
-    # Results
-    println(result)
-    x_final = Optim.minimizer(result)
-    final_objective = Optim.minimum(result)
-    final_dist = (final_objective - x_final[end])^(1/2) / params.dist_coeff
-    if abs(final_dist) > params.coset_tolerance
-        error("Target coset has not been reached at time $(x_final[end]/pi) π")
-    else
-        println(("Target coset has been reached at time $(x_final[end]/pi) π"))
+    # Given time interval when distance starts increasing, find minimal time
+    φ(t) = begin
+        d, m, _ = optimize_m_for_time(t, m_best)
+        d
     end
-    println("Minimizer: $x_final")
+    res = optimize(φ, t_left, t_right, Brent(); iterations = 50, rel_tol = 1e-6, abs_tol = 1e-8)
+
+    t_star = Optim.minimizer(res)
+    d_star = Optim.minimum(res)
+    println("Optimal time: $(t_star/pi) π, distance to target coset: $d_star")
 
 end
