@@ -1,4 +1,4 @@
-using DifferentialEquations, Optim, RecursiveArrayTools
+using DifferentialEquations, Optim, RecursiveArrayTools, Dates
 
 include("generators.jl")
 include("lie_algebra.jl")
@@ -12,6 +12,7 @@ mutable struct Params
     tmin::Float64
     tmax::Float64
     turning_point_factor::Float64
+    coset_hard_tol::Float64
     print_intermediate::Bool               
     alpha_memory::Base.RefValue{Float64}
 end
@@ -132,54 +133,82 @@ function compute_optimal_time(gens::Vector{SparseMatrixCSC{float_type, Int}},
 
     function optimize_m_for_time(t, m0)
         obj(m) = distance_at_time(m, t)
-        res = optimize(obj, m0, NelderMead(), Optim.Options(iterations = 50))
+        res = optimize(obj, m0, NelderMead(), Optim.Options(iterations = 30))
         m_best = Optim.minimizer(res)
         dist_best = distance_at_time(m_best, t)
         return dist_best, m_best, res
     end
 
     # find the interval in which distance to target coset starts again increasing
-    t_left = 0.0
-    t_right = 0.0
-    m_best = rand(length(p_basis)) .*2 .-1
-
-    t = params.tmin
     Δ = params.turning_point_factor
+    function find_local_optimum(t1, m_best)
+        t_left = 0.0
+        t_right = 0.0
 
-    d_prev, m_prev, _ = optimize_m_for_time(t, m_best)
-    turning_point = false
+        # First point
+        d1, m1, _ = optimize_m_for_time(t1, m_best)
+        println("Checking at t = $t1: dist = $d1")
+        # Second point
+        t2 = t1 * Δ
+        d2, m2, _ = optimize_m_for_time(t2, m1)
+        println("Checking at t = $t2: dist = $d2")
+        turning_point = false
 
-    while t ≤ params.tmax
-        t_new = t * Δ
-        d, m, _ = optimize_m_for_time(t_new, m_prev)
+        while t2 ≤ params.tmax
+            t3 = t2 * Δ
+            d3, m3, _ = optimize_m_for_time(t3, m2)
 
-        if params.print_intermediate
-            println("Check at t = $t_new, dist = $d")
+            if params.print_intermediate
+                println("Checking at t = $t3: dist = $d3")
+            end
+            
+            # Check if a local minimum of distance to target coset
+            if d2 < d1 && d2 < d3
+                t_left = t1
+                t_right = t3
+                m_best = m2
+                println("Turning point found, searching for local minimum")
+                turning_point = true
+                break
+            end
+
+            t1, d1 = t2, d2
+            t2, d2, m2 = t3, d3, m3
         end
 
-        if d > d_prev
-            # We found the turning point
-            t_left  = t / Δ
-            t_right = t_new
-            turning_point = true
-            m_best = m_prev
+        turning_point || error("Local minimum not found up to tmax = $(params.tmax)")
+
+        # Given time interval when distance starts increasing, find minimal time
+        φ(t) = begin
+            d, m, _ = optimize_m_for_time(t, m_best)
+            d
+        end
+        res = optimize(φ, t_left, t_right, Brent(); iterations = 30, rel_tol = 1e-5, abs_tol = 1e-5)
+
+        t_star = Optim.minimizer(res)
+        d_star = Optim.minimum(res)
+        return t_star, d_star, t2, m2
+    end
+
+    # First local minimum
+    m_best = rand(length(p_basis)) .*2 .-1
+    t_loc_min, d_loc_min, last_t, m_best = find_local_optimum(params.tmin, m_best)
+
+    while true
+
+        if d_loc_min < params.coset_hard_tol
+            println("Local optimum converged to target coset within tolerance")
             break
+        else
+            println("Local optimum at t = $t_loc_min did not converge to target coset within tolerance, continuing")
+            t_loc_min, d_loc_min, last_t, m_best = find_local_optimum(last_t * Δ, m_best)
         end
 
-        t, d_prev, m_prev = t_new, d, m
+        if last_t >= params.tmax
+            error("No local optimum converged to target coset within tolerance up to tmax = $(params.tmax)")
+        end
     end
 
-    turning_point || error("Change in dist relationship not observed until $(params.tmax)")
-
-    # Given time interval when distance starts increasing, find minimal time
-    φ(t) = begin
-        d, m, _ = optimize_m_for_time(t, m_best)
-        d
-    end
-    res = optimize(φ, t_left, t_right, Brent(); iterations = 50, rel_tol = 1e-6, abs_tol = 1e-8)
-
-    t_star = Optim.minimizer(res)
-    d_star = Optim.minimum(res)
-    println("Optimal time: $(t_star/pi) π, distance to target coset: $d_star")
+    println("Optimal time: $(t_loc_min/pi) π, distance to target coset: $d_loc_min")
 
 end

@@ -1,0 +1,35 @@
+One qubit example
+dim(lie basis) = 3
+Checking at t = 1.0: dist = 0.7963139005146465
+Checking at t = 1.2: dist = 0.521385988039076
+Checking at t = 1.44: dist = 0.1848416694331843
+Checking at t = 1.728: dist = 0.22209150638128752
+Turning point found, searching for local minimum
+Local optimum converged to target coset within tolerance
+Optimal time: 0.500003160315495 π, distance to target coset: 1.4556026067651622e-5
+---
+2 qutrit all symmetric example
+dim(lie basis) = 8
+Checking at t = 1.0: dist = 2.400168317605215
+Checking at t = 1.3: dist = 1.9990441110081434
+Checking at t = 1.6900000000000002: dist = 2.127169158460673
+Turning point found, searching for local minimum
+Local optimum at t = 1.1633771787116935 did not converge to target coset within tolerance, continuing
+Checking at t = 1.6900000000000002: dist = 2.127169158460673
+Checking at t = 2.1970000000000005: dist = 2.5576379019852657
+Checking at t = 2.856100000000001: dist = 2.908040687742198
+Checking at t = 3.7129300000000014: dist = 2.667404954917673
+Checking at t = 4.826809000000002: dist = 2.422825752038159
+Checking at t = 6.274851700000003: dist = 2.0079479827685716
+Checking at t = 8.157307210000004: dist = 2.5738811529878443
+Turning point found, searching for local minimum
+Local optimum at t = 6.854330269040152 did not converge to target coset within tolerance, continuing
+Checking at t = 8.157307210000004: dist = 2.5738811529878443
+Checking at t = 10.604499373000007: dist = 2.43866328589872
+Checking at t = 13.785849184900009: dist = 2.242191413265378
+Checking at t = 17.921603940370012: dist = 2.3759315366529563
+Turning point found, searching for local minimum
+Local optimum at t = 12.74272580588888 did not converge to target coset within tolerance, continuing
+Checking at t = 17.921603940370012: dist = 2.3759315366529563
+Checking at t = 23.298085122481016: dist = 2.283334294789008
+ERROR: LoadError: Local minimum not found up to tmax = 20.0
