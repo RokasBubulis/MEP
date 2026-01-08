@@ -1,58 +1,84 @@
-using DifferentialEquations, Optim, RecursiveArrayTools, Dates
+using DifferentialEquations, Optim, RecursiveArrayTools, Dates, Roots
 
 include("generators.jl")
 include("lie_algebra.jl")
 include("implementability.jl")
 
-mutable struct Params
-    H0::SparseMatrixCSC{float_type, Int}
-    l::SparseVector{float_type}
+mutable struct Params{T}
+    H0::SparseMatrixCSC{T, Int}
+    l::SparseVector{T}
     n_levels::Int
     n_qubits::Int
     tmin::Float64
     tmax::Float64
     turning_point_factor::Float64
     coset_hard_tol::Float64
-    print_intermediate::Bool               
-    alpha_memory::Base.RefValue{Float64}
+    print_intermediate::Bool
+    previous_alpha::Float64
+    dim::Int
+    dim2::Int
+
+    H_temp::SparseMatrixCSC{T, Int}  
+
+    tmp1::Matrix{T}                  
+    tmp2::Matrix{T}              
 end
 
-# Control of the adjoint system
-@inline function H_of_alpha!(H_of_alpha::SparseMatrixCSC{float_type, Int}, 
-                            H0::SparseMatrixCSC{float_type, Int}, 
-                            l::SparseVector{float_type},
-                            alpha::Float64)
+function make_params(H0::SparseMatrixCSC{T,Int}, l::SparseVector{T};
+                     n_levels::Int, n_qubits::Int,
+                     tmin::Float64, tmax::Float64,
+                     turning_point_factor::Float64,
+                     coset_hard_tol::Float64,
+                     print_intermediate::Bool=false,
+                     previous_alpha::Float64=0.0) where {T}
 
-    @inbounds for j in axes(H0,2), i in axes(H0,1)
-        H_of_alpha[i,j] = H0[i,j] * exp(alpha * (l[j] - l[i]))
+    dim = size(H0, 1)
+    @assert size(H0,2) == dim "H0 must be square"
+    dim2 = dim*dim
+
+    H_temp = copy(H0)          # copies structure + nzvals (same sparsity pattern)
+    tmp1   = Matrix{T}(undef, dim, dim)
+    tmp2   = Matrix{T}(undef, dim, dim)
+
+    return Params{T}(H0, l, n_levels, n_qubits, tmin, tmax,
+                     turning_point_factor, coset_hard_tol,
+                     print_intermediate, previous_alpha,
+                     dim, dim2,
+                     H_temp, tmp1, tmp2)
+end
+
+
+function H_of_alpha!(H_of_alpha::SparseMatrixCSC, H0::SparseMatrixCSC, l::SparseVector, alpha::Float64)
+    @inbounds for col in 1:size(H0,2)
+        for ptr in H0.colptr[col]:(H0.colptr[col+1]-1)
+            row = H0.rowval[ptr]
+            H_of_alpha.nzval[ptr] = H0.nzval[ptr] * exp(alpha * (l[col] - l[row]))
+        end
     end
 end
 
-# current way to obtain H_opt using optimisation without grad
-function obtain_H_opt(M::SparseMatrixCSC{float_type, Int}, params::Params)
-    H0, l = params.H0, params.l
-    H_of_alpha = similar(H0)
-    alpha_prev = params.alpha_memory[]      
-
-    function cost(a)
-        α = a[1]
-        H_of_alpha!(H_of_alpha, H0, l, α)
-        return -real(tr(H_of_alpha * M))
+function H_opt!(M::AbstractMatrix, params::Params)
+    H0, l, α0 = params.H0, params.l, params.previous_alpha
+    
+    function pmp_derivative(α)
+        n = size(H0, 1)
+        s = 0
+        for j in 2:n, i in 1:j-1
+            Δ = l[j] - l[i]
+            s += real(Δ*exp(α*Δ)*H0[i,j]*M[j,i])
+        end
+        return s
     end
 
-    alpha0 = [alpha_prev]
-    result = optimize(cost, alpha0, NelderMead())
-    α_opt = Optim.minimizer(result)[1]   # scalar
-
-    # warm-start for next call
-    params.alpha_memory[] = α_opt
-
-    H_of_alpha!(H_of_alpha, H0, l, α_opt)
-    return H_of_alpha
+    α_opt = fzero(pmp_derivative, α0)
+    params.previous_alpha = α_opt
+    H_of_alpha!(params.H_temp, H0, l, α_opt)
+    return
 end
 
-# 1D optimisation to obtain distance to target coset
-function distance_to_target_coset(P_opt::SparseMatrixCSC{float_type, Int}, 
+
+#1D optimisation to obtain distance to target coset
+function distance_to_target_coset(P_opt::AbstractMatrix, 
                                   target::SparseMatrixCSC{float_type, Int}, params::Params)
 
     λ = params.l
@@ -74,16 +100,32 @@ end
 # Coupled ODE system, (P_opt, M)
 # dP_opt/dt = H_opt(t) * P_opt
 # dM/dt = [H_opt(t), M]
-function f!(dX, X, p, t)
-    P = X.x[1]
-    M = X.x[2]
 
-    H_opt = obtain_H_opt(M, p)
-    dP = H_opt * P
-    dM = br(H_opt, M)
+function br!(dM::StridedMatrix, H::SparseMatrixCSC, M::StridedMatrix, params)
+    # tmp1 = H*M   (dense)
+    mul!(params.tmp1, H, M)
 
-    dX.x[1] .= dP
-    dX.x[2] .= dM
+    # tmp2 = M*H   (dense)
+    mul!(params.tmp2, M, H)
+
+    @. dM = params.tmp1 - params.tmp2
+    return nothing
+end
+
+function f!(dX, X, params, t)
+    dim, dim2 = params.dim, params.dim2
+
+    @views P  = reshape(view(X, 1:dim2), dim, dim)
+    @views M  = reshape(view(X, dim2+1:2dim2), dim, dim)
+    @views dP = reshape(view(dX, 1:dim2), dim, dim)
+    @views dM = reshape(view(dX, dim2+1:2dim2), dim, dim)
+
+    H_opt!(M, params) 
+
+    mul!(dP, params.H_temp, P)
+    br!(dM, params.H_temp, M, params)
+
+    return nothing
 end
 
 # Build costate M from the basis of the orthogonal complement of control subalgebra
@@ -109,25 +151,29 @@ function compute_optimal_time(gens::Vector{SparseMatrixCSC{float_type, Int}},
     println("dim(lie basis) = $(length(lie_basis))")
     @assert check_if_implementable(lie_basis, target) "Target is not implementable"
     p_basis = lie_basis[2:end] 
-    dim = params.n_levels ^ params.n_qubits
+    dim = params.dim
+    dim2 = params.dim2
     P0 = spdiagm(0 => ones(float_type, dim))
 
     # Construct a single shoot: obtain geodesic for a given time and initial costate (=momentum)
-    function construct_ODE(m::Vector{Float64}, t::Float64)
-        params.alpha_memory[] = 1.0
-        M0 = build_M(m, p_basis)
-        @assert M0 !== nothing "build_M returned nothing"
-        X0 = ArrayPartition(copy(P0), M0)
+    function construct_ODE(m::Vector{Float64}, t::Float64, p_basis, params::Params{T}) where {T}
+        m_normalised = m / max(norm(m), 1e-12)
+        M0_sparse = build_M(m_normalised, p_basis)  # your current returns sparse
+        M0 = Matrix{T}(M0_sparse)                   # convert once at init
+        P0 = Matrix{T}(I, params.dim, params.dim)
+
+        X0 = Vector{T}(undef, 2*params.dim2)
+        X0[1:params.dim2] .= vec(P0)
+        X0[params.dim2+1:end] .= vec(M0)
         ODEProblem(f!, X0, (0.0, t), params)
     end
 
     function distance_at_time(m::Vector{Float64}, t::Float64)
-        m_normalised = m / max(norm(m), 1e-12)
-        prob = construct_ODE(m_normalised, t)
+        prob = construct_ODE(m, t, p_basis, params)
         sol = solve(prob, saveat=t, abstol=1e-4, reltol=1e-4)
         sol.retcode != SciMLBase.ReturnCode.Success && return 1e20
 
-        P_T = sol.u[end].x[1]
+        @views P_T = reshape(view(sol.u[end], 1:dim2), dim, dim)
         return distance_to_target_coset(P_T, target, params)
     end
 
@@ -200,7 +246,7 @@ function compute_optimal_time(gens::Vector{SparseMatrixCSC{float_type, Int}},
             println("Local optimum converged to target coset within tolerance")
             break
         else
-            println("Local optimum at t = $t_loc_min did not converge to target coset within tolerance, continuing")
+            println("Local optimum $d_loc_min at t = $t_loc_min did not converge to target coset within tolerance of $(params.coset_hard_tol), continuing")
             t_loc_min, d_loc_min, last_t, m_best = find_local_optimum(last_t * Δ, m_best)
         end
 
