@@ -7,8 +7,6 @@ include("implementability.jl")
 mutable struct Params{T}
     H0::SparseMatrixCSC{T, Int}
     l::SparseVector{T}
-    n_levels::Int
-    n_qubits::Int
     tmin::Float64
     tmax::Float64
     turning_point_factor::Float64
@@ -25,7 +23,6 @@ mutable struct Params{T}
 end
 
 function make_params(H0::SparseMatrixCSC{T,Int}, l::SparseVector{T};
-                     n_levels::Int, n_qubits::Int,
                      tmin::Float64, tmax::Float64,
                      turning_point_factor::Float64,
                      coset_hard_tol::Float64,
@@ -40,7 +37,7 @@ function make_params(H0::SparseMatrixCSC{T,Int}, l::SparseVector{T};
     tmp1   = Matrix{T}(undef, dim, dim)
     tmp2   = Matrix{T}(undef, dim, dim)
 
-    return Params{T}(H0, l, n_levels, n_qubits, tmin, tmax,
+    return Params{T}(H0, l, tmin, tmax,
                      turning_point_factor, coset_hard_tol,
                      print_intermediate, previous_alpha,
                      dim, dim2,

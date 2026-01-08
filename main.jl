@@ -9,13 +9,13 @@ tmin = 1.0
 tmax = 10.0
 print_intermediate = true
 coset_hard_tol = 1e-4
+turning_point_factor = 1.2
 
 ########################################################
 # One qubit example
 function one_qubit_example()
     n_levels = 2
     n_qubits = 1
-    turning_point_factor = 1.2
 
     # Operators
     X = operator(Xop([1]), n_qubits)
@@ -26,7 +26,6 @@ function one_qubit_example()
 
     # Params
     params = make_params(-im*X, -im*diag(Z);
-        n_levels=n_levels, n_qubits=n_qubits,
         tmin=tmin, tmax=tmax,
         turning_point_factor=turning_point_factor,
         coset_hard_tol=coset_hard_tol,
@@ -40,40 +39,31 @@ end
 
 ########################################################
 # Two qutrit example
-# function two_qutrit_example()
-#     n_levels = 3
-#     n_qubits = 2
-#     turning_point_factor = 1.1
+function two_qutrit_example()
+    n_levels = 3
+    n_qubits = 2
 
-#     # Generators and target
-#     gens = construct_Ryd_generators(n_qubits)
-#     target = construct_CZ_target(n_qubits, n_levels)
+    # Generators and target
+    gens = construct_Ryd_generators(n_qubits)
+    target = construct_CZ_target(n_qubits, n_levels)
 
-#     # Params
-#     params = Params(
-#         -1im * gens[2],
-#         -1im * diag(gens[1]),
-#         n_levels,
-#         n_qubits,
-#         tmin,
-#         tmax,
-#         turning_point_factor,
-#         coset_hard_tol,
-#         print_intermediate,
-#         Ref(1.0),
-#         -1.0,
-#         1.0
-#     )
+    # Params
+    params = make_params(-im*gens[2], -im*diag(gens[1]);
+        tmin=tmin, tmax=tmax,
+        turning_point_factor=turning_point_factor,
+        coset_hard_tol=coset_hard_tol,
+        print_intermediate=true
+    )
 
-#     println("=== Two qutrit example ===")
-#     compute_optimal_time(gens, target, params)
-#     println("--------------------------")
-# end
+    println("=== Two qutrit example ===")
+    compute_optimal_time(gens, target, params)
+    println("--------------------------")
+end
 
 ########################################################
 # Run examples
 one_qubit_example()
-# two_qutrit_example()
+two_qutrit_example()
 
 # n_qubits = 1
 # X = operator(Xop([1]), n_qubits)
