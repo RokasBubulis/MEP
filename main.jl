@@ -63,7 +63,32 @@ end
 ########################################################
 # Run examples
 one_qubit_example()
-two_qutrit_example()
+# two_qutrit_example()
+
+# n_qubits = 1
+# X = operator(Xop([1]), n_qubits)
+# Z = operator(Zop([1]), n_qubits)
+# gens = [Z, X]
+# lie_basis = construct_lie_basis_general(gens)
+# p_basis = lie_basis[2:end] 
+# m = rand(length(p_basis)) .*2 .-1
+# M = build_M(m, p_basis)
+# H0 = -1im * X
+# l = -1im * diag(gens[1])
+
+# function find_alpha(α)
+#     n = size(H0, 1)
+#     s = 0
+#     for j in 2:n, i in 1:j-1
+#         Δ = l[j] - l[i]
+#         s += real(Δ*exp(α*Δ)*H0[i,j]*M[j,i])
+#     end
+#     return s
+# end
+
+# α_star = find_zero(find_alpha, (-1, 1)) 
+# println(α_star)
+# println(find_alpha(α_star))
 
 # n_qubits = 1
 # X = operator(Xop([1]), n_qubits)
