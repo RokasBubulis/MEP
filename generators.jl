@@ -42,15 +42,15 @@ operator_matrix(::ZopRyd) = sparse(float_type[1 0 0; 0 1 0; 0 0 -1])
 operator_matrix(::YopRyd) = sparse(float_type[1 0 0; 0 0 -im; 0 im 0])
 operator_matrix(::QopRyd) = sparse(float_type[1 0 0; 0 1 0; 0 0 0])
 
-function n_levels(op::PauliOp)
+function return_n_levels(op::PauliOp)
     return 2
 end
-function n_levels(op::RydbergOp)
+function return_n_levels(op::RydbergOp)
     return 3
 end
 
 function operator(op::Union{PauliOp, RydbergOp}, n_qubits::Int)
-    n_lev = n_levels(op)
+    n_lev = return_n_levels(op)
     identity_matrix = spdiagm(0 => ones(float_type, n_lev))
     ops = [identity_matrix for _ in 1:n_qubits]
     mat = operator_matrix(op)
@@ -146,8 +146,8 @@ function construct_coupled_spin_generators(n_qubits::Int)
     return [H_d, H1, H2, H3, H4]
 end
 
-N_LEVELS = 2
-function construct_rydberg_drift(positions::AbstractMatrix{<:Real}; C=1, p=6, n_levels = N_LEVELS)
+N_LEVELS = 3
+function construct_rydberg_drift(positions::AbstractMatrix{<:Real}; C=100, p=6, n_levels = N_LEVELS)
     """
     positions: row per atom
     """
@@ -160,7 +160,7 @@ function construct_rydberg_drift(positions::AbstractMatrix{<:Real}; C=1, p=6, n_
     for m in 1:N-1
         for n in m+1:N
             r = norm(positions[m,:] - positions[n,:])
-            V[m,n] = C / r^p
+            V[m,n] = C / r^p 
             V[n,m] = V[m,n]
         end
     end

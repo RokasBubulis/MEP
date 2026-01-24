@@ -1,15 +1,15 @@
-using Roots
+using Roots, BenchmarkTools
 
 include("generators.jl")
 include("lie_algebra.jl")
 include("time_optimal_solver.jl")
 
 # General parameters
-tmin = 1.0
-tmax = 10.0
+tmin = 0.1*2*pi
+tmax = 2*2*pi
 print_intermediate = true
 coset_hard_tol = 1e-4
-turning_point_factor = 1.2
+turning_point_factor = 1.1
 
 ########################################################
 # One qubit example
@@ -24,17 +24,20 @@ function one_qubit_example()
 
     target = -1im * operator(Yop([1]), n_qubits)
 
+    # convert target from lab to rotating frame
+    positions = [0 0]
+    V_Ryd = construct_rydberg_drift(positions; n_levels)
+
     # Params
-    params = make_params(-im*X, -im*diag(Z);
+    params = make_params(-im*X, Vector(-im*diag(Z)), V_Ryd,
         tmin=tmin, tmax=tmax,
         turning_point_factor=turning_point_factor,
         coset_hard_tol=coset_hard_tol,
         print_intermediate=true
     )
 
-    println("=== One qubit example ===")
-    compute_optimal_time(gens, target, params)
-    println("-------------------------")
+    print_intermediate && println("=== One qubit example ===")
+    P = compute_optimal_time(gens, target, params, "1_qubit")
 end
 
 ########################################################
@@ -44,11 +47,20 @@ function two_qutrit_example()
     n_qubits = 2
 
     # Generators and target
-    gens = construct_Ryd_generators(n_qubits)
-    target = construct_CZ_target(n_qubits, n_levels)
+    gens = construct_Ryd_generators(n_qubits)  # rotating frame
+    target = construct_CZ_target(n_qubits, n_levels)  # lab frame
+    #target -= 7/9*I
+
+    # convert target from lab to rotating frame
+    positions = [0 0; 0 1]
+    V_Ryd = construct_rydberg_drift(positions; n_levels)
+    # U_Ryd = exp(-im*Matrix(V_Ryd)*pi)
+    # target = sparse(adjoint(U_Ryd) * target)
+    #display(target)
+    display(V_Ryd)
 
     # Params
-    params = make_params(-im*gens[2], -im*diag(gens[1]);
+    params = make_params(-im*gens[2], Vector(-im*diag(gens[1])), V_Ryd, 
         tmin=tmin, tmax=tmax,
         turning_point_factor=turning_point_factor,
         coset_hard_tol=coset_hard_tol,
@@ -56,14 +68,13 @@ function two_qutrit_example()
     )
 
     println("=== Two qutrit example ===")
-    compute_optimal_time(gens, target, params)
-    println("--------------------------")
+    P = compute_optimal_time(gens, target, params, "2_qutrit")
 end
 
 ########################################################
 # Run examples
-one_qubit_example()
-# two_qutrit_example()
+P1 = one_qubit_example()
+P2 = two_qutrit_example()
 
 # n_qubits = 1
 # X = operator(Xop([1]), n_qubits)

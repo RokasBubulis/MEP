@@ -1,4 +1,4 @@
-using DifferentialEquations, Optim, Roots, LinearAlgebra
+using DifferentialEquations, Optim, Roots
 
 include("generators.jl")
 include("lie_algebra.jl")
@@ -7,8 +7,7 @@ include("plot_geodesics.jl")
 
 mutable struct Params{T}
     H0::SparseMatrixCSC{T, Int}
-    l::Vector{T}
-    V_Ryd::SparseVector{T}
+    l::SparseVector{T}
     tmin::Float64
     tmax::Float64
     turning_point_factor::Float64
@@ -25,7 +24,7 @@ mutable struct Params{T}
     tmp2::Matrix{T}              
 end
 
-function make_params(H0::SparseMatrixCSC{T,Int}, l::Vector{T}, V_Ryd::SparseMatrixCSC{T, Int};
+function make_params(H0::SparseMatrixCSC{T,Int}, l::SparseVector{T};
                      tmin::Float64, tmax::Float64,
                      turning_point_factor::Float64,
                      coset_hard_tol::Float64,
@@ -41,7 +40,7 @@ function make_params(H0::SparseMatrixCSC{T,Int}, l::Vector{T}, V_Ryd::SparseMatr
     tmp1   = Matrix{T}(undef, dim, dim)
     tmp2   = Matrix{T}(undef, dim, dim)
 
-    return Params{T}(H0, l, Vector(diag(V_Ryd)), tmin, tmax,
+    return Params{T}(H0, l, tmin, tmax,
                      turning_point_factor, coset_hard_tol,
                      print_intermediate, previous_alpha, previous_gamma,
                      dim, dim2,
@@ -49,7 +48,7 @@ function make_params(H0::SparseMatrixCSC{T,Int}, l::Vector{T}, V_Ryd::SparseMatr
 end
 
 
-function H_of_alpha!(H_of_alpha::SparseMatrixCSC, H0::SparseMatrixCSC, l::Vector, alpha::Float64)
+function H_of_alpha!(H_of_alpha::SparseMatrixCSC, H0::SparseMatrixCSC, l::SparseVector, alpha::Float64)
     @inbounds for col in 1:size(H0,2)
         for ptr in H0.colptr[col]:(H0.colptr[col+1]-1)
             row = H0.rowval[ptr]
@@ -58,137 +57,128 @@ function H_of_alpha!(H_of_alpha::SparseMatrixCSC, H0::SparseMatrixCSC, l::Vector
     end
 end
 
-function H_opt!(M::AbstractMatrix, params::Params)
-    H0, l, α0 = params.H0, params.l, params.previous_alpha
-
-    function f(x)
-        α = x[1]
-        func = 0.0
-
-        @inbounds for col in 1:size(H0,2)
-            for ptr in H0.colptr[col]:(H0.colptr[col+1]-1)
-                row = H0.rowval[ptr]
-                if row < col
-                    Δ = l[col] - l[row]
-                    e = exp(α * Δ)
-                    z = H0.nzval[ptr] * M[col,row]
-                    func += real(e * z)
-                end
-            end
-        end
-        return -func
-    end
-
-    function g!(G, x)
-        α = x[1]
-        grad = 0.0
-
-        @inbounds for col in 1:size(H0,2)
-            for ptr in H0.colptr[col]:(H0.colptr[col+1]-1)
-                row = H0.rowval[ptr]
-                if row < col
-                    Δ = l[col] - l[row]
-                    e = exp(α * Δ)
-                    z = H0.nzval[ptr] * M[col,row]
-                    grad += real(Δ * e * z)
-                end
-            end
-        end
-        G[1] = -grad
-        return nothing
-    end
-
-    x0 = [α0]
-    res = optimize(f, g!, [-pi/2], [pi/2], x0, Fminbox(BFGS()))
-    α_opt = Optim.minimizer(res)[1]
-    params.previous_alpha = α_opt
-    H_of_alpha!(params.H_temp, H0, l, α_opt)
-end 
-
-# #1D optimisation to obtain distance to target coset
-# function distance_to_target_coset(P_opt::AbstractMatrix, 
-#                                   target::SparseMatrixCSC{float_type, Int}, params::Params)
-
-#     λ = params.l
-#     #A = adjoint(target) * P_opt
-#     A = P_opt * adjoint(target)
-
-#     function cost(alpha::Vector{Float64})
-#         alpha = alpha[1]
-#         return norm(A - spdiagm(0 => exp.(alpha .* λ)))
+# function H_opt!(M::AbstractMatrix, params::Params)
+#     H0, l, α0 = params.H0, params.l, params.previous_alpha
+    
+#     function pmp_derivative(α)
+#         n = size(H0, 1)
+#         s = 0
+#         for j in 2:n, i in 1:j-1
+#             Δ = l[j] - l[i]
+#             s += real(Δ*exp(α*Δ)*H0[i,j]*M[j,i])
+#         end
+#         return s
 #     end
 
-#     result = optimize(cost, [0.0], NelderMead())
-#     alpha_opt = Optim.minimizer(result)[1]
-#     if isnan(alpha_opt)
-#         alpha_opt = 0.0
+#     α_opt = fzero(pmp_derivative, α0)
+#     n = size(H0, 1)
+#     s = 0
+#     for j in 2:n, i in 1:j-1
+#         Δ = l[j] - l[i]
+#         s += real(Δ^2*exp(Δ * α_opt)*H0[i,j]*M[j,i])
 #     end
-#     return cost([alpha_opt])
+#     @assert s < 0 "2nd derivative not negative: $s"
+#     params.previous_alpha = α_opt
+#     H_of_alpha!(params.H_temp, H0, l, α_opt)
+#     return
 # end
 
-function distance_to_target_coset(P_opt::AbstractMatrix,
-                                  target::SparseMatrixCSC{float_type, Int},
-                                  params::Params)
-
-    l = params.l
-    A = P_opt * adjoint(target)
-    normA = sum(abs2, A)          
-    a  = diag(A)                     
-
-    @inline function distance(gamma::Float64)
-        d = exp.(gamma .* l)     
-        return sqrt(normA + sum(abs2, d) - 2 * real(dot(conj(a), d)))
+function pmp_d1_d2(α, H0, l, M)
+    d1 = 0.0
+    d2 = 0.0
+    n = size(H0, 1)
+    for j in 2:n, i in 1:j-1
+        Δ = l[j] - l[i]
+        e = exp(Δ*α)
+        z = H0[i,j]*M[j,i]
+        d1 += real(Δ*e*z)
+        d2 += real(Δ^2*e*z)
     end
-
-    result = optimize(distance, -pi, pi)
-    gamma_opt = Optim.minimizer(result)
-    return distance(gamma_opt)
+    return d1, d2
 end
 
-function plot_results(sol, target, params, name)
-    dim = params.dim
-    dim2 = dim^2
-    p_vals_rot = Vector{Float64}(undef, length(sol.u))
-    p_vals_lab = Vector{Float64}(undef, length(sol.u))
-    coset_vals_rot = Vector{Float64}(undef, length(sol.u))
-    coset_vals_lab = Vector{Float64}(undef, length(sol.u))
-    tv = vec(target)
 
-    for k in eachindex(sol.u)
-        u = sol.u[k]
-        t = sol.t[k]
+function H_opt!(M::AbstractMatrix, params::Params)
+    H0 = params.H0
+    l  = params.l
+    α  = params.previous_alpha
 
-        @views Pk = reshape(view(u, 1:dim2), dim, dim)
+    # 2–3 Newton steps
+    @inbounds for _ in 1:3
+        g  = 0.0
+        gp = 0.0
 
-        U0 = spdiagm(0 => exp.(-im .* params.V_Ryd .* t))
-        P_lab = U0 * Pk
-        p_vals_rot[k] = abs(dot(vec(Pk), tv)) / (norm(Pk) * norm(tv))
-        p_vals_lab[k] = abs(dot(vec(P_lab), tv)) / (norm(P_lab) * norm(tv))
-        coset_vals_rot[k] = distance_to_target_coset(Pk, target, params)
-        coset_vals_lab[k] = distance_to_target_coset(P_lab, target, params)
+        for col in 1:size(H0,2)
+            for ptr in H0.colptr[col]:(H0.colptr[col+1]-1)
+                row = H0.rowval[ptr]
+
+                if row < col
+                    Δ = l[col] - l[row]
+                    e = exp(α * Δ)
+                    hij = H0.nzval[ptr]
+                    mji = M[col, row]     
+
+                    term = Δ * e * hij * mji
+                    g  += real(term)
+                    gp += real((Δ*Δ) * e * hij * mji)
+                end
+            end
+        end
+
+        # guard against division by tiny derivative
+        abs(gp) < 1e-14 && break
+        α -= g / gp
     end
 
-    plt = plot(
-        plot(sol.t, [p_vals_rot p_vals_lab];
-            title = "Overlap with target",
-            xlabel = "t",
-            ylabel = "|⟨P(t), target⟩|",
-            label = ["Rot frame" "Lab frame"]
-        ),
-        plot(sol.t, [coset_vals_rot coset_vals_lab];
-            title = "Distance to target coset",
-            xlabel = "t",
-            ylabel = "Coset distance",
-            label = ["Rot frame" "Lab frame"]
-        ),
-        layout = (2, 1),   # 2 rows, 1 column
-        size = (800, 800)
-    )
-    savefig(plt, "$(name)_visualisation.png")
+    params.previous_alpha = α
 
-    return plt
+    H_of_alpha!(params.H_temp, params.H0, params.l, α)
+    return nothing
 end
 
+# function distance_to_target_coset(P_opt::AbstractMatrix, 
+#                                   target::SparseMatrixCSC{float_type, Int}, params::Params)
+#     A_adjoint = adjoint(P_opt) * target  # A = adjoint(U_T) * P_T
+#     a_adj_diag = diag(A_adjoint)
+#     l = params.l
+#     gamma_0 = params.previous_gamma
+
+#     function derivative(gamma) # minimises distance^2
+#         s = 0.0
+#         for i in eachindex(a_adj_diag)
+#             s += real(a_adj_diag[i]*l[i]*exp(gamma * l[i]))
+#         end
+        
+#         return s
+#     end
+    
+#     gamma_opt = fzero(derivative, gamma_0)
+#     params.previous_gamma = gamma_opt
+#     B = spdiagm(exp.(gamma_opt .*l))
+
+#     return norm(adjoint(A_adjoint) - B)
+# end
+
+
+#1D optimisation to obtain distance to target coset
+function distance_to_target_coset(P_opt::AbstractMatrix, 
+                                  target::SparseMatrixCSC{float_type, Int}, params::Params)
+
+    λ = params.l
+    A = adjoint(target) * P_opt
+
+    function cost(alpha::Vector{Float64})
+        alpha = alpha[1]
+        return norm(A - spdiagm(0 => exp.(alpha .* λ)))
+    end
+
+    result = optimize(cost, [0.0], NelderMead())
+    alpha_opt = Optim.minimizer(result)[1]
+    if isnan(alpha_opt)
+        alpha_opt = 0.0
+    end
+    return cost([alpha_opt])
+end
 
 # Coupled ODE system, (P_opt, M)
 # dP_opt/dt = H_opt(t) * P_opt
@@ -209,9 +199,9 @@ function f!(dX, X, params, t)
     dim, dim2 = params.dim, params.dim2
 
     @views P  = reshape(view(X, 1:dim2), dim, dim)
-    @views M  = reshape(view(X, dim2+1:2*dim2), dim, dim)
+    @views M  = reshape(view(X, dim2+1:2dim2), dim, dim)
     @views dP = reshape(view(dX, 1:dim2), dim, dim)
-    @views dM = reshape(view(dX, dim2+1:2*dim2), dim, dim)
+    @views dM = reshape(view(dX, dim2+1:2dim2), dim, dim)
 
     H_opt!(M, params) 
 
@@ -236,39 +226,36 @@ end
 ###############
 # Main function
 function compute_optimal_time(gens::Vector{SparseMatrixCSC{float_type, Int}}, 
-                              target::SparseMatrixCSC{float_type, Int}, params::Params{T}, name::String) where {T}
+                              target::SparseMatrixCSC{float_type, Int}, params::Params, name::String)
     # Note: this function assumes 1 control given as the first generator and 1 drift as the second generator!
     
     # Check if target is implementable and construct the basis of orthogonal complement of control subalgebra
     lie_basis = construct_lie_basis_general(gens)
-    #@assert check_if_implementable(lie_basis, target) "Target is not implementable"  # this is not valid in rotating frame!
+    @assert check_if_implementable(lie_basis, target) "Target is not implementable"
     p_basis = lie_basis[2:end] 
     dim = params.dim
     dim2 = params.dim2
     P0 = spdiagm(0 => ones(float_type, dim))
-    X0 = Vector{T}(undef, 2*params.dim2)
-    X0[1:params.dim2] .= vec(P0)
 
     # Construct a single shoot: obtain geodesic for a given time and initial costate (=momentum)
     function construct_ODE(m::Vector{Float64}, t::Float64, p_basis, params::Params{T}) where {T}
-        M0_sparse = build_M(m, p_basis)
+        m_normalised = m / max(norm(m), 1e-12)
+        M0_sparse = build_M(m_normalised, p_basis)
         M0 = Matrix{T}(M0_sparse)                 
+        P0 = Matrix{T}(I, params.dim, params.dim)
+
+        X0 = Vector{T}(undef, 2*params.dim2)
+        X0[1:params.dim2] .= vec(P0)
         X0[params.dim2+1:end] .= vec(M0)
         ODEProblem(f!, X0, (0.0, t), params)
     end
 
     function distance_at_time(m::Vector{Float64}, t::Float64)
         prob = construct_ODE(m, t, p_basis, params)
-        sol = solve(prob, Tsit5();
-        abstol=1e-5, reltol=1e-5,
-        save_everystep=false, save_start=false
-    )
+        sol = solve(prob, Tsit5(), saveat=t, abstol=1e-4, reltol=1e-4)
         sol.retcode != SciMLBase.ReturnCode.Success && return 1e20
 
         @views P_T = reshape(view(sol.u[end], 1:dim2), dim, dim)
-        # convert to lab frame
-        # U0 = Diagonal(exp.(-im .* params.V_Ryd .* t))
-        # P_lab = U0 * P_T
         return distance_to_target_coset(P_T, target, params)
     end
 
@@ -331,32 +318,25 @@ function compute_optimal_time(gens::Vector{SparseMatrixCSC{float_type, Int}},
         end
     end
 
-    dself = distance_to_target_coset(Matrix(target), target, params)
-    U = Matrix(target)
-    dim = size(U,1)
-    @assert norm(U' * U - I(dim), Inf) == 0 "Target not unitary"
-    @assert dself < params.coset_hard_tol "Target not in target coset within tolerance"
-
     # First local minimum
     m_best = rand(length(p_basis)) .*2 .-1
 
     # M = build_M(m_best, p_basis)
-    # H_opt!(M, params)
+    # l = params.l
     # function Φ(α, H0, l, M)
     #     n = size(H0, 1)
     #     s = 0.0
     #     @inbounds for j in 1:n, i in 1:n
     #         Δ = l[j] - l[i]
-    #         s += real(exp(α * Δ) * H0[i,j] * M[j,i])
+    #         s += real(Δ* exp(α * Δ) * H0[i,j] * M[j,i])
     #     end
     #     return s
     # end
+    # println(m_best)
     # alphas = range(-π/2, π/2; length=200)
-    # vals = [Φ(a, params.H0, params.l, M) for a in alphas]
-    # plt = plot(alphas, vals, xlabel="α", ylabel="Re tr(H(α) M)")
-    # vline!([params.previous_alpha])
-    # savefig(plt, "2_qutrit_optimal_alpha.png")
+    # vals = [Φ(a, params.H0, l, M) for a in alphas]
 
+    # display(plot(alphas, vals, xlabel="α", ylabel="Re tr(H(α) M)"))
     
     t_loc_min, d_loc_min, last_t, m_best = find_local_optimum(params.tmin, m_best)
 
@@ -366,49 +346,45 @@ function compute_optimal_time(gens::Vector{SparseMatrixCSC{float_type, Int}},
 
             if print_intermediate
                 println("Local optimum converged to target coset within tolerance")
+                prob = construct_ODE(m_best, t_loc_min, p_basis, params)
+                sol = solve(prob, Tsit5(), saveat=range(0.0, t_loc_min, length=50), abstol=1e-4, reltol=1e-4)
+                display(plot_optimal_geodesic(sol, gens, target, params, t_loc_min))
             end
             break
         else
             print_intermediate && println("Local optimum $d_loc_min at t = $t_loc_min did not converge to target coset within tolerance of $(params.coset_hard_tol), continuing")
+            # prob = construct_ODE(m_best, t_loc_min, p_basis, params)
+            # sol = solve(prob, Tsit5(), saveat=range(0.0, t_loc_min, length=100), abstol=1e-4, reltol=1e-4)
             println("t=$t_loc_min, d=$d_loc_min")
             prob = construct_ODE(m_best, t_loc_min, p_basis, params)
-            sol = solve(prob, Tsit5(), save_everystep=false, save_start=false, abstol=1e-4, reltol=1e-4)
+            sol = solve(prob, Tsit5(), saveat=range(0.0, t_loc_min, length = 50), abstol=1e-4, reltol=1e-4)
             P = Vector{Matrix{float_type}}(undef, length(sol.u))
+            # M = Vector{Matrix{float_type}}(undef, length(sol.u))
             for (k, u) in pairs(sol.u)
                 P[k] = reshape(view(u, 1:dim2), dim, dim)
+                # M[k] = reshape(view(u, dim2+1:2*dim2), dim, dim)
             end
-            println("P_rot:")
             display(P[end])
-            U0 = spdiagm(0 => exp.(-im .* params.V_Ryd .* sol.t[end]))
-            println("P_lab:")
-            display(U0 * P[end])
             t_loc_min, d_loc_min, last_t, m_best = find_local_optimum(last_t * Δ, m_best)
         end
 
         if last_t >= params.tmax
             prob = construct_ODE(m_best, t_loc_min, p_basis, params)
             sol = solve(prob, Tsit5(), saveat=range(0.0, t_loc_min, length=100), abstol=1e-4, reltol=1e-4)
-            P = Vector{Matrix{float_type}}(undef, length(sol.u))
+            P = Vector{Matrix{Float64}}(undef, length(sol.u))
+            M = Vector{Matrix{Float64}}(undef, length(sol.u))
             for (k, u) in pairs(sol.u)
                 @views P[k] = reshape(view(u, 1:dim2), dim, dim)
+                @views M[k] = reshape(view(u, dim2:2*dim2), dim, dim)
             end
-            display(plot_results(sol, target, params, name))
-            return P
-            error("No local optimum converged to target coset within tolerance up to tmax = $(params.tmax)")
+            display(plot_p_inner_target(sol, target, params, name))
+            println("No local optimum converged to target coset within tolerance up to tmax = $(params.tmax)")
         end
     end
 
     print_intermediate && println("Optimal time: $(t_loc_min/pi) π, distance to target coset: $d_loc_min")
     prob = construct_ODE(m_best, t_loc_min, p_basis, params)
-    sol = solve(prob, Tsit5(), saveat=range(0.0, t_loc_min, length=50), abstol=1e-4, reltol=1e-4)
-    display(plot_results(sol, target, params, name))
-    #display(plot_optimal_geodesic(sol, gens, target, params, t_loc_min))
-    P = Vector{Matrix{float_type}}(undef, length(sol.u))
-    for (k, u) in pairs(sol.u)
-        @views P[k] = reshape(view(u, 1:dim2), dim, dim)
-    end
-    println("P_rot:")
-    display(P[end])
-    return P
+    sol = solve(prob, Tsit5(), saveat=range(0.0, t_loc_min, length=100), abstol=1e-4, reltol=1e-4)
+    display(plot_p_inner_target(sol, target, params, name))
 
 end
