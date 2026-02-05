@@ -5,11 +5,34 @@ include("lie_algebra.jl")
 include("time_optimal_solver.jl")
 
 # General parameters
-tmin = 0.1*2*pi
-tmax = 2*2*pi
+tmin = 0.2*2*pi
+tmax = 1.5*2*pi
 print_intermediate = true
 coset_hard_tol = 1e-4
 turning_point_factor = 1.1
+
+function make_params(lie_basis::Vector{SparseMatrixCSC{T,Int}}, V_Ryd::SparseMatrixCSC{T, Int};
+                     tmin::Float64, tmax::Float64,
+                     turning_point_factor::Float64,
+                     coset_hard_tol::Float64,
+                     print_intermediate::Bool=false,
+                     previous_alpha::Float64=0.0,
+                     previous_gamma::Float64=0.0) where {T}
+
+    dim = size(lie_basis[1], 1)
+    @assert size(lie_basis[1],2) == dim "H0 must be square"
+
+    H_temp = copy(lie_basis[2])        
+    tmp1   = Matrix{T}(undef, dim, dim)
+    tmp2   = Matrix{T}(undef, dim, dim)
+
+    return Params{T}(lie_basis[2], Vector(diag(lie_basis[1])), lie_basis[2:end], Vector(diag(V_Ryd)), tmin, tmax,
+                     turning_point_factor, coset_hard_tol,
+                     print_intermediate, previous_alpha, previous_gamma,
+                     dim,
+                     H_temp, tmp1, tmp2)
+end
+
 
 ########################################################
 # One qubit example
@@ -22,22 +45,22 @@ function one_qubit_example()
     Z = operator(Zop([1]), n_qubits)
     gens = [Z, X]
 
-    target = -1im * operator(Yop([1]), n_qubits)
+    target = -im * operator(Yop([1]), n_qubits)
 
     # convert target from lab to rotating frame
     positions = [0 0]
-    V_Ryd = construct_rydberg_drift(positions; n_levels)
+    V_Ryd = construct_rydberg_drift(positions, n_levels)
 
+    # Check if target is implementable and construct the basis of orthogonal complement of control subalgebra
+    lie_basis = construct_lie_basis_general(gens)
+    @assert check_if_implementable(lie_basis, target) "Target is not implementable"  # this is not valid in rotating frame!
+    display(lie_basis[1])
+    display(-im*gens[1])
     # Params
-    params = make_params(-im*X, Vector(-im*diag(Z)), V_Ryd,
-        tmin=tmin, tmax=tmax,
-        turning_point_factor=turning_point_factor,
-        coset_hard_tol=coset_hard_tol,
-        print_intermediate=true
-    )
+    params = make_params(lie_basis, V_Ryd; tmin, tmax, turning_point_factor, coset_hard_tol, print_intermediate)
 
     print_intermediate && println("=== One qubit example ===")
-    P = compute_optimal_time(gens, target, params, "1_qubit")
+    P = compute_optimal_time(target, params, "1_qubit")
 end
 
 ########################################################
@@ -53,28 +76,61 @@ function two_qutrit_example()
 
     # convert target from lab to rotating frame
     positions = [0 0; 0 1]
-    V_Ryd = construct_rydberg_drift(positions; n_levels)
+    V_Ryd = construct_rydberg_drift(positions, n_levels)
     # U_Ryd = exp(-im*Matrix(V_Ryd)*pi)
     # target = sparse(adjoint(U_Ryd) * target)
     #display(target)
     display(V_Ryd)
 
+    # Check if target is implementable and construct the basis of orthogonal complement of control subalgebra
+    lie_basis = construct_lie_basis_general(gens)
+    @assert check_if_implementable(lie_basis, target) "Target is not implementable"  # this is not valid in rotating frame!
+
     # Params
-    params = make_params(-im*gens[2], Vector(-im*diag(gens[1])), V_Ryd, 
-        tmin=tmin, tmax=tmax,
-        turning_point_factor=turning_point_factor,
-        coset_hard_tol=coset_hard_tol,
-        print_intermediate=true
-    )
+    params = make_params(lie_basis, V_Ryd; tmin, tmax, turning_point_factor, coset_hard_tol, print_intermediate)
+
 
     println("=== Two qutrit example ===")
-    P = compute_optimal_time(gens, target, params, "2_qutrit")
+    P = compute_optimal_time(target, params, "2_qutrit")
+end
+
+########################################################
+# Two qutrit example
+function two_qubit_example()
+    n_levels = 2
+    n_qubits = 2
+
+    # Generators and target
+    drift = operator(Xop([1, 2]), n_qubits)
+    control = operator(Zop([1]), n_qubits) + operator(Zop([2]), n_qubits)
+
+    gens = [control, drift]
+    target = construct_CZ_target(n_qubits, n_levels)  # lab frame
+
+    # convert target from lab to rotating frame
+    positions = [0 0; 0 1]
+    V_Ryd = construct_rydberg_drift(positions, n_levels)
+    # U_Ryd = exp(-im*Matrix(V_Ryd)*pi)
+    # target = sparse(adjoint(U_Ryd) * target)
+    #display(target)
+    # Check if target is implementable and construct the basis of orthogonal complement of control subalgebra
+    lie_basis = construct_lie_basis_general(gens)
+    @assert check_if_implementable(lie_basis, target) "Target is not implementable"  # this is not valid in rotating frame!
+
+    # Params
+    params = make_params(lie_basis, V_Ryd; tmin, tmax, turning_point_factor, coset_hard_tol, print_intermediate)
+
+    println("=== Two qubit example ===")
+    P = compute_optimal_time(target, params, "2_qubit")
+    return nothing
 end
 
 ########################################################
 # Run examples
 P1 = one_qubit_example()
-P2 = two_qutrit_example()
+# P2 = two_qutrit_example()
+#one_qubit_example()
+#two_qubit_example()
 
 # n_qubits = 1
 # X = operator(Xop([1]), n_qubits)

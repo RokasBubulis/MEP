@@ -8,7 +8,8 @@ include("plot_geodesics.jl")
 mutable struct Params{T}
     H0::SparseMatrixCSC{T, Int}
     l::Vector{T}
-    V_Ryd::SparseVector{T}
+    p_basis::Vector{SparseMatrixCSC{T, Int}}
+    V_Ryd::Vector{T}
     tmin::Float64
     tmax::Float64
     turning_point_factor::Float64
@@ -17,37 +18,12 @@ mutable struct Params{T}
     previous_alpha::Float64
     previous_gamma::Float64
     dim::Int
-    dim2::Int
 
     H_temp::SparseMatrixCSC{T, Int}  
 
     tmp1::Matrix{T}                  
     tmp2::Matrix{T}              
 end
-
-function make_params(H0::SparseMatrixCSC{T,Int}, l::Vector{T}, V_Ryd::SparseMatrixCSC{T, Int};
-                     tmin::Float64, tmax::Float64,
-                     turning_point_factor::Float64,
-                     coset_hard_tol::Float64,
-                     print_intermediate::Bool=false,
-                     previous_alpha::Float64=0.0,
-                     previous_gamma::Float64=0.0) where {T}
-
-    dim = size(H0, 1)
-    @assert size(H0,2) == dim "H0 must be square"
-    dim2 = dim*dim
-
-    H_temp = copy(H0)        
-    tmp1   = Matrix{T}(undef, dim, dim)
-    tmp2   = Matrix{T}(undef, dim, dim)
-
-    return Params{T}(H0, l, Vector(diag(V_Ryd)), tmin, tmax,
-                     turning_point_factor, coset_hard_tol,
-                     print_intermediate, previous_alpha, previous_gamma,
-                     dim, dim2,
-                     H_temp, tmp1, tmp2)
-end
-
 
 function H_of_alpha!(H_of_alpha::SparseMatrixCSC, H0::SparseMatrixCSC, l::Vector, alpha::Float64)
     @inbounds for col in 1:size(H0,2)
@@ -137,7 +113,7 @@ function distance_to_target_coset(P_opt::AbstractMatrix,
 
     @inline function distance(gamma::Float64)
         d = exp.(gamma .* l)     
-        return sqrt(normA + sum(abs2, d) - 2 * real(dot(conj(a), d)))
+        return sqrt(normA + sum(abs2, d) - 2 * real(dot(a, d)))
     end
 
     result = optimize(distance, -pi, pi)
@@ -154,6 +130,8 @@ function plot_results(sol, target, params, name)
     coset_vals_lab = Vector{Float64}(undef, length(sol.u))
     tv = vec(target)
 
+    label = nothing
+    Plab_best = nothing
     for k in eachindex(sol.u)
         u = sol.u[k]
         t = sol.t[k]
@@ -166,7 +144,23 @@ function plot_results(sol, target, params, name)
         p_vals_lab[k] = abs(dot(vec(P_lab), tv)) / (norm(P_lab) * norm(tv))
         coset_vals_rot[k] = distance_to_target_coset(Pk, target, params)
         coset_vals_lab[k] = distance_to_target_coset(P_lab, target, params)
+        if coset_vals_lab[k] < 0.1
+            label = k
+            Plab_best = P_lab
+        end 
+        if abs( 1- p_vals_rot[k]) < 0.1
+
+            A1 = P_lab * target'
+            A2 = target' * P_lab
+
+            off1 = norm(A1 - Diagonal(diag(A1)))
+            off2 = norm(A2 - Diagonal(diag(A2)))
+
+            println(off1, off2)
+        end
     end
+    println("Closest time: $(sol.t[label]), distance: $(coset_vals_lab[label])")
+    display(Plab_best)
 
     plt = plot(
         plot(sol.t, [p_vals_rot p_vals_lab];
@@ -206,7 +200,8 @@ function br!(dM::StridedMatrix, H::SparseMatrixCSC, M::StridedMatrix, params)
 end
 
 function f!(dX, X, params, t)
-    dim, dim2 = params.dim, params.dim2
+    dim = params.dim
+    dim2 = dim^2
 
     @views P  = reshape(view(X, 1:dim2), dim, dim)
     @views M  = reshape(view(X, dim2+1:2*dim2), dim, dim)
@@ -235,26 +230,21 @@ end
 
 ###############
 # Main function
-function compute_optimal_time(gens::Vector{SparseMatrixCSC{float_type, Int}}, 
-                              target::SparseMatrixCSC{float_type, Int}, params::Params{T}, name::String) where {T}
+function compute_optimal_time(target::SparseMatrixCSC{float_type, Int}, params::Params{T}, name::String) where {T}
     # Note: this function assumes 1 control given as the first generator and 1 drift as the second generator!
-    
-    # Check if target is implementable and construct the basis of orthogonal complement of control subalgebra
-    lie_basis = construct_lie_basis_general(gens)
-    #@assert check_if_implementable(lie_basis, target) "Target is not implementable"  # this is not valid in rotating frame!
-    p_basis = lie_basis[2:end] 
+    p_basis = params.p_basis
     dim = params.dim
-    dim2 = params.dim2
+    dim2 = dim^2
     P0 = spdiagm(0 => ones(float_type, dim))
-    X0 = Vector{T}(undef, 2*params.dim2)
-    X0[1:params.dim2] .= vec(P0)
+    X0 = Vector{T}(undef, 2*dim2)
+    X0[1:dim2] .= vec(P0)
 
     # Construct a single shoot: obtain geodesic for a given time and initial costate (=momentum)
     function construct_ODE(m::Vector{Float64}, t::Float64, p_basis, params::Params{T}) where {T}
         M0_sparse = build_M(m, p_basis)
         M0 = Matrix{T}(M0_sparse)                 
-        X0[params.dim2+1:end] .= vec(M0)
-        ODEProblem(f!, X0, (0.0, t), params)
+        X0[dim2+1:end] .= vec(M0)
+        ODEProblem(f!, copy(X0), (0.0, t), params)
     end
 
     function distance_at_time(m::Vector{Float64}, t::Float64)
@@ -267,14 +257,14 @@ function compute_optimal_time(gens::Vector{SparseMatrixCSC{float_type, Int}},
 
         @views P_T = reshape(view(sol.u[end], 1:dim2), dim, dim)
         # convert to lab frame
-        # U0 = Diagonal(exp.(-im .* params.V_Ryd .* t))
-        # P_lab = U0 * P_T
-        return distance_to_target_coset(P_T, target, params)
+        U0 = Diagonal(exp.(-im .* params.V_Ryd .* t))
+        P_lab = U0 * P_T
+        return distance_to_target_coset(P_lab, target, params)
     end
 
     function optimize_m_for_time(t, m0)
         obj(m) = distance_at_time(m, t)
-        res = optimize(obj, m0, NelderMead(), Optim.Options(iterations = 30))
+        res = optimize(obj, m0, NelderMead(), Optim.Options(iterations = 1000))
         m_best = Optim.minimizer(res)
         dist_best = distance_at_time(m_best, t)
         return dist_best, m_best, res
@@ -321,7 +311,7 @@ function compute_optimal_time(gens::Vector{SparseMatrixCSC{float_type, Int}},
                 d, m, _ = optimize_m_for_time(t, m_best)
                 d
             end
-            res = optimize(φ, t_left, t_right, Brent(); iterations = 50, rel_tol = 1e-5, abs_tol = 1e-5)
+            res = optimize(φ, t_left, t_right, Brent(); iterations = 500, rel_tol = 1e-8, abs_tol = 1e-8)
 
             t_star = Optim.minimizer(res)
             d_star = Optim.minimum(res)
@@ -334,7 +324,7 @@ function compute_optimal_time(gens::Vector{SparseMatrixCSC{float_type, Int}},
     dself = distance_to_target_coset(Matrix(target), target, params)
     U = Matrix(target)
     dim = size(U,1)
-    @assert norm(U' * U - I(dim), Inf) == 0 "Target not unitary"
+    @assert norm(U' * U - I(dim), Inf) ≤ 1e-10 "Target not unitary"
     @assert dself < params.coset_hard_tol "Target not in target coset within tolerance"
 
     # First local minimum
@@ -355,7 +345,7 @@ function compute_optimal_time(gens::Vector{SparseMatrixCSC{float_type, Int}},
     # vals = [Φ(a, params.H0, params.l, M) for a in alphas]
     # plt = plot(alphas, vals, xlabel="α", ylabel="Re tr(H(α) M)")
     # vline!([params.previous_alpha])
-    # savefig(plt, "2_qutrit_optimal_alpha.png")
+    # savefig(plt, "$(name)_optimal_alpha.png")
 
     
     t_loc_min, d_loc_min, last_t, m_best = find_local_optimum(params.tmin, m_best)
@@ -372,7 +362,7 @@ function compute_optimal_time(gens::Vector{SparseMatrixCSC{float_type, Int}},
             print_intermediate && println("Local optimum $d_loc_min at t = $t_loc_min did not converge to target coset within tolerance of $(params.coset_hard_tol), continuing")
             println("t=$t_loc_min, d=$d_loc_min")
             prob = construct_ODE(m_best, t_loc_min, p_basis, params)
-            sol = solve(prob, Tsit5(), save_everystep=false, save_start=false, abstol=1e-4, reltol=1e-4)
+            sol = solve(prob, Tsit5(), save_everystep=false, save_start=false, abstol=1e-8, reltol=1e-8)
             P = Vector{Matrix{float_type}}(undef, length(sol.u))
             for (k, u) in pairs(sol.u)
                 P[k] = reshape(view(u, 1:dim2), dim, dim)
@@ -387,13 +377,12 @@ function compute_optimal_time(gens::Vector{SparseMatrixCSC{float_type, Int}},
 
         if last_t >= params.tmax
             prob = construct_ODE(m_best, t_loc_min, p_basis, params)
-            sol = solve(prob, Tsit5(), saveat=range(0.0, t_loc_min, length=100), abstol=1e-4, reltol=1e-4)
+            sol = solve(prob, Tsit5(), saveat=range(0.0, t_loc_min, length=1000), abstol=1e-9, reltol=1e-9)
             P = Vector{Matrix{float_type}}(undef, length(sol.u))
             for (k, u) in pairs(sol.u)
                 @views P[k] = reshape(view(u, 1:dim2), dim, dim)
             end
             display(plot_results(sol, target, params, name))
-            return P
             error("No local optimum converged to target coset within tolerance up to tmax = $(params.tmax)")
         end
     end

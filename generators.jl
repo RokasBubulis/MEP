@@ -147,7 +147,7 @@ function construct_coupled_spin_generators(n_qubits::Int)
 end
 
 N_LEVELS = 3
-function construct_rydberg_drift(positions::AbstractMatrix{<:Real}; C=100, p=6, n_levels = N_LEVELS)
+function construct_rydberg_drift(positions::AbstractMatrix{<:Real}, n_levels::Int; C=100, p=6)
     """
     positions: row per atom
     """

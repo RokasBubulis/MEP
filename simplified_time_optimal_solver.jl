@@ -1,0 +1,265 @@
+using DifferentialEquations, Optim, Roots, LinearAlgebra, Plots, CMAEvolutionStrategy
+
+include("generators.jl")
+include("lie_algebra.jl")
+include("group_implementability.jl")
+
+T = float_type
+
+mutable struct  Params{T}
+    drift:: SparseMatrixCSC{T, Int}
+    diag_control::Vector{T}
+    V_Ryd::Vector{T}
+    tmin::Float64
+    tmax::Float64
+    time_coeff::Float64
+    coset_tol::Float64
+    abs_tol::Float64
+    rel_tol::Float64
+    dim::Int
+    H_alpha::Matrix{T}
+    tmp1::Matrix{T}
+    tmp2::Matrix{T}
+end
+
+function H_α!(H_α::AbstractMatrix, drift:: AbstractMatrix, diag_control::Vector, α::Float64)
+    n = size(drift, 1)
+    @inbounds for i in 1:n, j in 1:n
+        H_α[i,j] = drift[i,j] * exp(α * (diag_control[j] - diag_control[i]))
+    end
+    return nothing
+end
+
+function H_optimal!(M::AbstractMatrix, params::Params)
+    drift, l = params.drift, params.diag_control
+    n = size(drift, 1)
+
+    function f(x)
+        α = x[1]
+        func = 0.0
+        @inbounds for i in 1:n, j in 1:n
+            Δ = l[j] - l[i]
+            e = exp(α * Δ)
+            z = drift[i,j] * M[j,i]
+            func += real(e*z)
+        end
+
+        return -func
+    end
+
+    function g!(G, x)
+        α = x[1]
+        grad = 0.0
+        @inbounds for i in 1:n, j in 1:n
+            Δ = l[j] - l[i]
+            e = exp(α * Δ)
+            z = drift[i,j] * M[j,i]
+            grad += real(Δ * e * z)
+        end
+        G[1] = -grad
+        return nothing
+    end 
+
+    res = optimize(f, g!, [-2*pi], [2*pi], [0.0], Fminbox(BFGS()))
+    α_opt = Optim.minimizer(res)[1]
+    H_α!(params.H_alpha, drift, l, α_opt)
+    return nothing
+end
+
+function distance_to_target_coset(P_opt::AbstractMatrix,
+                                  target::SparseMatrixCSC{float_type, Int},
+                                  params::Params)
+
+    l = params.diag_control
+    A = P_opt * adjoint(target)
+    normA = sum(abs2, A)          
+    a  = diag(A)                     
+
+    @inline function distance(gamma::Float64)
+        d = exp.(gamma .* l)     
+        return sqrt(normA + sum(abs2, d) - 2 * real(dot(a, d)))
+    end
+
+    result = optimize(distance, -pi, pi)
+    gamma_opt = Optim.minimizer(result)
+    return distance(gamma_opt)
+end
+
+function br!(dM, H, M, params)
+    mul!(params.tmp1, H, M)
+    mul!(params.tmp2, M, H)
+    @. dM = params.tmp1 - params.tmp2
+    return nothing 
+end
+
+function f!(dX, X, params, t)
+    dim = params.dim
+    dim2 = dim ^ 2
+
+    @views P = reshape(view(X, 1:dim2), dim, dim)
+    @views M = reshape(view(X, dim2 + 1: 2*dim2), dim, dim)
+    @views dP = reshape(view(dX, 1:dim2), dim, dim)
+    @views dM = reshape(view(dX, dim2 + 1: 2*dim2), dim, dim)
+
+    H_optimal!(M, params)
+    mul!(dP, params.H_alpha, P)
+    br!(dM, params.H_alpha, M, params)
+
+    return nothing
+end
+
+function build_M!(M::AbstractMatrix{T}, m::AbstractVector{Float64}, p_basis::Vector{SparseMatrixCSC{T, Int}})
+    fill!(M, zero(T))
+    for (i, m_coeff) in enumerate(m)
+        M .+= m_coeff * p_basis[i]
+    end
+    return nothing
+end 
+
+#########################################
+
+function main_function()
+    # Settings
+    tmin = 1 * pi
+    tmax = 5 * pi
+    time_coeff = 1e-1
+    coset_tol = 1e-6
+    abs_tol = 1e-6
+    rel_tol = 1e-6
+
+    n_saves = 1000
+
+    # One qubit case
+    # n_qubits = 1
+    # n_levels = 2
+    # drift = operator(Xop([1]), n_qubits)
+    # control = operator(Zop([1]), n_qubits)
+    # target = -im* operator(Yop([1]), n_qubits)
+    # positions = [0 0]
+
+    # Two qubit case
+    n_qubits = 2
+    n_levels = 2
+    drift = operator(Xop([1, 2]), n_qubits)
+    control = operator(Zop([1]), n_qubits) + operator(Zop([2]), n_qubits)
+    target = construct_CZ_target(n_qubits, n_levels)
+    positions = [0 0; 0 1]
+
+    # # Two qutrit case
+    # n_qubits = 2
+    # n_levels = 3
+    # control, drift = construct_Ryd_generators(n_qubits)
+    # target = construct_CZ_target(n_qubits, n_levels)
+    # positions = [0 0; 0 1]
+
+    # example of passing implementability for 2 qubits
+    # control1 = operator(Zop([1]), n_qubits)
+    # control2 = operator(Zop([2]), n_qubits)
+    # control3 = operator(Xop([1]), n_qubits)
+    # control4 = operator(Xop([2]), n_qubits)
+    # gens1 = [control1, control2, control3, control4, drift]
+    # lie_basis1 = construct_lie_basis_general(gens1)
+    # @assert check_group_implementability(target, lie_basis1) "Single qubits dont work either"
+
+    ##############################
+    gens = [control, drift]
+    dim = size(gens[1], 1)
+    V_Ryd = construct_rydberg_drift(positions, n_levels)
+    lie_basis = construct_lie_basis_general(gens)
+    @assert check_group_implementability(target, lie_basis) "Target is not implementable with given generators"
+    params = Params(
+        -im*drift,  # normalise for 1 qubit?
+        Vector(diag(-im*control)),
+        Vector(diag(V_Ryd)),
+        tmin,
+        tmax,
+        time_coeff,
+        coset_tol,
+        abs_tol,
+        rel_tol,
+        dim,
+        Matrix{T}(undef, dim, dim),
+        Matrix{T}(undef, dim, dim),        
+        Matrix{T}(undef, dim, dim)       
+    )
+
+    p_basis = lie_basis[2:end] # exclude control subalgebra from orthogonal complement
+    M0 = zeros(ComplexF64, size(p_basis[1])...)
+
+    dself = distance_to_target_coset(Matrix(target), target, params)
+    U = Matrix(target)
+    @assert norm(U' * U - I(dim), Inf) ≤ 1e-10 "Target not unitary"
+    @assert dself < params.coset_tol "Target not in target coset within tolerance"
+
+    function single_shoot(m)
+        X0 = zeros(T, 2*dim^2)
+        @views P0 = reshape(view(X0, 1:dim^2), dim, dim)
+        copyto!(P0, I)
+        build_M!(M0, m, p_basis)
+        @views reshape(X0[dim^2 + 1: 2*dim^2], dim, dim) .= M0
+
+        prob = ODEProblem(f!, X0, (0.0, params.tmax), params)
+        sol = solve(prob, Tsit5(); abstol=params.abs_tol, reltol=params.rel_tol,
+        saveat=range(0.0, params.tmax, length=n_saves))
+        return sol
+    end
+
+    function distance_at_time(t, sol)
+        Xt = sol(t)
+        @views P_rot = reshape(view(Xt, 1:dim^2), dim, dim)
+        return distance_to_target_coset(P_rot, target, params)
+    end
+
+    function distance_at_time_lab(t, sol)
+        Xt = sol(t)
+        @views P_rot = reshape(view(Xt, 1:dim^2), dim, dim)
+        U0 = spdiagm(0 => exp.(-im .* params.V_Ryd .* t))
+        P_lab = U0 * P_rot
+        return distance_to_target_coset(P_lab, target, params)
+    end
+
+    function evaluate_single_shoot(sol)
+        func(t) = distance_at_time_lab(t, sol)
+        res = optimize(func, params.tmin, params.tmax)
+        dmin, tstar = Optim.minimum(res), Optim.minimizer(res)
+        return dmin, tstar
+    end
+
+    function objective(m)
+        sol = single_shoot(m)
+        dmin, tstar = evaluate_single_shoot(sol)
+        return dmin + params.time_coeff * tstar
+    end
+
+    m0 = randn(length(p_basis))
+    result = minimize(objective, m0, 0.3; maxiter=10, verbosity=1)
+    m_best = xbest(result)
+    sol_best = single_shoot(m_best)
+    dmin, tstar = evaluate_single_shoot(sol_best)
+
+    ustar = sol_best(tstar)
+    P_rot_best = reshape(view(ustar, 1:dim^2), dim, dim)
+
+    println("Best m0: $m_best, min distance: $dmin, time (in π): $(tstar/pi)")
+    println("Propagator in rot frame at tstar:")
+    U0 = spdiagm(0 => exp.(-im .* params.V_Ryd .* tstar))
+    display(P_rot_best)
+    println("Rotating transformation at tstar")
+    display(U0)
+    println("Propagator in lab frame at tstar")
+    display(U0 * P_rot_best)
+    ts = range(params.tmin, params.tmax; length=n_saves)
+    ds_rot = [distance_at_time(t, sol_best) for t in ts]
+    ds_lab = [distance_at_time_lab(t, sol_best) for t in ts]
+    p = plot(ts/pi, ds_rot, label="Rot")
+    plot!(p, ts/pi, ds_lab, label="Lab")
+    xlabel!(p, "Time in π")
+    ylabel!(p, "Distance to target coset")
+    display(p)
+end
+
+main_function()
+
+
+
+

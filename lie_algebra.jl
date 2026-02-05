@@ -54,7 +54,7 @@ end
 
 function construct_lie_basis_general(generators::Vector{SparseMatrixCSC{float_type, Int}}; depth = 10)
     basis_elements = SparseMatrixCSC{float_type,Int}[]
-    gens = [im * g for g in generators]
+    gens = [-im * g for g in generators]
     for g in gens
         try_add_orthonormal!(basis_elements, g)
     end
