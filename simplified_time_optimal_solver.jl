@@ -9,13 +9,13 @@ T = float_type
 mutable struct  Params{T}
     drift:: SparseMatrixCSC{T, Int}
     diag_control::Vector{T}
-    V_Ryd::Vector{T}
     tmin::Float64
     tmax::Float64
     time_coeff::Float64
     coset_tol::Float64
     abs_tol::Float64
     rel_tol::Float64
+    beta::Float64
     dim::Int
     H_alpha::Matrix{T}
     tmp1::Matrix{T}
@@ -60,7 +60,7 @@ function H_optimal!(M::AbstractMatrix, params::Params)
         return nothing
     end 
 
-    res = optimize(f, g!, [-2*pi], [2*pi], [0.0], Fminbox(BFGS()))
+    res = optimize(f, g!, [-Float64(π/2)], [Float64(π/2)], [0.0], Fminbox(BFGS()))
     α_opt = Optim.minimizer(res)[1]
     H_α!(params.H_alpha, drift, l, α_opt)
     return nothing
@@ -120,12 +120,13 @@ end
 
 function main_function()
     # Settings
-    tmin = 1 * pi
+    tmin = 0.1
     tmax = 5 * pi
     time_coeff = 1e-1
     coset_tol = 1e-6
     abs_tol = 1e-6
     rel_tol = 1e-6
+    beta = 5.0
 
     n_saves = 1000
 
@@ -135,48 +136,55 @@ function main_function()
     # drift = operator(Xop([1]), n_qubits)
     # control = operator(Zop([1]), n_qubits)
     # target = -im* operator(Yop([1]), n_qubits)
-    # positions = [0 0]
 
-    # Two qubit case
-    n_qubits = 2
-    n_levels = 2
-    drift = operator(Xop([1, 2]), n_qubits)
-    control = operator(Zop([1]), n_qubits) + operator(Zop([2]), n_qubits)
-    target = construct_CZ_target(n_qubits, n_levels)
-    positions = [0 0; 0 1]
-
-    # # Two qutrit case
+    # # Two qubit case
     # n_qubits = 2
-    # n_levels = 3
-    # control, drift = construct_Ryd_generators(n_qubits)
+    # n_levels = 2
+    # drift = operator(Xop([1, 2]), n_qubits)
+    # control = operator(Zop([1]), n_qubits) + operator(Zop([2]), n_qubits)
     # target = construct_CZ_target(n_qubits, n_levels)
     # positions = [0 0; 0 1]
 
-    # example of passing implementability for 2 qubits
-    # control1 = operator(Zop([1]), n_qubits)
-    # control2 = operator(Zop([2]), n_qubits)
-    # control3 = operator(Xop([1]), n_qubits)
-    # control4 = operator(Xop([2]), n_qubits)
-    # gens1 = [control1, control2, control3, control4, drift]
-    # lie_basis1 = construct_lie_basis_general(gens1)
-    # @assert check_group_implementability(target, lie_basis1) "Single qubits dont work either"
+    function construct_YQ_target(n_qubits::Int)
+        A = spzeros(float_type, 3^n_qubits, 3^n_qubits)
+        for i in 1:n_qubits
+            Qnot = sparse(Matrix{float_type}(I, 3^n_qubits, 3^n_qubits))
+            for j in 1:n_qubits
+                if j != i 
+                    Qnot *= operator(QopRyd([j]), n_qubits)
+                end
+            end
+            A += operator(ZopRyd([i]), n_qubits) * Qnot
+        end
+        return A
+    end
+
+    # Two qutrit case
+    n_qubits = 2
+    n_levels = 3
+    control, drift = construct_Ryd_generators(n_qubits)
+    target = sparse(exp(-im*Matrix(construct_YQ_target(n_qubits))))
+    # target = sparse(exp(-im*Matrix(drift)))
+    display(target)
+    # target = construct_CZ_target(n_qubits, n_levels)  # only for two qutrits
+    # target = operator(YopRyd([1]), n_qubits) + operator(YopRyd([2]), n_qubits)
 
     ##############################
     gens = [control, drift]
     dim = size(gens[1], 1)
-    V_Ryd = construct_rydberg_drift(positions, n_levels)
     lie_basis = construct_lie_basis_general(gens)
-    @assert check_group_implementability(target, lie_basis) "Target is not implementable with given generators"
+    
+    #@assert check_group_implementability(target, lie_basis) "Target is not implementable with given generators"
     params = Params(
-        -im*drift,  # normalise for 1 qubit?
-        Vector(diag(-im*control)),
-        Vector(diag(V_Ryd)),
+        -im*drift,
+        -im*Vector(diag(control)),
         tmin,
         tmax,
         time_coeff,
         coset_tol,
         abs_tol,
         rel_tol,
+        beta,
         dim,
         Matrix{T}(undef, dim, dim),
         Matrix{T}(undef, dim, dim),        
@@ -210,52 +218,55 @@ function main_function()
         return distance_to_target_coset(P_rot, target, params)
     end
 
-    function distance_at_time_lab(t, sol)
-        Xt = sol(t)
-        @views P_rot = reshape(view(Xt, 1:dim^2), dim, dim)
-        U0 = spdiagm(0 => exp.(-im .* params.V_Ryd .* t))
-        P_lab = U0 * P_rot
-        return distance_to_target_coset(P_lab, target, params)
-    end
+    function evaluate_single_shoot(sol, params)
+        
+        # func(t) = distance_at_time(t, sol)
+        # res = optimize(func, params.tmin, params.tmax)
+        # dmin, tstar = Optim.minimum(res), Optim.minimizer(res)
 
-    function evaluate_single_shoot(sol)
-        func(t) = distance_at_time_lab(t, sol)
-        res = optimize(func, params.tmin, params.tmax)
-        dmin, tstar = Optim.minimum(res), Optim.minimizer(res)
+        ts = range(params.tmin, params.tmax, n_saves)
+        vals = [distance_at_time(t, sol) for t in ts]
+        dmin = minimum(vals)
+        tstar = ts[argmin(vals)]
+
         return dmin, tstar
     end
 
     function objective(m)
+        
         sol = single_shoot(m)
-        dmin, tstar = evaluate_single_shoot(sol)
+        dmin, tstar = evaluate_single_shoot(sol, params)
+    # function objective(m)
+    #     sol = single_shoot(m)
+    #     ts = range(params.tmin, params.tmax, n_saves)
+    #     vals = [distance_at_time(t, sol) for t in ts]
+    #     J = sum(exp.(-params.beta * vals)) / length(vals)
+    #     return -log(J)/params.beta
+    # end
         return dmin + params.time_coeff * tstar
     end
 
     m0 = randn(length(p_basis))
-    result = minimize(objective, m0, 0.3; maxiter=10, verbosity=1)
+    result =minimize(objective, m0, 0.5; maxiter=50, verbosity=1)
     m_best = xbest(result)
     sol_best = single_shoot(m_best)
-    dmin, tstar = evaluate_single_shoot(sol_best)
+    dmin, tstar = evaluate_single_shoot(sol_best, params)
 
     ustar = sol_best(tstar)
     P_rot_best = reshape(view(ustar, 1:dim^2), dim, dim)
 
     println("Best m0: $m_best, min distance: $dmin, time (in π): $(tstar/pi)")
+    # println("Propagator in rot frame at t=0:")
+    # display(reshape(view(sol_best(0), 1:dim^2), dim, dim))
     println("Propagator in rot frame at tstar:")
-    U0 = spdiagm(0 => exp.(-im .* params.V_Ryd .* tstar))
     display(P_rot_best)
-    println("Rotating transformation at tstar")
-    display(U0)
-    println("Propagator in lab frame at tstar")
-    display(U0 * P_rot_best)
     ts = range(params.tmin, params.tmax; length=n_saves)
     ds_rot = [distance_at_time(t, sol_best) for t in ts]
-    ds_lab = [distance_at_time_lab(t, sol_best) for t in ts]
     p = plot(ts/pi, ds_rot, label="Rot")
-    plot!(p, ts/pi, ds_lab, label="Lab")
     xlabel!(p, "Time in π")
     ylabel!(p, "Distance to target coset")
     display(p)
+    savefig(p, "Two qutrit best.png")
 end
 
 main_function()
