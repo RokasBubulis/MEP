@@ -49,6 +49,7 @@ function H_optimal!(M::AbstractMatrix, params::Params)
         return -func
     end
 
+    # Check derivative numerically! g(x) ≃ (f(x+dt) - f(x-dt)) / (2 dt)
     function g!(G, x)
         α = x[1]
         grad = 0.0
