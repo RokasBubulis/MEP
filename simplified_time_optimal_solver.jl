@@ -7,11 +7,11 @@ include("group_implementability.jl")
 T = float_type
 
 mutable struct  Params{T}
-    drift:: SparseMatrixCSC{T, Int}
-    diag_control::Vector{T}
-    tmin::Float64
-    tmax::Float64
-    time_coeff::Float64
+    drift:: SparseMatrixCSC{T, Int} # H0
+    diag_control::Vector{T} # Z
+    tmin::Float64 # PMP prop t0
+    tmax::Float64 # PMP prop tmax
+    time_coeff::Float64 # 
     coset_tol::Float64
     abs_tol::Float64
     rel_tol::Float64
@@ -22,6 +22,7 @@ mutable struct  Params{T}
     tmp2::Matrix{T}
 end
 
+"Control adjusted drift. Ad_k"
 function H_α!(H_α::AbstractMatrix, drift:: AbstractMatrix, diag_control::Vector, α::Float64)
     n = size(drift, 1)
     @inbounds for i in 1:n, j in 1:n
