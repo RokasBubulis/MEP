@@ -22,6 +22,7 @@ mutable struct  Params{T}
     tmp2::Matrix{T}
 end
 
+# TODO: This calculation seems to be wrong. Use Campbell identity: https://en.wikipedia.org/wiki/Baker%E2%80%93Campbell%E2%80%93Hausdorff_formula
 "Control adjusted drift. Ad_k"
 function H_α!(H_α::AbstractMatrix, drift:: AbstractMatrix, diag_control::Vector, α::Float64)
     n = size(drift, 1)
@@ -60,7 +61,7 @@ function H_optimal!(M::AbstractMatrix, params::Params)
         G[1] = -grad
         return nothing
     end 
-
+    # (x)->(f(x, args))
     res = optimize(f, g!, [-Float64(π/2)], [Float64(π/2)], [0.0], Fminbox(BFGS()))
     α_opt = Optim.minimizer(res)[1]
     H_α!(params.H_alpha, drift, l, α_opt)
