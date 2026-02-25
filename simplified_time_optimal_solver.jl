@@ -36,7 +36,7 @@ function H_optimal!(M::AbstractMatrix, params::Params)
     drift, l = params.drift, params.diag_control
     n = size(drift, 1)
 
-    function f(x)
+    function f(x, drift, M) # Commutation assumption does not apply
         α = x[1]
         func = 0.0
         @inbounds for i in 1:n, j in 1:n
@@ -61,15 +61,18 @@ function H_optimal!(M::AbstractMatrix, params::Params)
         G[1] = -grad
         return nothing
     end 
-    # (x)->(f(x, args))
+    # anonymous functions: (x)->(f(x, args)), or optimizer args
+    # Include second derivative, use Newton()
+    # Use linesearch=LineSearches.BackTracking()
     res = optimize(f, g!, [-Float64(π/2)], [Float64(π/2)], [0.0], Fminbox(BFGS()))
     α_opt = Optim.minimizer(res)[1]
     H_α!(params.H_alpha, drift, l, α_opt)
     return nothing
 end
 
-function distance_to_target_coset(P_opt::AbstractMatrix,
-                                  target::SparseMatrixCSC{float_type, Int},
+# distance_to_target_coset_if_diagonal
+function distance_to_target_coset(P_opt::AbstractMatrix, # P_M0
+                                  target::SparseMatrixCSC{float_type, Int}, # U_T
                                   params::Params)
 
     l = params.diag_control
@@ -82,22 +85,37 @@ function distance_to_target_coset(P_opt::AbstractMatrix,
         return sqrt(normA + sum(abs2, d) - 2 * real(dot(a, d)))
     end
 
+    # do it inplace. Also avoid functions inside functions 
+    # @inline function distance!(d, gamma::Float64)
+    #     d[:] .= exp.(gamma .* l)     
+    #     return sqrt(normA + sum(abs2, d) - 2 * real(dot(a, d)))
+    # end
+
+
     result = optimize(distance, -pi, pi)
     gamma_opt = Optim.minimizer(result)
     return distance(gamma_opt)
 end
 
+# These are elements of the algebra, use structure constant (future scalability thing)
+# struct LieOperator
+#   hilbert::HilbertOperator (~ matrix)
+#   lie_vec::LieElement (~ vec)
+#   Lie_adjoint::LieOp (~ matrix)
+# end
+# Also types
 function br!(dM, H, M, params)
     mul!(params.tmp1, H, M)
     mul!(params.tmp2, M, H)
-    @. dM = params.tmp1 - params.tmp2
+    @. dM[:] = params.tmp1 - params.tmp2
     return nothing 
 end
 
+"main PMP propagator"
 function f!(dX, X, params, t)
     dim = params.dim
     dim2 = dim ^ 2
-
+    # Use normal matrices, or LieOperator
     @views P = reshape(view(X, 1:dim2), dim, dim)
     @views M = reshape(view(X, dim2 + 1: 2*dim2), dim, dim)
     @views dP = reshape(view(dX, 1:dim2), dim, dim)
@@ -110,10 +128,11 @@ function f!(dX, X, params, t)
     return nothing
 end
 
-function build_M!(M::AbstractMatrix{T}, m::AbstractVector{Float64}, p_basis::Vector{SparseMatrixCSC{T, Int}})
-    fill!(M, zero(T))
+function build_M!(M::AbstractMatrix{T}, m::AbstractVector{Float64}, p_basis::Vector{SparseMatrixCSC{T, Int}}) where {T<:Complex}
+    M[:] .= 0
+    # fill!(M, zero(T))
     for (i, m_coeff) in enumerate(m)
-        M .+= m_coeff * p_basis[i]
+        M[:] .+= m_coeff * p_basis[i]
     end
     return nothing
 end 
@@ -209,6 +228,7 @@ function main_function()
         @views reshape(X0[dim^2 + 1: 2*dim^2], dim, dim) .= M0
 
         prob = ODEProblem(f!, X0, (0.0, params.tmax), params)
+        # TODO: Choose propagator where we can set the time-step
         sol = solve(prob, Tsit5(); abstol=params.abs_tol, reltol=params.rel_tol,
         saveat=range(0.0, params.tmax, length=n_saves))
         return sol

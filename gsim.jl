@@ -2,6 +2,7 @@ using BenchmarkTools
 include("generators.jl")
 include("lie_algebra.jl")
 
+"Checks the distance of the observable to a Lie-algebra basis"
 function check_observable(observable::SparseMatrixCSC{ComplexF64, Int}, lie_basis::Vector{SparseMatrixCSC{ComplexF64, Int}})
     v_obs = Vector{eltype(observable)}(undef, length(lie_basis))
     temp_element = similar(observable)
@@ -17,6 +18,7 @@ function check_observable(observable::SparseMatrixCSC{ComplexF64, Int}, lie_basi
 end
 
 # Default matrix exponentiation approach
+"Matrix propagation"
 function standard_expectation_value(
     observable::SparseMatrixCSC{float_type, Int}, 
     input_matrix::SparseMatrixCSC{Float64, Int}, 
@@ -24,7 +26,7 @@ function standard_expectation_value(
     generators::Vector{SparseMatrixCSC{float_type, Int}})
 
     tmpH = similar(Matrix(generators[1]))
-    mul!(tmpH, Matrix(generators[1]), theta[1])
+    mul!(tmpH, Matrix(generators[1]), theta[1]) # H = θ1 H1
     BLAS.axpy!(theta[2], Matrix(generators[2]), tmpH) 
     lmul!(-im, tmpH)                           
     unitary = exp(tmpH) 
