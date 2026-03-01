@@ -76,6 +76,25 @@ function construct_lie_basis_general(generators::Vector{SparseMatrixCSC{float_ty
     return basis_elements
 end
 
+function adjoint_action_by_campbell(X::SparseMatrixCSC{float_type, Int}, 
+    Y::SparseMatrixCSC{float_type, Int}; depth = 10)
+
+    result = copy(Y)
+    last_term = copy(Y)
+    coeff = one(Float64)
+    for n in 1:depth
+        # println("---")
+        # println(n)
+        # println(coeff)
+        # display(result)
+        new_term = br(X, last_term)
+        coeff /= n
+        result .+= coeff .* new_term
+        last_term = new_term
+    end
+    return result 
+end
+
 function construct_adjoint_representations(lie_basis::Vector{SparseMatrixCSC{float_type,Int}},
                                            generators::Vector{SparseMatrixCSC{float_type, Int}})
     n = length(lie_basis)

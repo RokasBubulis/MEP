@@ -8,7 +8,8 @@ T = float_type
 
 mutable struct  Params{T}
     drift:: SparseMatrixCSC{T, Int} # H0
-    diag_control::Vector{T} # Z
+    diagonal_control:: SparseMatrixCSC{T, Int} # sum_i Z_i
+    diagonal_control_vec:: Vector{T}
     tmin::Float64 # PMP prop t0
     tmax::Float64 # PMP prop tmax
     time_coeff::Float64 # 
@@ -17,72 +18,129 @@ mutable struct  Params{T}
     rel_tol::Float64
     beta::Float64
     dim::Int
-    H_alpha::Matrix{T}
+    H_alpha_tmp::Matrix{T}
     tmp1::Matrix{T}
     tmp2::Matrix{T}
 end
 
 # TODO: This calculation seems to be wrong. Use Campbell identity: https://en.wikipedia.org/wiki/Baker%E2%80%93Campbell%E2%80%93Hausdorff_formula
+# "Control adjusted drift. Ad_k"
+# function H_α!(H_α::AbstractMatrix, drift:: AbstractMatrix, diag_control::Vector, α::Float64)
+#     n = size(drift, 1)
+#     @inbounds for i in 1:n, j in 1:n
+#         H_α[i,j] = drift[i,j] * exp(α * (diag_control[j] - diag_control[i]))
+#     end
+#     return nothing
+# end
+
 "Control adjusted drift. Ad_k"
-function H_α!(H_α::AbstractMatrix, drift:: AbstractMatrix, diag_control::Vector, α::Float64)
-    n = size(drift, 1)
-    @inbounds for i in 1:n, j in 1:n
-        H_α[i,j] = drift[i,j] * exp(α * (diag_control[j] - diag_control[i]))
-    end
+# function H_α!(H_α::AbstractMatrix, drift:: AbstractMatrix, diag_control::Vector, α::Float64)
+#     X = spdiagm(0 => α * diag_control)
+#     M = adjoint_action_by_campbell(X, drift)
+#     H_α .= M
+#     return nothing
+# end
+
+function control_adjusted_drift!(tmp, drift, diagonal_control, α)
+    mat = adjoint_action_by_campbell(α * diagonal_control, drift)
+    tmp .= mat
+    return nothing 
+end 
+
+function control_adjusted_drift(drift, diagonal_control, α)
+    return adjoint_action_by_campbell(α * diagonal_control, drift)
+end 
+
+function control_adjusted_drift_objective(x, drift, diagonal_control, costate)
+    α = x[1]
+    control_H = control_adjusted_drift(drift, diagonal_control, α)
+    return tr(control_H * costate)
+end 
+
+function control_adjusted_drift_1st_der!(G, x, drift, diagonal_control)
+    α = x[1]
+    control_H = control_adjusted_drift(drift, diagonal_control, α)
+    G[1] = control_H * diagonal_control - diagonal_control * control_H
     return nothing
-end
+end 
 
-function H_optimal!(M::AbstractMatrix, params::Params)
-    drift, l = params.drift, params.diag_control
-    n = size(drift, 1)
+function control_adjusted_drift_2nd_der!(H, x, drift, diagonal_control)
+    α = x[1]
+    control_H = control_adjusted_drift(drift, diagonal_control, α)
+    first_der = control_H * diagonal_control - diagonal_control * control_H
+    H[1,1] = first_der * diagonal_control - diagonal_control * first_der
+    return nothing 
+end 
 
-    function f(x, drift, M) # Commutation assumption does not apply
-        α = x[1]
-        func = 0.0
-        @inbounds for i in 1:n, j in 1:n
-            Δ = l[j] - l[i]
-            e = exp(α * Δ)
-            z = drift[i,j] * M[j,i]
-            func += real(e*z)
-        end
+function optimal_control_adjusted_drift!(costate, params)
 
-        return -func
-    end
+    drift, diagonal_control = params.drift, params.diagonal_control
+    x = [0.0]
+    td = TwiceDifferentiable(
+    x -> control_adjusted_drift_objective(x, drift, diagonal_control, costate),
+    (G, x) -> control_adjusted_drift_1st_der!(G, x, drift, diagonal_control),
+    (H, x) -> control_adjusted_drift_2nd_der!(H, x, drift, diagonal_control),
+    x0
+    )
+    res = optimize(td, x0, Newton(linesearch = LineSearches.BackTracking()))
 
-    # Check derivative numerically! g(x) ≃ (f(x+dt) - f(x-dt)) / (2 dt)
-    function g!(G, x)
-        α = x[1]
-        grad = 0.0
-        @inbounds for i in 1:n, j in 1:n
-            Δ = l[j] - l[i]
-            e = exp(α * Δ)
-            z = drift[i,j] * M[j,i]
-            grad += real(Δ * e * z)
-        end
-        G[1] = -grad
-        return nothing
-    end 
-    # anonymous functions: (x)->(f(x, args)), or optimizer args
-    # Include second derivative, use Newton()
-    # Use linesearch=LineSearches.BackTracking()
-    res = optimize(f, g!, [-Float64(π/2)], [Float64(π/2)], [0.0], Fminbox(BFGS()))
-    α_opt = Optim.minimizer(res)[1]
-    H_α!(params.H_alpha, drift, l, α_opt)
-    return nothing
-end
+    α_optimal = Optim.minimizer(res)[1]
+
+    control_adjusted_drift!(params.H_alpha_tmp, drift, diagonal_control, α_optimal)
+
+    return nothing 
+end 
+
+# function H_optimal!(M::AbstractMatrix, params::Params)
+#     drift, l = params.drift, params.diag_control
+#     n = size(drift, 1)
+
+#     function f(x, drift, M) # Commutation assumption does not apply
+#         α = x[1]
+#         func = 0.0
+#         @inbounds for i in 1:n, j in 1:n
+#             Δ = l[j] - l[i]
+#             e = exp(α * Δ)
+#             z = drift[i,j] * M[j,i]
+#             func += real(e*z)
+#         end
+
+#         return -func
+#     end
+
+#     # Check derivative numerically! g(x) ≃ (f(x+dt) - f(x-dt)) / (2 dt)
+#     function g!(G, x)
+#         α = x[1]
+#         grad = 0.0
+#         @inbounds for i in 1:n, j in 1:n
+#             Δ = l[j] - l[i]
+#             e = exp(α * Δ)
+#             z = drift[i,j] * M[j,i]
+#             grad += real(Δ * e * z)
+#         end
+#         G[1] = -grad
+#         return nothing
+#     end 
+#     # anonymous functions: (x)->(f(x, args)), or optimizer args
+#     # Include second derivative, use Newton()
+#     # Use linesearch=LineSearches.BackTracking()
+#     res = optimize(f, g!, [-Float64(π/2)], [Float64(π/2)], [0.0], Fminbox(BFGS()))
+#     α_opt = Optim.minimizer(res)[1]
+#     H_α!(params.H_alpha, drift, l, α_opt)
+#     return nothing
+# end
 
 # distance_to_target_coset_if_diagonal
 function distance_to_target_coset(P_opt::AbstractMatrix, # P_M0
                                   target::SparseMatrixCSC{float_type, Int}, # U_T
                                   params::Params)
 
-    l = params.diag_control
     A = P_opt * adjoint(target)
     normA = sum(abs2, A)          
     a  = diag(A)                     
 
     @inline function distance(gamma::Float64)
-        d = exp.(gamma .* l)     
+        d = exp.(gamma .* params.diagonal_control_vec)     
         return sqrt(normA + sum(abs2, d) - 2 * real(dot(a, d)))
     end
 
@@ -91,7 +149,6 @@ function distance_to_target_coset(P_opt::AbstractMatrix, # P_M0
     #     d[:] .= exp.(gamma .* l)     
     #     return sqrt(normA + sum(abs2, d) - 2 * real(dot(a, d)))
     # end
-
 
     result = optimize(distance, -pi, pi)
     gamma_opt = Optim.minimizer(result)
@@ -199,6 +256,7 @@ function main_function()
     #@assert check_group_implementability(target, lie_basis) "Target is not implementable with given generators"
     params = Params(
         -im*drift,
+        -im*control,
         -im*Vector(diag(control)),
         tmin,
         tmax,
