@@ -1,5 +1,4 @@
-using Plots
-using Random
+using Plots, Random, BenchmarkTools
 
 include("generators.jl")
 include("lie_algebra.jl")
@@ -26,7 +25,6 @@ costate = zeros(ComplexF64, size(p_basis[1])...)
 # m0 = [0.1, 0.4, 0.5, -0.5, -1.0, 0.2, 0.7]
 m0 = rand(Float64, length(p_basis))
 build_M!(costate, m0, p_basis)
-println(m0)
 
 mutable struct  Params{T}
     drift:: SparseMatrixCSC{T, Int} # -i*H0
@@ -36,11 +34,15 @@ mutable struct  Params{T}
     max_alpha::Float64
 end
 
-params = Params(-im*drift, im*control, zeros(ComplexF64, size(drift)), -Float64(pi/2), Float64(pi/2))
+params = Params(-im*drift, im*control, zeros(ComplexF64, size(drift)), -Float64(pi), Float64(pi))
 
-# optimise overlap 
-optimal_adjoint_drift!(costate, params)
+# # benchmark optimisation
+# @btime optimal_adjoint_drift_newton!(costate, params)  # 133 μs
+# @btime optimal_adjoint_drift_fminbox!(costate, params)  # 227 μs
+# @btime optimal_adjoint_drift_ipnewton!(costate, params)  # 1.281 ms
 
+# optimise overlap
+optimal_adjoint_drift_newton!(costate, params)
 # plot overlap
 α_grid = range(params.min_alpha, params.max_alpha, length=400)
 vals = [-neg_adjoint_drift_obj([α], params.drift, params.control, costate) for α in α_grid]
