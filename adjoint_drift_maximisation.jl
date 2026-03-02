@@ -1,14 +1,30 @@
 using Optim, LineSearches
-include("lie_algebra.jl")
+#include("lie_algebra.jl")
+
+function adjoint_action_by_campbell(X::SparseMatrixCSC{float_type, Int}, 
+    Y::SparseMatrixCSC{float_type, Int}; depth = 10)
+    # e^X Y e^(-X) = \sum_n=0^inf 1/n! [X,Y]_n
+
+    result = copy(Y)
+    last_term = copy(Y)
+    coeff = 1.0
+    for n in 1:depth
+        new_term = br(X, last_term)
+        coeff /= n
+        result .+= coeff .* new_term
+        last_term = new_term
+    end
+    return result 
+end
 
 function adjoint_drift!(tmp, drift, control, α)
-    mat = adjoint_action_by_campbell(α * control, drift)
+    mat = adjoint_action_by_campbell(-α * control, drift)
     tmp .= mat
     return nothing 
 end 
 
 function adjoint_drift(drift, control, α)
-    return adjoint_action_by_campbell(α * control, drift)
+    return adjoint_action_by_campbell(-α * control, drift)
 end 
 
 # Negate the objective and derivatives as the goal is to maximise the function
@@ -21,8 +37,8 @@ end
 function neg_adjoint_drift_obj_1st_der!(G, x, drift, control, costate)
     α = x[1]
     control_H = adjoint_drift(drift, control, α)
-    first_dev = control_H * control - control * control_H
-    G[1] = -real(tr(first_dev * costate))
+    first_der = control_H * control - control * control_H
+    G[1] = -real(tr(first_der * costate))
     return nothing
 end 
 
@@ -39,13 +55,23 @@ function optimal_adjoint_drift!(costate, params)
 
     drift, control = params.drift, params.control
     x0 = [0.0]
-    td = TwiceDifferentiable(
-    x -> neg_adjoint_drift_obj(x, drift, control, costate),
-    (G, x) -> neg_adjoint_drift_obj_1st_der!(G, x, drift, control, costate),
-    (H, x) -> neg_adjoint_drift_obj_2nd_der!(H, x, drift, control, costate),
-    x0
+    lower = [params.min_alpha]
+    upper = [params.max_alpha]
+    # td = TwiceDifferentiable(
+    # x -> neg_adjoint_drift_obj(x, drift, control, costate),
+    # (G, x) -> neg_adjoint_drift_obj_1st_der!(G, x, drift, control, costate),
+    # (H, x) -> neg_adjoint_drift_obj_2nd_der!(H, x, drift, control, costate),
+    # x0
+    # )
+    # res = Optim.optimize(td, x0, Newton(linesearch = LineSearches.BackTracking()))
+
+    # slower constrained
+    od = OnceDifferentiable(
+        x -> neg_adjoint_drift_obj(x, drift, control, costate),
+        (G, x) -> neg_adjoint_drift_obj_1st_der!(G, x, drift, control, costate),
+        x0
     )
-    res = Optim.optimize(td, x0, Newton(linesearch = LineSearches.BackTracking()))
+    res = Optim.optimize(od, lower, upper, x0, Fminbox(BFGS()))
 
     α_optimal = Optim.minimizer(res)[1]
 

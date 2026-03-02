@@ -54,7 +54,7 @@ end
 
 function construct_lie_basis_general(generators::Vector{SparseMatrixCSC{float_type, Int}}; depth = 10)
     basis_elements = SparseMatrixCSC{float_type,Int}[]
-    gens = [-im * g for g in generators]
+    gens = [im * g for g in generators]
     for g in gens
         try_add_orthonormal!(basis_elements, g)
     end
@@ -78,15 +78,12 @@ end
 
 function adjoint_action_by_campbell(X::SparseMatrixCSC{float_type, Int}, 
     Y::SparseMatrixCSC{float_type, Int}; depth = 10)
+    # e^X Y e^(-X) = \sum_n=0^inf 1/n! [X,Y]_n
 
     result = copy(Y)
     last_term = copy(Y)
-    coeff = one(Float64)
+    coeff = 1.0
     for n in 1:depth
-        # println("---")
-        # println(n)
-        # println(coeff)
-        # display(result)
         new_term = br(X, last_term)
         coeff /= n
         result .+= coeff .* new_term
