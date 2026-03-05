@@ -2,8 +2,10 @@
 br(A, B) = A * B - B * A
 commutes(x, y; tol = 1e-6) = maximum(abs.(br(x, y))) < tol
 
-function try_add_orthonormal!(basis::Vector{SparseMatrixCSC{float_type,Int}}, 
-                        candidate:: SparseMatrixCSC{float_type,Int};
+T = ComplexF64
+
+function try_add_orthonormal!(basis::Vector{SparseMatrixCSC{T,Int}}, 
+                        candidate:: SparseMatrixCSC{T,Int};
                         tol = 1e-6)
     
     for element in basis
@@ -23,8 +25,8 @@ function try_add_orthonormal!(basis::Vector{SparseMatrixCSC{float_type,Int}},
 end
 
 # Local GS orthonormalisation
-function construct_lie_basis_2gens(generators::Vector{SparseMatrixCSC{float_type, Int}}, depth::Int)
-    basis_elements = SparseMatrixCSC{float_type,Int}[]
+function construct_lie_basis_2gens(generators::Vector{SparseMatrixCSC{T, Int}}, depth::Int)
+    basis_elements = SparseMatrixCSC{T,Int}[]
     im_gens = im.*generators
     for g in im_gens
         try_add_orthonormal!(basis_elements, g)
@@ -38,7 +40,7 @@ function construct_lie_basis_2gens(generators::Vector{SparseMatrixCSC{float_type
     d = 1
     while d < depth
         d += 1
-        next_layer = SparseMatrixCSC{float_type, Int}[]
+        next_layer = SparseMatrixCSC{T, Int}[]
         for element in new_elements
             for gen in im_gens
                 bracket = br(gen, element)
@@ -52,8 +54,8 @@ function construct_lie_basis_2gens(generators::Vector{SparseMatrixCSC{float_type
     return basis_elements
 end
 
-function construct_lie_basis_general(generators::Vector{SparseMatrixCSC{float_type, Int}}; depth = 10)
-    basis_elements = SparseMatrixCSC{float_type,Int}[]
+function construct_lie_basis_general(generators::Vector{SparseMatrixCSC{T, Int}}; depth = 10)
+    basis_elements = SparseMatrixCSC{T,Int}[]
     gens = [im * g for g in generators]
     for g in gens
         try_add_orthonormal!(basis_elements, g)
@@ -61,7 +63,7 @@ function construct_lie_basis_general(generators::Vector{SparseMatrixCSC{float_ty
     last_level = copy(gens)
     if depth > 1
         for d in 1:depth 
-            next_level = SparseMatrixCSC{float_type,Int}[]
+            next_level = SparseMatrixCSC{T,Int}[]
             for gen in gens
                 for last_el in last_level
                     bracket = br(gen, last_el)
@@ -76,8 +78,8 @@ function construct_lie_basis_general(generators::Vector{SparseMatrixCSC{float_ty
     return basis_elements
 end
 
-function adjoint_action_by_campbell(X::SparseMatrixCSC{float_type, Int}, 
-    Y::SparseMatrixCSC{float_type, Int}; depth = 10)
+function adjoint_action_by_campbell(X::SparseMatrixCSC{T, Int}, 
+    Y::SparseMatrixCSC{T, Int}; depth = 10)
     # e^X Y e^(-X) = \sum_n=0^inf 1/n! [X,Y]_n
 
     result = copy(Y)
@@ -92,10 +94,10 @@ function adjoint_action_by_campbell(X::SparseMatrixCSC{float_type, Int},
     return result 
 end
 
-function construct_adjoint_representations(lie_basis::Vector{SparseMatrixCSC{float_type,Int}},
-                                           generators::Vector{SparseMatrixCSC{float_type, Int}})
+function construct_adjoint_representations(lie_basis::Vector{SparseMatrixCSC{T,Int}},
+                                           generators::Vector{SparseMatrixCSC{T, Int}})
     n = length(lie_basis)
-    adjoint_map = [zeros(float_type, n, n) for _ in 1:length(generators)]
+    adjoint_map = [zeros(T, n, n) for _ in 1:length(generators)]
 
     for (gidx, g) in enumerate(generators)
         for j in 1:n
@@ -108,10 +110,10 @@ function construct_adjoint_representations(lie_basis::Vector{SparseMatrixCSC{flo
     return adjoint_map
 end
 
-function construct_subgroup_basis(lie_basis::Vector{SparseMatrixCSC{float_type, Int}}, max_product_depth::Int)
-    basis_elements = SparseMatrixCSC{float_type,Int}[]
+function construct_subgroup_basis(lie_basis::Vector{SparseMatrixCSC{T, Int}}, max_product_depth::Int)
+    basis_elements = SparseMatrixCSC{T,Int}[]
     n = size(lie_basis[1], 1)
-    try_add_orthonormal!(basis_elements, spdiagm(0 => ones(float_type, n)))
+    try_add_orthonormal!(basis_elements, spdiagm(0 => ones(T, n)))
 
     for b in lie_basis
         try_add_orthonormal!(basis_elements, b)
@@ -120,7 +122,7 @@ function construct_subgroup_basis(lie_basis::Vector{SparseMatrixCSC{float_type, 
     if max_product_depth > 1
         for d in 2:max_product_depth
             old_len = length(basis_elements)
-            current_level = SparseMatrixCSC{float_type,Int}[]
+            current_level = SparseMatrixCSC{T,Int}[]
             for last_element in last_level
                 for b_element in lie_basis
                     new_el = last_element * b_element
@@ -251,12 +253,12 @@ function construct_algebras(drift, controls; commutation_depth = 10, tol = 1e-12
         corrected_drift .-= dot(b, corrected_drift) * b
     end
     if all(x->abs(dot(corrected_drift, x)) < tol, l_c) 
-        p_c = SparseMatrixCSC{float_type,Int}[]
+        p_c = SparseMatrixCSC{T,Int}[]
     else
         error("No drift component outside the control lie algebra")
     end
 
-    gens = SparseMatrixCSC{float_type, Int}[corrected_drift, controls...]
+    gens = SparseMatrixCSC{T, Int}[corrected_drift, controls...]
     g_c = construct_lie_basis_general(gens; depth = commutation_depth)
     for g in g_c
         if all(x -> abs(dot(g, x)) < tol, l_c)
@@ -266,11 +268,11 @@ function construct_algebras(drift, controls; commutation_depth = 10, tol = 1e-12
     # Cartan-like decomposition check
     check_cartan_structure(l_c, p_c)
 
-    a_c = SparseMatrixCSC{float_type,Int}[]
+    a_c = SparseMatrixCSC{T,Int}[]
     candidates = copy(p_c)
     #Construct a_c
     while !isempty(candidates)
-        new_candidates = SparseMatrixCSC{float_type,Int}[]
+        new_candidates = SparseMatrixCSC{T,Int}[]
         old_length = length(a_c)
         for p_el in candidates
             if all(x -> commutes(x, p_el), a_c)
@@ -293,7 +295,7 @@ function construct_algebras_single_control(gens; commutation_depth = 10, tol = 1
 
     g_c = construct_lie_basis_general(gens; depth = commutation_depth)
     l_c = g_c[2]
-    p_c = SparseMatrixCSC{float_type, Int}[]
+    p_c = SparseMatrixCSC{T, Int}[]
     for g in g_c
         if abs(dot(g, l_c)) < tol
             push!(p_c, g)
@@ -302,11 +304,11 @@ function construct_algebras_single_control(gens; commutation_depth = 10, tol = 1
     # Cartan-like decomposition check
     check_cartan_structure([l_c], p_c)
 
-    a_c = SparseMatrixCSC{float_type,Int}[]
+    a_c = SparseMatrixCSC{T,Int}[]
     candidates = copy(p_c)
     #Construct a_c
     while !isempty(candidates)
-        new_candidates = SparseMatrixCSC{float_type,Int}[]
+        new_candidates = SparseMatrixCSC{T,Int}[]
         old_length = length(a_c)
         for p_el in candidates
             if all(x -> commutes(x, p_el), a_c)
@@ -328,7 +330,7 @@ end
 function construct_weyl_group_orbit(control_subgroup, max_abelian_subalgebra; tol=1e-3)
 
     # Construct weyl group first
-    weyl_group = SparseMatrixCSC{float_type,Int}[]
+    weyl_group = SparseMatrixCSC{T,Int}[]
     for K in control_subgroup
         is_suitable = true
         for a in max_abelian_subalgebra
@@ -349,7 +351,7 @@ function construct_weyl_group_orbit(control_subgroup, max_abelian_subalgebra; to
     end
 
     # Now construct the orbit 
-    weyl_group_orbit = SparseMatrixCSC{float_type,Int}[]
+    weyl_group_orbit = SparseMatrixCSC{T,Int}[]
     for a in max_abelian_subalgebra
         for w in weyl_group
             WaW = w * a * adjoint(w)

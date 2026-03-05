@@ -27,38 +27,38 @@ function adjoint_drift(drift, control, α)
 end 
 
 # Negate the objective and derivatives as the goal is to maximise the function
-function neg_adjoint_drift_obj(x, drift, control, costate)
+function neg_adjoint_drift_obj(x, drift, control, costate, reg_coeff)
     α = x[1]
     control_H = adjoint_drift(drift, control, α)
-    return -real(tr(control_H * costate))
+    return -real(tr(control_H * costate) - reg_coeff * α^2)
 end 
 
-function neg_adjoint_drift_obj_1st_der!(G, x, drift, control, costate)
+function neg_adjoint_drift_obj_1st_der!(G, x, drift, control, costate, reg_coeff)
     α = x[1]
     control_H = adjoint_drift(drift, control, α)
     first_der = control_H * control - control * control_H
-    G[1] = -real(tr(first_der * costate))
+    G[1] = -(real(tr(first_der * costate)) - 2 * reg_coeff * α)
     return nothing
 end 
 
-function neg_adjoint_drift_obj_2nd_der!(H, x, drift, control, costate)
+function neg_adjoint_drift_obj_2nd_der!(H, x, drift, control, costate, reg_coeff)
     α = x[1]
     control_H = adjoint_drift(drift, control, α)
     first_der = control_H * control - control * control_H
     second_der =  first_der * control - control * first_der
-    H[1,1] = -real(tr(second_der * costate))
+    H[1,1] = -real(tr(second_der * costate) - 2 * reg_coeff)
     return nothing 
 end
 
 function optimal_adjoint_drift_newton!(costate, params)
 
-    drift, control = params.drift, params.control
+    drift, control, reg_coeff = params.drift, params.control, params.reg_coeff
     x0 = [0.0]
 
     td = TwiceDifferentiable(
-    x -> neg_adjoint_drift_obj(x, drift, control, costate),
-    (G, x) -> neg_adjoint_drift_obj_1st_der!(G, x, drift, control, costate),
-    (H, x) -> neg_adjoint_drift_obj_2nd_der!(H, x, drift, control, costate),
+    x -> neg_adjoint_drift_obj(x, drift, control, costate, reg_coeff),
+    (G, x) -> neg_adjoint_drift_obj_1st_der!(G, x, drift, control, costate, reg_coeff),
+    (H, x) -> neg_adjoint_drift_obj_2nd_der!(H, x, drift, control, costate, reg_coeff),
     x0
     )
     res = Optim.optimize(td, x0, Newton(linesearch = LineSearches.BackTracking()))
@@ -69,44 +69,44 @@ function optimal_adjoint_drift_newton!(costate, params)
     return nothing 
 end 
 
-function optimal_adjoint_drift_fminbox!(costate, params)
+# function optimal_adjoint_drift_fminbox!(costate, params)
 
-    drift, control = params.drift, params.control
-    x0 = [0.0]
-    lower = [params.min_alpha]
-    upper = [params.max_alpha]
+#     drift, control = params.drift, params.control
+#     x0 = [0.0]
+#     lower = [params.min_alpha]
+#     upper = [params.max_alpha]
 
-    od = OnceDifferentiable(
-        x -> neg_adjoint_drift_obj(x, drift, control, costate),
-        (G, x) -> neg_adjoint_drift_obj_1st_der!(G, x, drift, control, costate),
-        x0
-    )
-    res = Optim.optimize(od, lower, upper, x0, Fminbox(BFGS()))
-    α_optimal = Optim.minimizer(res)[1]
+#     od = OnceDifferentiable(
+#         x -> neg_adjoint_drift_obj(x, drift, control, costate),
+#         (G, x) -> neg_adjoint_drift_obj_1st_der!(G, x, drift, control, costate),
+#         x0
+#     )
+#     res = Optim.optimize(od, lower, upper, x0, Fminbox(BFGS()))
+#     α_optimal = Optim.minimizer(res)[1]
 
-    adjoint_drift!(params.H_alpha_tmp, drift, control, α_optimal)
+#     adjoint_drift!(params.H_alpha_tmp, drift, control, α_optimal)
 
-    return nothing 
-end 
+#     return nothing 
+# end 
 
-function optimal_adjoint_drift_ipnewton!(costate, params)
+# function optimal_adjoint_drift_ipnewton!(costate, params)
 
-    drift, control = params.drift, params.control
-    x0 = [0.0]
+#     drift, control = params.drift, params.control
+#     x0 = [0.0]
 
-    td = TwiceDifferentiable(
-    x -> neg_adjoint_drift_obj(x, drift, control, costate),
-    (G, x) -> neg_adjoint_drift_obj_1st_der!(G, x, drift, control, costate),
-    (H, x) -> neg_adjoint_drift_obj_2nd_der!(H, x, drift, control, costate),
-    x0
-    )
-    constraints = TwiceDifferentiableConstraints([params.min_alpha], [params.max_alpha])
-    res = Optim.optimize(td, constraints, x0, IPNewton())
+#     td = TwiceDifferentiable(
+#     x -> neg_adjoint_drift_obj(x, drift, control, costate),
+#     (G, x) -> neg_adjoint_drift_obj_1st_der!(G, x, drift, control, costate),
+#     (H, x) -> neg_adjoint_drift_obj_2nd_der!(H, x, drift, control, costate),
+#     x0
+#     )
+#     constraints = TwiceDifferentiableConstraints([params.min_alpha], [params.max_alpha])
+#     res = Optim.optimize(td, constraints, x0, IPNewton())
 
-    α_optimal = Optim.minimizer(res)[1]
+#     α_optimal = Optim.minimizer(res)[1]
 
-    adjoint_drift!(params.H_alpha_tmp, drift, control, α_optimal)
+#     adjoint_drift!(params.H_alpha_tmp, drift, control, α_optimal)
 
-    return nothing 
-end 
+#     return nothing 
+# end 
 

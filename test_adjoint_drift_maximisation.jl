@@ -32,9 +32,12 @@ mutable struct  Params{T}
     H_alpha_tmp::Matrix{T}
     min_alpha::Float64
     max_alpha::Float64
+    reg_coeff::Float64
 end
 
-params = Params(-im*drift, im*control, zeros(ComplexF64, size(drift)), -Float64(pi), Float64(pi))
+n = 0.3 # need for regularisation and its effects should be revisited
+params = Params(-im*drift, im*control, zeros(ComplexF64, size(drift)), 
+                -n*Float64(pi), n*Float64(pi), 1e5)
 
 # # benchmark optimisation
 # @btime optimal_adjoint_drift_newton!(costate, params)  # 133 μs
@@ -45,7 +48,7 @@ params = Params(-im*drift, im*control, zeros(ComplexF64, size(drift)), -Float64(
 optimal_adjoint_drift_newton!(costate, params)
 # plot overlap
 α_grid = range(params.min_alpha, params.max_alpha, length=400)
-vals = [-neg_adjoint_drift_obj([α], params.drift, params.control, costate) for α in α_grid]
+vals = [-neg_adjoint_drift_obj([α], params.drift, params.control, costate, params.reg_coeff) for α in α_grid]
 
 optimal_overlap = real(tr(params.H_alpha_tmp * costate))
 println(" optimal overlap: $optimal_overlap")

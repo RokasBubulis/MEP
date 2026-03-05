@@ -1,8 +1,8 @@
 using SparseArrays, LinearAlgebra
 
-float_type = Complex{Float64}
-id3 = sparse(Matrix(float_type[1 0 0; 0 1 0; 0 0 1]))
-id2 = sparse(Matrix(float_type[1 0; 0 1]))
+T = Complex{Float64}
+id3 = sparse(Matrix(T[1 0 0; 0 1 0; 0 0 1]))
+id2 = sparse(Matrix(T[1 0; 0 1]))
 
 abstract type PauliOp end
 struct Xop<: PauliOp
@@ -33,14 +33,36 @@ struct QopRyd<: RydbergOp
     sites::Vector{Int}
 end
 
-operator_matrix(::Xop) = sparse(float_type[0 1; 1 0])
-operator_matrix(::Zop) = sparse(float_type[1 0; 0 -1])
-operator_matrix(::Yop) = sparse(float_type[0 -im; im 0])
-operator_matrix(::Qop) = sparse(float_type[1 0; 0 0])
-operator_matrix(::XopRyd) = sparse(float_type[1 0 0; 0 0 1; 0 1 0])
-operator_matrix(::ZopRyd) = sparse(float_type[1 0 0; 0 1 0; 0 0 -1])
-operator_matrix(::YopRyd) = sparse(float_type[0 0 0; 0 0 -im; 0 im 0])
-operator_matrix(::QopRyd) = sparse(float_type[1 0 0; 0 1 0; 0 0 0])
+mutable struct  Params{T}
+    drift:: SparseMatrixCSC{T, Int} # H0
+    control:: SparseMatrixCSC{T, Int} # sum_i Z_i
+    target:: SparseMatrixCSC{T, Int}
+    p_basis:: Vector{SparseMatrixCSC{T, Int}}
+    diagonal_control_vec:: Vector{T}
+    tmin::Float64 # PMP prop t0
+    tmax::Float64 # PMP prop tmax
+    time_coeff::Float64 # 
+    min_alpha::Float64
+    max_alpha::Float64
+    coset_tol::Float64
+    abs_tol::Float64
+    rel_tol::Float64
+    P0::SparseMatrixCSC{T, Int}
+    H_alpha_tmp::Matrix{T}
+    M_temp::Matrix{T}
+    tmp1::Matrix{T}
+    tmp2::Matrix{T}
+    n_saves::Int
+end
+
+operator_matrix(::Xop) = sparse(T[0 1; 1 0])
+operator_matrix(::Zop) = sparse(T[1 0; 0 -1])
+operator_matrix(::Yop) = sparse(T[0 -im; im 0])
+operator_matrix(::Qop) = sparse(T[1 0; 0 0])
+operator_matrix(::XopRyd) = sparse(T[1 0 0; 0 0 1; 0 1 0])
+operator_matrix(::ZopRyd) = sparse(T[1 0 0; 0 1 0; 0 0 -1])
+operator_matrix(::YopRyd) = sparse(T[0 0 0; 0 0 -im; 0 im 0])
+operator_matrix(::QopRyd) = sparse(T[1 0 0; 0 1 0; 0 0 0])
 
 function return_n_levels(op::PauliOp)
     return 2
@@ -51,7 +73,7 @@ end
 
 function operator(op::Union{PauliOp, RydbergOp}, n_qubits::Int)
     n_lev = return_n_levels(op)
-    identity_matrix = spdiagm(0 => ones(float_type, n_lev))
+    identity_matrix = spdiagm(0 => ones(T, n_lev))
     ops = [identity_matrix for _ in 1:n_qubits]
     mat = operator_matrix(op)
     for s in op.sites
@@ -71,7 +93,7 @@ function construct_sparse_generators(n_qubits::Int)
 end
 
 function construct_dense_generators(n_qubits::Int)
-    A = spzeros(float_type, 2^n_qubits, 2^n_qubits)
+    A = spzeros(T, 2^n_qubits, 2^n_qubits)
     for i in 1:n_qubits-1
         for j in i+1:n_qubits
             Jij = 1 / abs(i - j)
@@ -84,9 +106,9 @@ end
 
 function construct_Ryd_generators(n_qubits::Int)
     # returns control first and drift second
-    A = spzeros(float_type, 3^n_qubits, 3^n_qubits)
+    A = spzeros(T, 3^n_qubits, 3^n_qubits)
     for i in 1:n_qubits
-        Qnot = sparse(Matrix{float_type}(I, 3^n_qubits, 3^n_qubits))
+        Qnot = sparse(Matrix{T}(I, 3^n_qubits, 3^n_qubits))
         for j in 1:n_qubits
             if j != i 
                 Qnot *= operator(QopRyd([j]), n_qubits)
@@ -99,9 +121,9 @@ function construct_Ryd_generators(n_qubits::Int)
 end
 
 function construct_Ryd_generators_2levels(n_qubits::Int)
-    A = spzeros(float_type, 2^n_qubits, 2^n_qubits)
+    A = spzeros(T, 2^n_qubits, 2^n_qubits)
     for i in 1:n_qubits
-        Qnot = sparse(Matrix{float_type}(I, 2^n_qubits, 2^n_qubits))
+        Qnot = sparse(Matrix{T}(I, 2^n_qubits, 2^n_qubits))
         for j in 1:n_qubits
             if j != i 
                 Qnot *= operator(Qop([j]), n_qubits)
@@ -127,7 +149,7 @@ end
 
 function Qnot(site::Int, n_qubits::Int)
     @assert n_qubits >= 2 "Number of qubits must be at least 2"
-    Qnot = sparse(Matrix{float_type}(I, 3^n_qubits, 3^n_qubits))
+    Qnot = sparse(Matrix{T}(I, 3^n_qubits, 3^n_qubits))
     for j in 1:n_qubits
         if j != site
             Qnot *= operator(QopRyd([j]), n_qubits)
@@ -154,7 +176,7 @@ function construct_rydberg_drift(positions::AbstractMatrix{<:Real}, n_levels::In
     @assert length(unique(eachrow(positions))) == size(positions, 1) "Positions must be unique"
     N = size(positions, 1)
     dim = n_levels^N
-    H_drift = spzeros(float_type, dim, dim)
+    H_drift = spzeros(T, dim, dim)
     V = zeros(Float64, dim, dim)
 
     for m in 1:N-1
@@ -180,8 +202,8 @@ end
 
 function construct_global_controls(n_qubits; n_levels = N_LEVELS)
     dim = n_levels ^ n_qubits
-    X = spzeros(float_type, dim, dim)
-    Z = spzeros(float_type, dim, dim)
+    X = spzeros(T, dim, dim)
+    Z = spzeros(T, dim, dim)
     for i in 1:n_qubits
         if n_levels == 2
             X += operator(Xop([i]), n_qubits)
@@ -195,8 +217,8 @@ function construct_global_controls(n_qubits; n_levels = N_LEVELS)
 end
 
 function construct_local_controls(n_qubits; n_levels = N_LEVELS)
-    x_lst = SparseMatrixCSC{float_type, Int}[]
-    z_lst = SparseMatrixCSC{float_type, Int}[]
+    x_lst = SparseMatrixCSC{T, Int}[]
+    z_lst = SparseMatrixCSC{T, Int}[]
     for i in 1:n_qubits
         if n_levels == 2
             push!(x_lst, operator(Xop([i]), n_qubits))

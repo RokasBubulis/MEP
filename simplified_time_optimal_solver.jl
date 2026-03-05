@@ -33,64 +33,6 @@ end
 #     return nothing
 # end
 
-"Control adjusted drift. Ad_k"
-# function H_α!(H_α::AbstractMatrix, drift:: AbstractMatrix, diag_control::Vector, α::Float64)
-#     X = spdiagm(0 => α * diag_control)
-#     M = adjoint_action_by_campbell(X, drift)
-#     H_α .= M
-#     return nothing
-# end
-
-function control_adjusted_drift!(tmp, drift, diagonal_control, α)
-    mat = adjoint_action_by_campbell(α * diagonal_control, drift)
-    tmp .= mat
-    return nothing 
-end 
-
-function control_adjusted_drift(drift, diagonal_control, α)
-    return adjoint_action_by_campbell(α * diagonal_control, drift)
-end 
-
-function control_adjusted_drift_objective(x, drift, diagonal_control, costate)
-    α = x[1]
-    control_H = control_adjusted_drift(drift, diagonal_control, α)
-    return tr(control_H * costate)
-end 
-
-function control_adjusted_drift_1st_der!(G, x, drift, diagonal_control)
-    α = x[1]
-    control_H = control_adjusted_drift(drift, diagonal_control, α)
-    G[1] = control_H * diagonal_control - diagonal_control * control_H
-    return nothing
-end 
-
-function control_adjusted_drift_2nd_der!(H, x, drift, diagonal_control)
-    α = x[1]
-    control_H = control_adjusted_drift(drift, diagonal_control, α)
-    first_der = control_H * diagonal_control - diagonal_control * control_H
-    H[1,1] = first_der * diagonal_control - diagonal_control * first_der
-    return nothing 
-end 
-
-function optimal_control_adjusted_drift!(costate, params)
-
-    drift, diagonal_control = params.drift, params.diagonal_control
-    x = [0.0]
-    td = TwiceDifferentiable(
-    x -> control_adjusted_drift_objective(x, drift, diagonal_control, costate),
-    (G, x) -> control_adjusted_drift_1st_der!(G, x, drift, diagonal_control),
-    (H, x) -> control_adjusted_drift_2nd_der!(H, x, drift, diagonal_control),
-    x0
-    )
-    res = optimize(td, x0, Newton(linesearch = LineSearches.BackTracking()))
-
-    α_optimal = Optim.minimizer(res)[1]
-
-    control_adjusted_drift!(params.H_alpha_tmp, drift, diagonal_control, α_optimal)
-
-    return nothing 
-end 
-
 # function H_optimal!(M::AbstractMatrix, params::Params)
 #     drift, l = params.drift, params.diag_control
 #     n = size(drift, 1)
