@@ -5,6 +5,7 @@ include("generators.jl")
 function adjoint_action_by_campbell(X::SparseMatrixCSC{T, Int}, 
     Y::SparseMatrixCSC{T, Int}; depth = 10)
     # e^X Y e^(-X) = \sum_n=0^inf 1/n! [X,Y]_n
+    # X = -α i control, Y = -i drift
 
     result = copy(Y)
     last_term = copy(Y)
@@ -15,59 +16,61 @@ function adjoint_action_by_campbell(X::SparseMatrixCSC{T, Int},
         result .+= coeff .* new_term
         last_term = new_term
     end
-    result /= norm(result)
-    return result 
+    result ./= norm(result)
+    return result
 end
 
-function adjoint_drift!(tmp, drift, control, α)
-    mat = adjoint_action_by_campbell(-α * control, drift)
+function adjoint_drift!(tmp, neg_im_drift, im_control, α)
+    mat = adjoint_action_by_campbell(-α * im_control, neg_im_drift)
     tmp .= mat
     return nothing 
 end 
 
-function adjoint_drift(drift, control, α)
-    return adjoint_action_by_campbell(-α * control, drift)
+function adjoint_drift(neg_im_drift, im_control, α)
+    mat = adjoint_action_by_campbell(-α * im_control, neg_im_drift)
+    return mat
 end 
 
 # Negate the objective and derivatives as the goal is to maximise the function
-function neg_adjoint_drift_obj(x, drift, control, costate, reg_coeff)
+function neg_adjoint_drift_obj(x, neg_im_drift, im_control, costate, reg_coeff)
     α = x[1]
-    control_H = adjoint_drift(drift, control, α)
+    control_H = adjoint_drift(neg_im_drift, im_control, α)
     return -real(tr(control_H * costate) - reg_coeff * α^2)
 end 
 
-function neg_adjoint_drift_obj_1st_der!(G, x, drift, control, costate, reg_coeff)
+function neg_adjoint_drift_obj_1st_der!(G, x, neg_im_drift, im_control, costate, reg_coeff)
     α = x[1]
-    control_H = adjoint_drift(drift, control, α)
-    first_der = control_H * control - control * control_H
-    G[1] = -(real(tr(first_der * costate)) - 2 * reg_coeff * α)
+    control_H = adjoint_drift(neg_im_drift, im_control, α)
+    first_der = control_H * im_control - im_control * control_H
+    G[1] = -real(tr(first_der * costate) - 2 * reg_coeff * α)
     return nothing
 end 
 
-function neg_adjoint_drift_obj_2nd_der!(H, x, drift, control, costate, reg_coeff)
+function neg_adjoint_drift_obj_2nd_der!(H, x, neg_im_drift, im_control, costate, reg_coeff)
     α = x[1]
-    control_H = adjoint_drift(drift, control, α)
-    first_der = control_H * control - control * control_H
-    second_der =  first_der * control - control * first_der
+    control_H = adjoint_drift(neg_im_drift, im_control, α)
+    first_der = control_H * im_control - im_control * control_H
+    second_der =  first_der * im_control - im_control * first_der
     H[1,1] = -real(tr(second_der * costate) - 2 * reg_coeff)
     return nothing 
 end
 
 function optimal_adjoint_drift_newton!(costate, params)
-
-    drift, control, reg_coeff = params.drift, params.control, params.reg_coeff
+    neg_im_drift = -params.system_params.im_drift
+    im_control = params.system_params.im_control
+    reg_coeff = params.propagation_params.reg_coeff
     x0 = [0.0]
 
     td = TwiceDifferentiable(
-    x -> neg_adjoint_drift_obj(x, drift, control, costate, reg_coeff),
-    (G, x) -> neg_adjoint_drift_obj_1st_der!(G, x, drift, control, costate, reg_coeff),
-    (H, x) -> neg_adjoint_drift_obj_2nd_der!(H, x, drift, control, costate, reg_coeff),
+    x -> neg_adjoint_drift_obj(x, neg_im_drift, im_control, costate, reg_coeff),
+    (G, x) -> neg_adjoint_drift_obj_1st_der!(G, x, neg_im_drift, im_control, costate, reg_coeff),
+    (H, x) -> neg_adjoint_drift_obj_2nd_der!(H, x, neg_im_drift, im_control, costate, reg_coeff),
     x0
     )
     res = Optim.optimize(td, x0, Newton(linesearch = LineSearches.BackTracking()))
     α_optimal = Optim.minimizer(res)[1]
 
-    adjoint_drift!(params.H_alpha_tmp, drift, control, α_optimal)
+    adjoint_drift!(params.storage_params.H_alpha_tmp, neg_im_drift, im_control, α_optimal)
 
     return nothing 
 end 

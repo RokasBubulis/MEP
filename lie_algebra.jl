@@ -56,15 +56,15 @@ end
 
 function construct_lie_basis_general(generators::Vector{SparseMatrixCSC{T, Int}}; depth = 10)
     basis_elements = SparseMatrixCSC{T,Int}[]
-    gens = [im * g for g in generators]
-    for g in gens
+    # gens = [im * g for g in generators]
+    for g in generators
         try_add_orthonormal!(basis_elements, g)
     end
-    last_level = copy(gens)
+    last_level = copy(generators)
     if depth > 1
         for d in 1:depth 
             next_level = SparseMatrixCSC{T,Int}[]
-            for gen in gens
+            for gen in generators
                 for last_el in last_level
                     bracket = br(gen, last_el)
                     if try_add_orthonormal!(basis_elements, bracket)
@@ -78,21 +78,6 @@ function construct_lie_basis_general(generators::Vector{SparseMatrixCSC{T, Int}}
     return basis_elements
 end
 
-function adjoint_action_by_campbell(X::SparseMatrixCSC{T, Int}, 
-    Y::SparseMatrixCSC{T, Int}; depth = 10)
-    # e^X Y e^(-X) = \sum_n=0^inf 1/n! [X,Y]_n
-
-    result = copy(Y)
-    last_term = copy(Y)
-    coeff = 1.0
-    for n in 1:depth
-        new_term = br(X, last_term)
-        coeff /= n
-        result .+= coeff .* new_term
-        last_term = new_term
-    end
-    return result 
-end
 
 function construct_adjoint_representations(lie_basis::Vector{SparseMatrixCSC{T,Int}},
                                            generators::Vector{SparseMatrixCSC{T, Int}})

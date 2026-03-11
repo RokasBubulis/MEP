@@ -33,27 +33,6 @@ struct QopRyd<: RydbergOp
     sites::Vector{Int}
 end
 
-mutable struct  Params{T}
-    drift:: SparseMatrixCSC{T, Int} # H0
-    control:: SparseMatrixCSC{T, Int} # sum_i Z_i
-    target:: SparseMatrixCSC{T, Int}
-    p_basis:: Vector{SparseMatrixCSC{T, Int}}
-    diagonal_control_vec:: Vector{T}
-    tmin::Float64 # PMP prop t0
-    tmax::Float64 # PMP prop tmax
-    time_coeff::Float64 # 
-    min_alpha::Float64
-    max_alpha::Float64
-    coset_tol::Float64
-    abs_tol::Float64
-    rel_tol::Float64
-    P0::SparseMatrixCSC{T, Int}
-    H_alpha_tmp::Matrix{T}
-    M_temp::Matrix{T}
-    tmp1::Matrix{T}
-    tmp2::Matrix{T}
-    n_saves::Int
-end
 
 operator_matrix(::Xop) = sparse(T[0 1; 1 0])
 operator_matrix(::Zop) = sparse(T[1 0; 0 -1])
@@ -229,4 +208,18 @@ function construct_local_controls(n_qubits; n_levels = N_LEVELS)
         end
     end
     return vcat(x_lst, z_lst)
+end
+
+function construct_YQ_target(n_qubits::Int)
+    A = spzeros(T, 3^n_qubits, 3^n_qubits)
+    for i in 1:n_qubits
+        Qnot = sparse(Matrix{T}(I, 3^n_qubits, 3^n_qubits))
+        for j in 1:n_qubits
+            if j != i 
+                Qnot *= operator(QopRyd([j]), n_qubits)
+            end
+        end
+        A += operator(ZopRyd([i]), n_qubits) * Qnot
+    end
+    return A
 end
