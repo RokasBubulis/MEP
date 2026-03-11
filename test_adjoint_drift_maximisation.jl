@@ -4,13 +4,12 @@ include("generators.jl")
 include("lie_algebra.jl")
 include("adjoint_drift_maximisation.jl")
 
-T = float_type
-
 function build_M!(M::AbstractMatrix{T}, m::AbstractVector{Float64}, p_basis::Vector{SparseMatrixCSC{T, Int}})
     fill!(M, zero(T))
     for (i, m_coeff) in enumerate(m)
         M .+= m_coeff * p_basis[i]
     end
+    M /= norm(M)
     return nothing
 end 
 
@@ -26,7 +25,7 @@ costate = zeros(ComplexF64, size(p_basis[1])...)
 m0 = rand(Float64, length(p_basis))
 build_M!(costate, m0, p_basis)
 
-mutable struct  Params{T}
+mutable struct  Params_test{T}
     drift:: SparseMatrixCSC{T, Int} # -i*H0
     control:: SparseMatrixCSC{T, Int} # i*sum_j Z_j
     H_alpha_tmp::Matrix{T}
@@ -35,9 +34,9 @@ mutable struct  Params{T}
     reg_coeff::Float64
 end
 
-n = 0.3 # need for regularisation and its effects should be revisited
-params = Params(-im*drift, im*control, zeros(ComplexF64, size(drift)), 
-                -n*Float64(pi), n*Float64(pi), 1e5)
+n = 2 # need for regularisation and its effects should be revisited
+params = Params_test(-im*drift, im*control, zeros(ComplexF64, size(drift)), 
+                -n*Float64(pi), n*Float64(pi), 0.0)
 
 # # benchmark optimisation
 # @btime optimal_adjoint_drift_newton!(costate, params)  # 133 μs
@@ -47,11 +46,10 @@ params = Params(-im*drift, im*control, zeros(ComplexF64, size(drift)),
 # optimise overlap
 optimal_adjoint_drift_newton!(costate, params)
 # plot overlap
-α_grid = range(params.min_alpha, params.max_alpha, length=400)
+α_grid = range(params.min_alpha, params.max_alpha, length=1000)
 vals = [-neg_adjoint_drift_obj([α], params.drift, params.control, costate, params.reg_coeff) for α in α_grid]
 
 optimal_overlap = real(tr(params.H_alpha_tmp * costate))
 println(" optimal overlap: $optimal_overlap")
 plot(α_grid, vals, label="objective")
 hline!([optimal_overlap])
-

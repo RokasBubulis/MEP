@@ -1,7 +1,9 @@
 using Optim, LineSearches
 
-function adjoint_action_by_campbell(X::SparseMatrixCSC{float_type, Int}, 
-    Y::SparseMatrixCSC{float_type, Int}; depth = 10)
+include("generators.jl")
+
+function adjoint_action_by_campbell(X::SparseMatrixCSC{T, Int}, 
+    Y::SparseMatrixCSC{T, Int}; depth = 10)
     # e^X Y e^(-X) = \sum_n=0^inf 1/n! [X,Y]_n
 
     result = copy(Y)
@@ -13,6 +15,7 @@ function adjoint_action_by_campbell(X::SparseMatrixCSC{float_type, Int},
         result .+= coeff .* new_term
         last_term = new_term
     end
+    result /= norm(result)
     return result 
 end
 
