@@ -70,7 +70,7 @@ function optimal_adjoint_drift_newton!(costate, params)
     res = Optim.optimize(td, x0, Newton(linesearch = LineSearches.BackTracking()))
     α_optimal = Optim.minimizer(res)[1]
 
-    adjoint_drift!(params.storage_params.H_alpha_tmp, neg_im_drift, im_control, α_optimal)
+    adjoint_drift!(params.storage_params.adjoint_drift_tmp, neg_im_drift, im_control, α_optimal)
 
     return nothing 
 end 

@@ -8,23 +8,35 @@ struct SystemParams{T}
     target::SparseMatrixCSC{T, Int}  # U_T 
 end
 
-lie_basis(s::SystemParams) = construct_lie_basis_general([s.im_control, s.im_drift])
-orth_control_complement_basis(s::SystemParams) = lie_basis(s)[2:end]
-diagonal_control_vec(s::SystemParams) = Vector(diag(s.im_control))
+struct DerivedArgs{T}
+    lie_basis::Vector{SparseMatrixCSC{T, Int}}
+    p_basis::Vector{SparseMatrixCSC{T, Int}}
+    diag_im_control_vec::Vector{T}
+end
+
+function precompute_derived_args(s::SystemParams)
+    lie_basis = construct_lie_basis_general([s.im_control, s.im_drift])
+    p_basis = lie_basis[2:end]
+    diag_im_control_vec = Vector(diag(s.im_control))
+
+    return DerivedArgs(lie_basis, p_basis, diag_im_control_vec)
+end
+
 
 struct PropagationParams{T}
     tmin::Float64
     tmax::Float64
     dt::Float64
-    P0::Matrix{T}
+    U0::Matrix{T}
     reg_coeff::Float64
+    coset_tol::Float64
 end
 
 mutable struct StorageParams{T}
-    H_alpha_tmp::Matrix{T}
+    adjoint_drift_tmp::Matrix{T}
     M_tmp::Matrix{T}
-    P_tmp::Matrix{T}
-    dP::Matrix{T}
+    U_tmp::Matrix{T}
+    dU::Matrix{T}
     dM::Matrix{T}
     tmp1::Matrix{T}
     tmp2::Matrix{T}
@@ -34,6 +46,7 @@ struct Params{T}
     system_params::SystemParams{T}
     propagation_params::PropagationParams{T}
     storage_params::StorageParams{T}
+    derived_args::DerivedArgs{T}
 end 
 
 function prepare_trivial_2D_setup()
@@ -47,8 +60,9 @@ function prepare_trivial_2D_setup()
     tmax = 5 * π
     dt = (tmax - tmin) / 100
     dim = size(im_control, 1)
-    P0 = Matrix{T}(I, dim, dim)
-    propagation_params = PropagationParams(tmin, tmax, dt, P0, 0.0)
+    U0 = Matrix{T}(I, dim, dim)
+    coset_tol = 1e-6
+    propagation_params = PropagationParams(tmin, tmax, dt, U0, 0.0, coset_tol)
 
     storage_params = StorageParams(
         Matrix{T}(undef, dim, dim),
@@ -59,5 +73,7 @@ function prepare_trivial_2D_setup()
         Matrix{T}(undef, dim, dim),
         Matrix{T}(undef, dim, dim)
     )
-    return Params(system_params, propagation_params, storage_params)
+    derived_args = precompute_derived_args(system_params)
+
+    return Params(system_params, propagation_params, storage_params, derived_args)
 end 
