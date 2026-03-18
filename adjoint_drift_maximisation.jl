@@ -1,28 +1,37 @@
 using Optim, LineSearches
 
 include("generators.jl")
+include("checks.jl")
 
+# depth of 10 is insufficient to produce oscillatory behaviour with equal peaks
+# function adjoint_action_by_campbell(X::SparseMatrixCSC{T, Int}, 
+#     Y::SparseMatrixCSC{T, Int}; depth = 10)
+#     # e^X Y e^(-X) = \sum_n=0^inf 1/n! [X,Y]_n
+#     # X = -α i control, Y = -i drift
+
+#     result = copy(Y)
+#     last_term = copy(Y)
+#     coeff = 1.0
+#     for n in 1:depth
+#         new_term = br(X, last_term)
+#         coeff /= n
+#         result .+= coeff .* new_term
+#         last_term = new_term
+#     end
+#     result ./= norm(result)
+#     return result
+# end
+
+# temporary expensive implementation, approach above should be made efficient to use later
 function adjoint_action_by_campbell(X::SparseMatrixCSC{T, Int}, 
     Y::SparseMatrixCSC{T, Int}; depth = 10)
     # e^X Y e^(-X) = \sum_n=0^inf 1/n! [X,Y]_n
     # X = -α i control, Y = -i drift
-
-    result = copy(Y)
-    last_term = copy(Y)
-    coeff = 1.0
-    for n in 1:depth
-        new_term = br(X, last_term)
-        coeff /= n
-        result .+= coeff .* new_term
-        last_term = new_term
-    end
-    result ./= norm(result)
-    return result
+    return exp(Matrix(X)) * Y * exp(-Matrix(X))
 end
 
 function adjoint_drift!(tmp, neg_im_drift, im_control, α)
-    mat = adjoint_action_by_campbell(-α * im_control, neg_im_drift)
-    tmp .= mat
+    tmp .= adjoint_action_by_campbell(-α * im_control, neg_im_drift)
     return nothing 
 end 
 
@@ -71,6 +80,8 @@ function optimal_adjoint_drift_newton!(costate, params)
     α_optimal = Optim.minimizer(res)[1]
 
     adjoint_drift!(params.storage_params.adjoint_drift_tmp, neg_im_drift, im_control, α_optimal)
+    # ensure optimal adjoint drift is anti-hermitian
+    check_anti_hermiticity(params.storage_params.adjoint_drift_tmp)
 
     return nothing 
 end 

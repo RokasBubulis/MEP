@@ -57,16 +57,17 @@ end
 function construct_lie_basis_general(generators::Vector{SparseMatrixCSC{T, Int}}; depth = 10)
     basis_elements = SparseMatrixCSC{T,Int}[]
     # gens = [im * g for g in generators]
-    for g in generators
+    gens = copy(generators)
+    for g in gens
         try_add_orthonormal!(basis_elements, g)
     end
     last_level = copy(generators)
     if depth > 1
         for d in 1:depth 
             next_level = SparseMatrixCSC{T,Int}[]
-            for gen in generators
+            for g in gens
                 for last_el in last_level
-                    bracket = br(gen, last_el)
+                    bracket = br(g, last_el)
                     if try_add_orthonormal!(basis_elements, bracket)
                         push!(next_level, bracket)
                     end

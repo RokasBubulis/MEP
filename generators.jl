@@ -219,7 +219,7 @@ function construct_YQ_target(n_qubits::Int)
                 Qnot *= operator(QopRyd([j]), n_qubits)
             end
         end
-        A += operator(ZopRyd([i]), n_qubits) * Qnot
+        A += operator(YopRyd([i]), n_qubits) * Qnot
     end
     return A
 end
