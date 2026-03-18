@@ -2,7 +2,8 @@ include("generators.jl")
 include("lie_algebra.jl")
 T = ComplexF64
 
-struct SystemParams{T}
+# set to mutable for target = exp(-drift) testing
+mutable struct SystemParams{T}
     im_drift::SparseMatrixCSC{T, Int} # i H_0
     im_control::SparseMatrixCSC{T, Int}  # i sum_j Z_j
     target::SparseMatrixCSC{T, Int}  # U_T 
@@ -52,14 +53,13 @@ function prepare_trivial_2D_setup()
 
     n_qubits = 2
     im_control, im_drift = im .* construct_Ryd_generators(n_qubits)
-    beta = 0.0
-    tau = 1.0
-    target = sparse(exp(-im*beta*Matrix(construct_YQ_target(n_qubits)) - tau*Matrix(im_drift)))
+    dim = size(im_control, 1)
+    target = SparseMatrixCSC{T, Int}(undef, dim, dim)
     system_params = SystemParams(im_drift, im_control, target)
 
-    tmin = 0.0 * π
-    tmax = 10.0 * π
-    dt = (tmax - tmin) / 10000
+    tmin = 0.0
+    tmax = 10.0
+    dt = (tmax - tmin) / 1000
     # dt should decrease with increasing range, else explosion in M
     dim = size(im_control, 1)
     U0 = Matrix{T}(I, dim, dim)
@@ -80,34 +80,3 @@ function prepare_trivial_2D_setup()
 
     return Params(system_params, propagation_params, storage_params, derived_args)
 end 
-
-# function prepare_1D_setup()
-
-#     n_qubits = 1
-#     im_drift = im * operator(Xop([1]), n_qubits)
-#     im_control = im*operator(Zop([1]), n_qubits)
-#     target = im* operator(Yop([1]), n_qubits) 
-#     system_params = SystemParams(im_drift, im_control, target)
-
-#     tmin = 0.0
-#     tmax = 1.0
-#     dt = (tmax - tmin) / 100
-#     dim = size(im_control, 1)
-#     U0 = Matrix{T}(I, dim, dim)
-#     reg_coeff = 0.0
-#     coset_tol = 1e-6
-#     propagation_params = PropagationParams(tmin, tmax, dt, U0, reg_coeff, coset_tol)
-
-#     storage_params = StorageParams(
-#         Matrix{T}(undef, dim, dim),
-#         Matrix{T}(undef, dim, dim),
-#         Matrix{T}(undef, dim, dim),
-#         Matrix{T}(undef, dim, dim),
-#         Matrix{T}(undef, dim, dim),
-#         Matrix{T}(undef, dim, dim),
-#         Matrix{T}(undef, dim, dim)
-#     )
-#     derived_args = precompute_derived_args(system_params)
-
-#     return Params(system_params, propagation_params, storage_params, derived_args)
-# end 

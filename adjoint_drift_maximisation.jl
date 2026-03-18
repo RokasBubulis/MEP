@@ -65,7 +65,7 @@ function neg_adjoint_drift_obj_2nd_der!(H, x, neg_im_drift, im_control, costate,
 end
 
 function optimal_adjoint_drift_newton!(costate, params)
-    neg_im_drift = -params.system_params.im_drift
+    neg_im_drift = -params.derived_args.p_basis[1]#params.system_params.im_drift
     im_control = params.system_params.im_control
     reg_coeff = params.propagation_params.reg_coeff
     x0 = [0.0]
