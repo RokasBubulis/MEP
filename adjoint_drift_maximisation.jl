@@ -41,39 +41,38 @@ function adjoint_drift(neg_im_drift, im_control, α)
 end 
 
 # Negate the objective and derivatives as the goal is to maximise the function
-function neg_adjoint_drift_obj(x, neg_im_drift, im_control, costate, reg_coeff)
+function neg_adjoint_drift_obj(x, neg_im_drift, im_control, costate)
     α = x[1]
     control_H = adjoint_drift(neg_im_drift, im_control, α)
-    return -real(tr(control_H * costate) - reg_coeff * α^2)
+    return -real(tr(control_H * costate))
 end 
 
-function neg_adjoint_drift_obj_1st_der!(G, x, neg_im_drift, im_control, costate, reg_coeff)
+function neg_adjoint_drift_obj_1st_der!(G, x, neg_im_drift, im_control, costate)
     α = x[1]
     control_H = adjoint_drift(neg_im_drift, im_control, α)
     first_der = control_H * im_control - im_control * control_H
-    G[1] = -real(tr(first_der * costate) - 2 * reg_coeff * α)
+    G[1] = -real(tr(first_der * costate))
     return nothing
 end 
 
-function neg_adjoint_drift_obj_2nd_der!(H, x, neg_im_drift, im_control, costate, reg_coeff)
+function neg_adjoint_drift_obj_2nd_der!(H, x, neg_im_drift, im_control, costate)
     α = x[1]
     control_H = adjoint_drift(neg_im_drift, im_control, α)
     first_der = control_H * im_control - im_control * control_H
     second_der =  first_der * im_control - im_control * first_der
-    H[1,1] = -real(tr(second_der * costate) - 2 * reg_coeff)
+    H[1,1] = -real(tr(second_der * costate))
     return nothing 
 end
 
 function optimal_adjoint_drift_newton!(costate, params)
     neg_im_drift = -params.derived_args.p_basis[1]#params.system_params.im_drift
     im_control = params.system_params.im_control
-    reg_coeff = params.propagation_params.reg_coeff
     x0 = [0.0]
 
     td = TwiceDifferentiable(
-    x -> neg_adjoint_drift_obj(x, neg_im_drift, im_control, costate, reg_coeff),
-    (G, x) -> neg_adjoint_drift_obj_1st_der!(G, x, neg_im_drift, im_control, costate, reg_coeff),
-    (H, x) -> neg_adjoint_drift_obj_2nd_der!(H, x, neg_im_drift, im_control, costate, reg_coeff),
+    x -> neg_adjoint_drift_obj(x, neg_im_drift, im_control, costate),
+    (G, x) -> neg_adjoint_drift_obj_1st_der!(G, x, neg_im_drift, im_control, costate),
+    (H, x) -> neg_adjoint_drift_obj_2nd_der!(H, x, neg_im_drift, im_control, costate),
     x0
     )
     res = Optim.optimize(td, x0, Newton(linesearch = LineSearches.BackTracking()))

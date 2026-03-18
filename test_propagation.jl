@@ -36,5 +36,5 @@ xlabel!(p4, "t (π)")
 ylabel!(p4, "M(t) overlap with adjoint drift")
 
 plt = plot(p1, p2, p3, p4, layout=(2,2), size=(1000, 800))
-savefig(plt, "results/drift_propagation_test.png")
+#savefig(plt, "results/drift_propagation_test.png")
 display(plt)

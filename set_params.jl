@@ -28,7 +28,6 @@ struct PropagationParams{T}
     tmax::Float64
     dt::Float64
     U0::Matrix{T}
-    reg_coeff::Float64
     coset_tol::Float64
 end
 
@@ -63,9 +62,8 @@ function prepare_trivial_2D_setup()
     # dt should decrease with increasing range, else explosion in M
     dim = size(im_control, 1)
     U0 = Matrix{T}(I, dim, dim)
-    reg_coeff = 0.0
     coset_tol = 1e-8
-    propagation_params = PropagationParams(tmin, tmax, dt, U0, reg_coeff, coset_tol)
+    propagation_params = PropagationParams(tmin, tmax, dt, U0, coset_tol)
 
     storage_params = StorageParams(
         Matrix{T}(undef, dim, dim),

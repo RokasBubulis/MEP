@@ -13,8 +13,8 @@ function build_M!(M::AbstractMatrix{T}, m::AbstractVector{Float64}, p_basis::Vec
 end 
 
 params = prepare_trivial_2D_setup()
-min_alpha = -30
-max_alpha = 30
+min_alpha = -10
+max_alpha = 10
 
 p_basis = params.derived_args.p_basis
 costate = zeros(T, size(p_basis[1])...)
@@ -26,10 +26,9 @@ optimal_adjoint_drift_newton!(costate, params)
 # plot overlap
 α_grid = range(min_alpha, max_alpha, length=1000)
 vals = [-neg_adjoint_drift_obj([α], 
-    -params.system_params.im_drift, 
+    -params.derived_args.p_basis[1], 
     params.system_params.im_control, 
-    costate, 
-    params.propagation_params.reg_coeff)
+    costate)
     for α in α_grid]
 
 optimal_overlap = real(tr(params.storage_params.adjoint_drift_tmp * costate))
