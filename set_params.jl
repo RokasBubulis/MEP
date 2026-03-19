@@ -57,9 +57,8 @@ function prepare_trivial_2D_setup()
     system_params = SystemParams(im_drift, im_control, target)
 
     tmin = 0.0
-    tmax = 1.0 * pi
-    dt = (tmax - tmin) / 10000
-    # dt should decrease with increasing range, else explosion in M
+    tmax = 5.0
+    dt = (tmax - tmin) / 1000
     dim = size(im_control, 1)
     U0 = Matrix{T}(I, dim, dim)
     coset_tol = 1e-8

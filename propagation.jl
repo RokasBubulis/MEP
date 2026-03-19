@@ -1,5 +1,5 @@
-# using DifferentialEquations
 
+include("set_params.jl")
 include("adjoint_drift_maximisation.jl")
 include("checks.jl")
 
@@ -9,7 +9,7 @@ function build_M!(m, params)
     for (i, m_coeff) in enumerate(m)
         M.+= m_coeff * params.derived_args.p_basis[i]
     end
-    #M /= norm(M)
+    M /= norm(M)
     return nothing
 end 
 
@@ -33,20 +33,13 @@ function br_for_dM!(params)
     return nothing 
 end
 
-function propagate(m, params)
+function objective(m, params)
     prop = params.propagation_params
     stor = params.storage_params
 
     stor.U_tmp = copy(prop.U0)
     build_M!(m, params)
     ts = collect(range(prop.tmin, prop.tmax; step=prop.dt))
-    n = length(ts)
-
-    Us = Vector{typeof(stor.U_tmp)}(undef, n)
-    Ms = Vector{typeof(stor.M_tmp)}(undef, n)
-    Hs = Vector{typeof(stor.U_tmp)}(undef, n)
-    αs = Vector{Float64}(undef, n)
-    dists = Vector{Float64}(undef, n)
     
     dmin = min_dist_to_target_coset(stor.U_tmp, params)
     tstar = prop.tmin
@@ -57,24 +50,18 @@ function propagate(m, params)
     @assert target_dist < prop.coset_tol "dist(target) = $target_dist"
 
     for (i, ti) in enumerate(ts)
-        Us[i] = copy(stor.U_tmp)
-        Ms[i] = copy(stor.M_tmp)
         # check initial and following actions
         check_unitarity(stor.U_tmp, i)
-        dists[i] = min_dist_to_target_coset(stor.U_tmp, params)
+        dist = min_dist_to_target_coset(stor.U_tmp, params)
 
-        α_opt = optimal_adjoint_drift_newton!(stor.M_tmp, params)
-        αs[i] = α_opt
-        Hs[i] = copy(stor.adjoint_drift_tmp)
-        stor.U_tmp .= exp(stor.adjoint_drift_tmp * prop.dt) * stor.U_tmp
-        #mul!(stor.U_tmp, exp(stor.adjoint_drift_tmp .* dt), stor.U_tmp)
+        optimal_adjoint_drift_newton!(stor.M_tmp, params)
+        #stor.U_tmp .= exp(stor.adjoint_drift_tmp * prop.dt) * stor.U_tmp
+        mul!(stor.dU, exp(stor.adjoint_drift_tmp .* prop.dt), stor.U_tmp)
+        stor.U_tmp .= stor.dU
         br_for_dM!(params)
         stor.M_tmp .+= stor.dM .* prop.dt
 
-        dist = dists[i] 
-
         if dist < prop.coset_tol
-            # return ts[1:i], Us[1:i], Ms[1:i], dists[1:i]
             return dist, ti
         
         elseif prop.coset_tol < dist < dmin 
@@ -83,8 +70,51 @@ function propagate(m, params)
         end 
     end 
 
-    return dmin, tstar
-    # return ts, Us, Ms, dists, Hs, αs
+    return dmin
+end
+
+function propagate_and_store_results(m, params)
+    prop = params.propagation_params
+    stor = params.storage_params
+
+    stor.U_tmp = copy(prop.U0)
+    build_M!(m, params)
+    ts = collect(range(prop.tmin, prop.tmax; step=prop.dt))
+
+    n = length(ts)
+    Us = Vector{typeof(stor.U_tmp)}(undef, n)
+    Ms = Vector{typeof(stor.M_tmp)}(undef, n)
+    Hs = Vector{typeof(stor.U_tmp)}(undef, n)
+    αs = Vector{Float64}(undef, n)
+    dists = Vector{Float64}(undef, n)
+
+    # check target before propagation
+    check_unitarity(params.system_params.target, 0; note="Target")
+    target_dist = min_dist_to_target_coset(params.system_params.target, params)
+    @assert target_dist < prop.coset_tol "dist(target) = $target_dist"
+
+    for i in eachindex(ts)
+
+        dist = min_dist_to_target_coset(stor.U_tmp, params)
+
+        # store
+        Us[i] = copy(stor.U_tmp)
+        Ms[i] = copy(stor.M_tmp)
+        Hs[i] = copy(stor.adjoint_drift_tmp)
+        dists[i] = dist
+
+        # check initial and following actions
+        check_unitarity(stor.U_tmp, i)
+        
+        # propagate
+        optimal_adjoint_drift_newton!(stor.M_tmp, params)
+        mul!(stor.dU, exp(stor.adjoint_drift_tmp .* prop.dt), stor.U_tmp)
+        stor.U_tmp .= stor.dU
+        br_for_dM!(params)
+        stor.M_tmp .+= stor.dM .* prop.dt 
+    end 
+
+    return ts, Us, Ms, Hs, dists
 end
 
 

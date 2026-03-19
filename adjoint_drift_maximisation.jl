@@ -82,7 +82,7 @@ function optimal_adjoint_drift_newton!(costate, params)
     # ensure optimal adjoint drift is anti-hermitian
     check_anti_hermiticity(params.storage_params.adjoint_drift_tmp)
 
-    return α_optimal
+    return nothing
 end 
 
 # function optimal_adjoint_drift_fminbox!(costate, params)
