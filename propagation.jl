@@ -45,6 +45,7 @@ function propagate(m, params)
     Us = Vector{typeof(stor.U_tmp)}(undef, n)
     Ms = Vector{typeof(stor.M_tmp)}(undef, n)
     Hs = Vector{typeof(stor.U_tmp)}(undef, n)
+    αs = Vector{Float64}(undef, n)
     dists = Vector{Float64}(undef, n)
     
     dmin = min_dist_to_target_coset(stor.U_tmp, params)
@@ -62,7 +63,8 @@ function propagate(m, params)
         check_unitarity(stor.U_tmp, i)
         dists[i] = min_dist_to_target_coset(stor.U_tmp, params)
 
-        optimal_adjoint_drift_newton!(stor.M_tmp, params)
+        α_opt = optimal_adjoint_drift_newton!(stor.M_tmp, params)
+        αs[i] = α_opt
         Hs[i] = copy(stor.adjoint_drift_tmp)
         stor.U_tmp .= exp(stor.adjoint_drift_tmp * prop.dt) * stor.U_tmp
         #mul!(stor.U_tmp, exp(stor.adjoint_drift_tmp .* dt), stor.U_tmp)
@@ -71,16 +73,18 @@ function propagate(m, params)
 
         dist = dists[i] 
 
-        # if dist < prop.coset_tol
-        #     return ts[1:i], Us[1:i], Ms[1:i], dists[1:i]
+        if dist < prop.coset_tol
+            # return ts[1:i], Us[1:i], Ms[1:i], dists[1:i]
+            return dist, ti
         
-        # elseif prop.coset_tol < dist < dmin 
-        #     dmin = dist 
-        #     tstar = ti 
-        # end 
+        elseif prop.coset_tol < dist < dmin 
+            dmin = dist 
+            tstar = ti 
+        end 
     end 
 
-    return ts, Us, Ms, dists, Hs 
+    return dmin, tstar
+    # return ts, Us, Ms, dists, Hs, αs
 end
 
 

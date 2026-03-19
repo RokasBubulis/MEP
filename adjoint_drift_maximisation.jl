@@ -65,7 +65,7 @@ function neg_adjoint_drift_obj_2nd_der!(H, x, neg_im_drift, im_control, costate)
 end
 
 function optimal_adjoint_drift_newton!(costate, params)
-    neg_im_drift = -params.derived_args.p_basis[1]#params.system_params.im_drift
+    neg_im_drift = -params.system_params.im_drift
     im_control = params.system_params.im_control
     x0 = [0.0]
 
@@ -82,7 +82,7 @@ function optimal_adjoint_drift_newton!(costate, params)
     # ensure optimal adjoint drift is anti-hermitian
     check_anti_hermiticity(params.storage_params.adjoint_drift_tmp)
 
-    return nothing 
+    return α_optimal
 end 
 
 # function optimal_adjoint_drift_fminbox!(costate, params)
