@@ -4,14 +4,19 @@ include("propagation.jl")
 
 params = prepare_trivial_2D_setup()
 beta = 0.5
-gamma = 0.1
+gamma = 0.0
 params.system_params.target = sparse(exp(
     - beta * Matrix(params.system_params.im_drift) 
     - im *gamma * Matrix(construct_YQ_target(2))
     ))
 
+# check target before propagation
+check_unitarity(params.system_params.target, 0; note="Target")
+target_dist = min_dist_to_target_coset(params.system_params.target, params)
+@assert target_dist < params.propagation_params.coset_tol "dist(target) = $target_dist"
+
 m0 = [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-result = minimize((m)->objective(m, params), m0, 0.5; maxiter=50, verbosity=1)
+result = minimize((m)->propagate(m, params), m0, 0.5; maxiter=50, verbosity=1)
 m_best = xbest(result)
 
 ts, Us, Ms, Hs, dists = propagate_and_store_results(m_best, params)

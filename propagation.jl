@@ -24,15 +24,7 @@ function min_dist_to_target_coset(U, params)
     return dist(β_opt)
 end
 
-# function br_for_dM!(params)
-#     stor = params.storage_params
-#     mul!(stor.tmp1, stor.adjoint_drift_tmp, stor.M_tmp)
-#     mul!(stor.tmp2, stor.M_tmp, stor.adjoint_drift_tmp)
-#     stor.dM .= stor.tmp1 - stor.tmp2
-#     return nothing 
-# end
-
-function objective(m, params)
+function propagate(m, params)
     # propagation accurate to first order in dt, use M_tmp0 only
     prop = params.propagation_params
     stor = params.storage_params
@@ -88,18 +80,21 @@ function propagate_and_store_results(m, params)
     Us = Vector{typeof(stor.U_tmp)}(undef, n)
     Ms = Vector{typeof(stor.M_tmp0)}(undef, n)
     Hs = Vector{typeof(stor.U_tmp)}(undef, n)
+    dists = Vector{Float64}(undef, n)
 
     for i in eachindex(ts)
-        # store
-        Us[i] = copy(stor.U_tmp)
-        Ms[i] = copy(stor.M_tmp0)
-        Hs[i] = copy(stor.adjoint_drift_tmp)
 
         # check initial and following actions
         check_unitarity(stor.U_tmp, i)
 
         # compute H_opt
         optimal_adjoint_drift_newton!(stor.M_tmp0, params)
+
+        # store
+        Us[i] = copy(stor.U_tmp)
+        Ms[i] = copy(stor.M_tmp0)
+        Hs[i] = copy(stor.adjoint_drift_tmp)
+        dists[i] = min_dist_to_target_coset(stor.U_tmp, params)
 
         # U(t+dt) = exp(H_opt * dt) * U(t)
         mul!(stor.dU, exp(stor.adjoint_drift_tmp .* prop.dt), stor.U_tmp)
@@ -114,7 +109,7 @@ function propagate_and_store_results(m, params)
         stor.M_tmp0 .+= stor.dM .* prop.dt
     end 
 
-    return ts, Us, Ms, Hs
+    return ts, Us, Ms, Hs, dists
 end
 
 

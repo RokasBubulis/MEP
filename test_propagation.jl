@@ -15,14 +15,13 @@ params.system_params.target = sparse(exp(
     ))
 
 m0 = [1.0, -3.5, 0.0, 0.0, 0.0, 0.0, 0.0]
-ts, Us, Ms, Hs = propagate_and_store_results(m0, params)
+ts, Us, Ms, Hs, dists = propagate_and_store_results(m0, params)
 ts /= π
 
 n = size(params.system_params.im_control, 1)
 Ms_overlap_with_drift = [abs(tr(M * adjoint(params.system_params.im_drift))) for M in Ms]
 Us_overlap_with_target = [1/n * abs(tr(U * adjoint(params.system_params.target))) for U in Us]
 Hs_overlap_with_M = [abs(tr(Hs[i] * Ms[i])) for i in eachindex(ts)]
-dists = [min_dist_to_target_coset(Us[i], params) for i in eachindex(ts)]
 println("Minimum distance $(minimum(dists)) at time $(ts[argmin(dists)]) π")
 
 p1 = plot(ts, dists, title="min dist=$(round(minimum(dists), sigdigits=3)) at t=$(round(ts[argmin(dists)], sigdigits=3)) π")
