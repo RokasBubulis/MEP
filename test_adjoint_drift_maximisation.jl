@@ -2,15 +2,7 @@ using Plots, Random, BenchmarkTools
 
 include("adjoint_drift_maximisation.jl")
 include("set_params.jl")
-
-function build_M!(M::AbstractMatrix{T}, m::AbstractVector{Float64}, p_basis::Vector{SparseMatrixCSC{T, Int}})
-    fill!(M, zero(T))
-    for (i, m_coeff) in enumerate(m)
-        M .+= m_coeff * p_basis[i]
-    end
-    M /= norm(M)
-    return nothing
-end 
+include("propagation.jl")
 
 params = prepare_trivial_2D_setup()
 min_alpha = -10
@@ -19,7 +11,7 @@ max_alpha = 10
 p_basis = params.derived_args.p_basis
 costate = zeros(T, size(p_basis[1])...)
 m0 = rand(Float64, length(p_basis))
-build_M!(costate, m0, p_basis)
+build_M0_first_order!(costate, m0, params)
 
 # optimise overlap
 optimal_adjoint_drift_newton!(costate, params)
