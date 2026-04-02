@@ -23,9 +23,9 @@ function precompute_derived_args(s::SystemParams)
     return DerivedArgs(lie_basis, p_basis, diag_im_control_vec)
 end
 
-struct PropagationParams{T}
-    tmin::Float64
+mutable struct PropagationParams{T}
     tmax::Float64
+    dt_base::Float64
     dt::Float64
     U0::Matrix{T}
     coset_tol::Float64
@@ -34,6 +34,8 @@ end
 mutable struct StorageParams{T}
     adjoint_drift_tmp::Matrix{T}
     M_tmp0::Matrix{T}
+    M_tmp1::Matrix{T}
+    M_tmp2::Matrix{T}
     U_tmp::Matrix{T}
     dU::Matrix{T}
     dM::Matrix{T}
@@ -55,15 +57,16 @@ function prepare_trivial_2D_setup()
     target = SparseMatrixCSC{T, Int}(undef, dim, dim)
     system_params = SystemParams(im_drift, im_control, target)
 
-    tmin = 0.0
-    tmax = 5.0
-    dt = (tmax - tmin) / 100
+    tmax = 1.0
+    dt = tmax / 100
     dim = size(im_control, 1)
     U0 = Matrix{T}(I, dim, dim)
     coset_tol = 1e-8
-    propagation_params = PropagationParams(tmin, tmax, dt, U0, coset_tol)
+    propagation_params = PropagationParams(tmax, dt, dt, U0, coset_tol)
 
     storage_params = StorageParams(
+        Matrix{T}(undef, dim, dim),
+        Matrix{T}(undef, dim, dim),
         Matrix{T}(undef, dim, dim),
         Matrix{T}(undef, dim, dim),
         Matrix{T}(undef, dim, dim),

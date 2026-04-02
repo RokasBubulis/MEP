@@ -11,7 +11,7 @@ max_alpha = 10
 p_basis = params.derived_args.p_basis
 costate = zeros(T, size(p_basis[1])...)
 m0 = rand(Float64, length(p_basis))
-build_M0_first_order!(costate, m0, params)
+build_M0!(costate, m0, params)
 
 # optimise overlap
 optimal_adjoint_drift_newton!(costate, params)
