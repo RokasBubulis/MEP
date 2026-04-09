@@ -1,8 +1,4 @@
 
-include("set_params.jl")
-include("adjoint_drift_maximisation.jl")
-include("checks.jl")
-
 function build_M0!(M0, m, params)
     M0 .= 0
     for (i, m_coeff) in enumerate(m)
@@ -29,8 +25,30 @@ function distance_objective(U, params)
     return 1.0 - abs(tr(U*adjoint(params.system_params.target))/size(U,1))
 end
 
-function propagator_2nd_order_step!(params)
-    stor = params.storage_params
+### Propagation ### 
+
+function set_initial_state_2nd_order!(m, params, stor)
+    # set U_tmp = U(dt) = exp(H_opt(0)*dt) * U(0) and 
+    # M_tmp0 = M(0), M_tmp1 = M(dt)
+    # to build M(dt) for the first step, use first-order approximation
+
+    prop = params.propagation_params
+
+    build_M0!(stor.M_tmp0, m, params)  # M(0)
+    optimal_adjoint_drift_newton!(stor.adjoint_drift_tmp, stor.M_tmp0, params)  # H_opt(0)
+
+    # M(dt) = [H_opt(0), M(0)] * dt
+    mul!(stor.dM, stor.adjoint_drift_tmp, stor.M_tmp0)
+    mul!(stor.tmp_mat, stor.M_tmp0, stor.adjoint_drift_tmp)
+    stor.dM .-= stor.tmp_mat
+    stor.M_tmp1 .= stor.dM * prop.dt .+ stor.M_tmp0
+
+    mul!(stor.U_tmp, exp(stor.adjoint_drift_tmp * prop.dt), copy(prop.U0))  # U(dt)
+
+    return nothing
+end
+
+function propagator_2nd_order_step!(params, stor)
     prop = params.propagation_params
 
     # compute H_opt(t) = argmax_H(α) tr(H(α)*M(t))
@@ -56,11 +74,10 @@ function propagator_2nd_order_step!(params)
     return nothing
 end 
 
-function propagate_2nd_order(m, params; store=false)
+function propagate_2nd_order(m, params, stor; save=false)
     prop = params.propagation_params
-    stor = params.storage_params
 
-    set_initial_state_2nd_order!(m, params)
+    set_initial_state_2nd_order!(m, params, stor)
     ts = collect(range(0.0, prop.tmax; step=prop.dt))
     n = length(ts)
 
@@ -68,7 +85,7 @@ function propagate_2nd_order(m, params; store=false)
     d2 = distance_objective(stor.U_tmp, params)
     dmin = min(d1, d2)
 
-    if store
+    if save
         Us = Vector{typeof(stor.U_tmp)}(undef, n)
         Ms = Vector{typeof(stor.M_tmp0)}(undef, n)
         Hs = Vector{typeof(stor.adjoint_drift_tmp)}(undef, n)
@@ -87,7 +104,7 @@ function propagate_2nd_order(m, params; store=false)
     for i in eachindex(ts)[3:end]
         dist = distance_objective(stor.U_tmp, params)
 
-        if !store
+        if !save
             if dist < prop.coset_tol
                 return dist
             elseif dist < dmin
@@ -97,9 +114,9 @@ function propagate_2nd_order(m, params; store=false)
 
         check_unitarity(stor.U_tmp, i)
         check_costate(stor.M_tmp0, params, i)
-        propagator_2nd_order_step!(params)
+        propagator_2nd_order_step!(params, stor)
 
-        if store
+        if save
             Us[i] = copy(stor.U_tmp)
             Ms[i] = copy(stor.M_tmp1)
             Hs[i] = copy(stor.adjoint_drift_tmp)
@@ -107,10 +124,10 @@ function propagate_2nd_order(m, params; store=false)
         end
     end
 
-    return store ? (ts, Us, Ms, Hs, dists) : dmin
+    return save ? (ts, Us, Ms, Hs, dists) : dmin
 end
 
-### Shooting approach to find the best initial costate M0
+### Shooting approach to find the best initial costate M0 ###
 
 # represent the search space as n-1 angles on the hyper-sphere ensuring |M(t)| = 1
 function angles_to_directions(angles)
@@ -126,20 +143,35 @@ function angles_to_directions(angles)
     return m
 end
 
-function find_best_initial_costate(params)
+function find_best_initial_costate(params, stor)
 
     # check target before propagation
     check_unitarity(params.system_params.target, 0; note="Target")
     @assert distance_objective(params.system_params.target, params) < params.propagation_params.coset_tol "Error in target overlap"
 
-    initial_angles = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-    objective(angles) = propagate_2nd_order(angles_to_directions(angles), params)
+    n = length(params.derived_args.p_basis) - 1
+    initial_angles = zeros(n)
+
+    #thread_stors = [deepcopy(stor) for _ in 1:Threads.nthreads()]
+    thread_stors = [deepcopy(stor) for _ in 1:Threads.maxthreadid()]
+
+    objective = function(angles)
+        s = thread_stors[Threads.threadid()]
+        propagate_2nd_order(angles_to_directions(angles), params, s)
+    end
+
+    #objective(angles) = propagate_2nd_order(angles_to_directions(angles), params, stor)
 
     # use CMA Evolution strategy for optimisation
     result = minimize(
         objective,
         initial_angles, 0.5;
-        maxiter=500, verbosity=1
+        maxiter=500, verbosity=1,
+        multi_threading=true,
+        popsize=24,
+        lower = zeros(n),
+        upper = [i == 1 ? 2π : π for i in 1:n],
+        ftarget=params.propagation_params.coset_tol
         )
     angles_best = xbest(result)
     m_best = angles_to_directions(angles_best)

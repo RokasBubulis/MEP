@@ -23,9 +23,8 @@ function precompute_derived_args(s::SystemParams)
     return DerivedArgs(lie_basis, p_basis, diag_im_control_vec)
 end
 
-mutable struct PropagationParams{T}
+struct PropagationParams{T}
     tmax::Float64
-    dt_base::Float64
     dt::Float64
     U0::Matrix{T}
     coset_tol::Float64
@@ -45,7 +44,6 @@ end
 struct Params{T}
     system_params::SystemParams{T}
     propagation_params::PropagationParams{T}
-    storage_params::StorageParams{T}
     derived_args::DerivedArgs{T}
 end 
 
@@ -61,8 +59,8 @@ function prepare_trivial_2D_setup()
     dt = tmax / 100
     dim = size(im_control, 1)
     U0 = Matrix{T}(I, dim, dim)
-    coset_tol = 1e-8
-    propagation_params = PropagationParams(tmax, dt, dt, U0, coset_tol)
+    coset_tol = 1e-5
+    propagation_params = PropagationParams(tmax, dt, U0, coset_tol)
 
     storage_params = StorageParams(
         Matrix{T}(undef, dim, dim),
@@ -76,5 +74,5 @@ function prepare_trivial_2D_setup()
     )
     derived_args = precompute_derived_args(system_params)
 
-    return Params(system_params, propagation_params, storage_params, derived_args)
+    return Params(system_params, propagation_params, derived_args), storage_params
 end 
