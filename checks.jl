@@ -12,13 +12,13 @@ function check_unitarity(U, i; note = nothing)
     @assert nrm < unitarity_tol "$(note !== nothing ? note : "") Propagator is not unitary at timestep $i: norm(U*adjoint(U) - I) = $nrm"
 end
 
-function check_belongs_to_p_basis(mat1, params, timestep)
+function check_costate(mat1, params, timestep)
     n = length(params.derived_args.p_basis)
     dim = size(params.system_params.target,1)
     mat = copy(mat1)
-    for i in 1:n
-        coeff = dot(params.derived_args.p_basis[i], mat) / dot(params.derived_args.p_basis[i],params.derived_args.p_basis[i])
-        mat .-= coeff .* params.derived_args.p_basis[i]
-    end
-    @assert isapprox(norm(mat), 0.0, atol=1e-3) "norm of remainder: $(norm(mat)) at timestep $timestep"
+    for element in params.derived_args.p_basis
+        coeff = dot(element, mat) / dot(element, element)
+        mat .-= coeff .* element
+    end 
+    @assert isapprox(norm(mat), 0.0, atol=1e-8) "norm of remainder: $(norm(mat)) at timestep $timestep"
 end

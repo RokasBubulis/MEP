@@ -4,13 +4,15 @@ commutes(x, y; tol = 1e-6) = maximum(abs.(br(x, y))) < tol
 
 T = ComplexF64
 
+# this is actually orthogonal!
 function try_add_orthonormal!(basis::Vector{SparseMatrixCSC{T,Int}}, 
                         candidate:: SparseMatrixCSC{T,Int};
                         tol = 1e-6)
     
     for element in basis
+        # println(dot(element, element))
         proj_coeff = dot(element, candidate) # more efficient than trace
-        candidate .-= proj_coeff .* element
+        candidate .-= proj_coeff .* element ./ dot(element, element)
     end
 
     nrm = norm(candidate)
@@ -24,36 +26,55 @@ function try_add_orthonormal!(basis::Vector{SparseMatrixCSC{T,Int}},
     return true
 end
 
-# Local GS orthonormalisation
-function construct_lie_basis_2gens(generators::Vector{SparseMatrixCSC{T, Int}}, depth::Int)
-    basis_elements = SparseMatrixCSC{T,Int}[]
-    im_gens = im.*generators
-    for g in im_gens
-        #try_add_orthonormal!(basis_elements, g)
-        push!(basis_elements, g)
+function try_add_not_orthogonal!(basis::Vector{SparseMatrixCSC{T,Int}}, next_level,
+                        candidate:: SparseMatrixCSC{T,Int};
+                        tol = 1e-6)
+    
+    cand = copy(candidate)
+    for element in basis
+        # println(dot(element, element))
+        proj_coeff = dot(element, cand) # more efficient than trace
+        cand .-= proj_coeff .* element ./ dot(element, element)
     end
-    bracket = br(im_gens[1], im_gens[2])
-    if try_add_orthonormal!(basis_elements, bracket)
-        new_elements = [bracket]
-    else
-        return basis_elements
+
+    nrm = norm(cand)
+    if nrm > tol * sqrt(length(cand))
+        push!(basis, candidate)# / norm(candidate))
+        push!(next_level, cand)
     end
-    d = 1
-    while d < depth
-        d += 1
-        next_layer = SparseMatrixCSC{T, Int}[]
-        for element in new_elements
-            for gen in im_gens
-                bracket = br(gen, element)
-                if try_add_orthonormal!(basis_elements, bracket)
-                    push!(next_layer, bracket)
-                end
-            end
-        end
-        new_elements = next_layer
-    end
-    return basis_elements
+    return nothing
 end
+
+# # Local GS orthonormalisation
+# function construct_lie_basis_2gens(generators::Vector{SparseMatrixCSC{T, Int}}, depth::Int)
+#     basis_elements = SparseMatrixCSC{T,Int}[]
+#     im_gens = im.*generators
+#     for g in im_gens
+#         #try_add_orthonormal!(basis_elements, g)
+#         push!(basis_elements, g)
+#     end
+#     bracket = br(im_gens[1], im_gens[2])
+#     if try_add_orthonormal!(basis_elements, bracket)
+#         new_elements = [bracket]
+#     else
+#         return basis_elements
+#     end
+#     d = 1
+#     while d < depth
+#         d += 1
+#         next_layer = SparseMatrixCSC{T, Int}[]
+#         for element in new_elements
+#             for gen in im_gens
+#                 bracket = br(gen, element)
+#                 if try_add_orthonormal!(basis_elements, bracket)
+#                     push!(next_layer, bracket)
+#                 end
+#             end
+#         end
+#         new_elements = next_layer
+#     end
+#     return basis_elements
+# end
 
 function construct_lie_basis_general(generators::Vector{SparseMatrixCSC{T, Int}}; depth = 10)
     basis_elements = SparseMatrixCSC{T,Int}[]

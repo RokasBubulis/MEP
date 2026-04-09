@@ -64,7 +64,7 @@ function neg_adjoint_drift_obj_2nd_der!(H, x, neg_im_drift, im_control, costate)
     return nothing 
 end
 
-function optimal_adjoint_drift_newton!(costate, params)
+function optimal_adjoint_drift_newton!(tmp, costate, params)
     neg_im_drift = -params.system_params.im_drift
     im_control = params.system_params.im_control
     x0 = [0.0]
@@ -78,9 +78,9 @@ function optimal_adjoint_drift_newton!(costate, params)
     res = Optim.optimize(td, x0, Newton(linesearch = LineSearches.BackTracking()))
     α_optimal = Optim.minimizer(res)[1]
 
-    adjoint_drift!(params.storage_params.adjoint_drift_tmp, neg_im_drift, im_control, α_optimal)
+    adjoint_drift!(tmp, neg_im_drift, im_control, α_optimal)
     # ensure optimal adjoint drift is anti-hermitian
-    check_anti_hermiticity(params.storage_params.adjoint_drift_tmp)
+    check_anti_hermiticity(tmp)
 
     return nothing
 end 
