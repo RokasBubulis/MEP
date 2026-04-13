@@ -1,3 +1,4 @@
+using LinearAlgebra
 include("params.jl")
 
 function build_M0!(M0::Matrix{T}, m::Vector{Float64}, params::Params)
@@ -5,7 +6,6 @@ function build_M0!(M0::Matrix{T}, m::Vector{Float64}, params::Params)
     for (i, m_coeff) in enumerate(m)
         M0 .+= m_coeff * params.algebra.p_basis[i]
     end
-    #M0 /= norm(M0)
     return nothing
 end 
 
@@ -21,11 +21,18 @@ end
 #     return dist(β_opt)
 # end
 
+# applicable only if diagonal control
 function distance_objective(U::Union{Matrix{T}, SparseMatrixCSC{T,Int}}, 
     params::Params, stor::StorageParams)
-    # 1 - overlap between U and target
+
     mul!(stor.tmp, U, params.physics.adjoint_target)
-    return 1.0 - abs(tr(stor.tmp))/size(U,1)
+    tmp_diag = diag(stor.tmp)
+
+    dist(β) = 1 - 1/size(U,1) * abs(dot(exp.(β.*params.physics.im_control_vec), tmp_diag))
+    res = optimize(dist, -pi, pi)
+    β_opt = Optim.minimizer(res)
+
+    return dist(β_opt)
 end
 
 ### Propagation ### 
@@ -102,25 +109,23 @@ function propagate_2nd_order(m::Vector{Float64}, params::Params, stor::StoragePa
     end
 
     for i in eachindex(ts)[3:end]
-        dist = distance_objective(stor.U, params, stor)
-
-        if !save
-            if dist < params.solver.tol
-                return dist
-            elseif dist < dmin
-                dmin = dist
-            end
-        end
 
         check_unitarity(stor.U, i)
         check_costate(stor.M0, params, i)
         propagator_2nd_order_step!(params, stor)
+        dist = distance_objective(stor.U, params, stor)
 
         if save
             Us[i] = copy(stor.U)
             Ms[i] = copy(stor.M1)
             Hs[i] = copy(stor.adjoint_drift)
             dists[i] = dist
+        else
+            if dist < params.solver.tol
+                return dist
+            elseif dist < dmin
+                dmin = dist
+            end
         end
     end
 
@@ -166,7 +171,7 @@ function find_best_initial_costate(params::Params, stor::StorageParams)
     # use CMA Evolution strategy for optimisation
     result = minimize(
         objective,
-        initial_angles, 0.5;
+        initial_angles, 1.5;
         maxiter=500, verbosity=1,
         multi_threading=true,
         popsize=24,

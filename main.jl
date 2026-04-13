@@ -6,7 +6,7 @@ include("checks.jl")
 include("propagation.jl")
 
 # specify target over lie basis
-lie_coeffs = [0.0, 0.1, 0.3, 0.0, 0.0, 0.0, 0.0, 0.0]  # control is no longer used??
+lie_coeffs = [0.1, 0.3, 0.2, 0.0, 0.0, 0.0, 0.0, 0.0]
 tmax = 1.0
 dt = tmax / 100
 tol = 1e-5

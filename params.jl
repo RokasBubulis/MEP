@@ -7,6 +7,7 @@ struct PhysicsParams{T}
     im_control::SparseMatrixCSC{T,Int}
     target::SparseMatrixCSC{T,Int}
     adjoint_target::SparseMatrixCSC{T,Int}
+    im_control_vec::Vector{T}
 end
 
 struct AlgebraParams{T}
@@ -54,7 +55,7 @@ function prepare_2q_setup_with_target_from_Lie_coeffs(lie_coeffs::Vector{Float64
     @assert length(lie_coeffs) == length(lie_basis) "Number of coeffs must match Lie algebra dimension"
     target = sparse(exp(-Matrix(sum(lie_coeffs[i] * lie_basis[i] for i in eachindex(lie_coeffs)))))
 
-    physics = PhysicsParams{T}(im_drift, im_control, target, sparse(adjoint(target)))
+    physics = PhysicsParams{T}(im_drift, im_control, target, sparse(adjoint(target)), vec(diag(im_control)))
     algebra = AlgebraParams{T}(lie_basis, p_basis)
     solver  = SolverParams(tmax, dt, tol)
 
