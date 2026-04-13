@@ -1,23 +1,17 @@
 using Optim, CMAEvolutionStrategy
 
-include("set_params.jl")
+include("params.jl")
 include("adjoint_drift_maximisation.jl")
 include("checks.jl")
 include("propagation.jl")
 
-params, stor = prepare_trivial_2D_setup()
+# specify target over lie basis
+lie_coeffs = [0.0, 0.1, 0.3, 0.0, 0.0, 0.0, 0.0, 0.0]  # control is no longer used??
+tmax = 1.0
+dt = tmax / 100
+tol = 1e-5
 
-coeffs = [0.4, 0.3, 0.2, 0.0, 0.0, 0.0, 0.0]
-
-# terms = String[]
-# for (i, coeff) in enumerate(coeffs)
-#     coeff != 0 && push!(terms, "$(coeff)⋅p_[$i]")
-# end 
-# target_str = "exp(-(" * join(terms, " + ") * "))"
-
-params.system_params.target = sparse(exp(
-    - Matrix(sum(coeffs[i] * params.derived_args.p_basis[i] for i in eachindex(coeffs)))
-))
+params, stor = prepare_2q_setup_with_target_from_Lie_coeffs(lie_coeffs, tmax, dt, tol)
 
 m_best = find_best_initial_costate(params, stor)
 ts, Us, Ms, Hs, dists = propagate_2nd_order(m_best, params, stor; save = true)

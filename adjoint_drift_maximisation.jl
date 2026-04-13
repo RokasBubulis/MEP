@@ -30,24 +30,29 @@ function adjoint_action_by_campbell(X::SparseMatrixCSC{T, Int},
     return exp(Matrix(X)) * Y * exp(-Matrix(X))
 end
 
-function adjoint_drift!(tmp, neg_im_drift, im_control, α)
+function adjoint_drift!(tmp::Matrix{T}, neg_im_drift::SparseMatrixCSC{T,Int}, 
+    im_control::SparseMatrixCSC{T,Int}, α::Float64)
     tmp .= adjoint_action_by_campbell(-α * im_control, neg_im_drift)
     return nothing 
 end 
 
-function adjoint_drift(neg_im_drift, im_control, α)
+function adjoint_drift(neg_im_drift::SparseMatrixCSC{T,Int},
+    im_control::SparseMatrixCSC{T,Int}, α::Float64)
     mat = adjoint_action_by_campbell(-α * im_control, neg_im_drift)
     return mat
 end 
 
 # Negate the objective and derivatives as the goal is to maximise the function
-function neg_adjoint_drift_obj(x, neg_im_drift, im_control, costate)
+function neg_adjoint_drift_obj(x::Vector{Float64}, neg_im_drift::SparseMatrixCSC{T,Int},
+    im_control::SparseMatrixCSC{T,Int}, costate::Matrix{T})
     α = x[1]
     control_H = adjoint_drift(neg_im_drift, im_control, α)
     return -real(tr(control_H * costate))
 end 
 
-function neg_adjoint_drift_obj_1st_der!(G, x, neg_im_drift, im_control, costate)
+function neg_adjoint_drift_obj_1st_der!(G::AbstractVector{Float64}, x::AbstractVector{Float64}, 
+    neg_im_drift::SparseMatrixCSC{T,Int}, im_control::SparseMatrixCSC{T,Int}, 
+    costate::Matrix{T})
     α = x[1]
     control_H = adjoint_drift(neg_im_drift, im_control, α)
     first_der = control_H * im_control - im_control * control_H
@@ -55,7 +60,9 @@ function neg_adjoint_drift_obj_1st_der!(G, x, neg_im_drift, im_control, costate)
     return nothing
 end 
 
-function neg_adjoint_drift_obj_2nd_der!(H, x, neg_im_drift, im_control, costate)
+function neg_adjoint_drift_obj_2nd_der!(H::Matrix{Float64}, x::AbstractVector{Float64}, 
+    neg_im_drift::SparseMatrixCSC{T,Int}, im_control::SparseMatrixCSC{T,Int}, 
+    costate::Matrix{T})
     α = x[1]
     control_H = adjoint_drift(neg_im_drift, im_control, α)
     first_der = control_H * im_control - im_control * control_H
@@ -64,9 +71,9 @@ function neg_adjoint_drift_obj_2nd_der!(H, x, neg_im_drift, im_control, costate)
     return nothing 
 end
 
-function optimal_adjoint_drift_newton!(tmp, costate, params)
-    neg_im_drift = -params.system_params.im_drift
-    im_control = params.system_params.im_control
+function optimal_adjoint_drift_newton!(tmp::Matrix{T}, costate::Matrix{T}, params::Params)
+    neg_im_drift = -params.physics.im_drift
+    im_control = params.physics.im_control
     x0 = [0.0]
 
     td = TwiceDifferentiable(

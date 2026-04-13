@@ -1,125 +1,125 @@
+include("params.jl")
 
-function build_M0!(M0, m, params)
+function build_M0!(M0::Matrix{T}, m::Vector{Float64}, params::Params)
     M0 .= 0
     for (i, m_coeff) in enumerate(m)
-        M0 .+= m_coeff * params.derived_args.p_basis[i]
+        M0 .+= m_coeff * params.algebra.p_basis[i]
     end
     #M0 /= norm(M0)
     return nothing
 end 
 
-# if diagonal control
-function min_dist_to_target_coset(U, params)
-    A = U * adjoint(params.system_params.target)
+# # if diagonal control
+# function min_dist_to_target_coset(U, params)
+#     A = U * adjoint(params.system_params.target)
 
-    dist(β) = norm(A - spdiagm(0 => exp.(β.* params.derived_args.diag_im_control_vec)))
+#     dist(β) = norm(A - spdiagm(0 => exp.(β.* params.derived_args.diag_im_control_vec)))
     
-    res = optimize(dist, -pi, pi)  # decreasing tolerance does not help
-    β_opt = Optim.minimizer(res)
+#     res = optimize(dist, -pi, pi)  # decreasing tolerance does not help
+#     β_opt = Optim.minimizer(res)
 
-    return dist(β_opt)
-end
+#     return dist(β_opt)
+# end
 
-function distance_objective(U, params)
+function distance_objective(U::Union{Matrix{T}, SparseMatrixCSC{T,Int}}, 
+    params::Params, stor::StorageParams)
     # 1 - overlap between U and target
-    return 1.0 - abs(tr(U*adjoint(params.system_params.target))/size(U,1))
+    mul!(stor.tmp, U, params.physics.adjoint_target)
+    return 1.0 - abs(tr(stor.tmp))/size(U,1)
 end
 
 ### Propagation ### 
 
-function set_initial_state_2nd_order!(m, params, stor)
+function set_initial_state_2nd_order!(m::Vector{Float64}, params::Params, stor::StorageParams)
     # set U_tmp = U(dt) = exp(H_opt(0)*dt) * U(0) and 
     # M_tmp0 = M(0), M_tmp1 = M(dt)
     # to build M(dt) for the first step, use first-order approximation
 
-    prop = params.propagation_params
-
-    build_M0!(stor.M_tmp0, m, params)  # M(0)
-    optimal_adjoint_drift_newton!(stor.adjoint_drift_tmp, stor.M_tmp0, params)  # H_opt(0)
+    build_M0!(stor.M0, m, params)  # M(0)
+    optimal_adjoint_drift_newton!(stor.adjoint_drift, stor.M0, params)  # H_opt(0)
 
     # M(dt) = [H_opt(0), M(0)] * dt
-    mul!(stor.dM, stor.adjoint_drift_tmp, stor.M_tmp0)
-    mul!(stor.tmp_mat, stor.M_tmp0, stor.adjoint_drift_tmp)
-    stor.dM .-= stor.tmp_mat
-    stor.M_tmp1 .= stor.dM * prop.dt .+ stor.M_tmp0
+    mul!(stor.dM, stor.adjoint_drift, stor.M0)
+    mul!(stor.tmp, stor.M0, stor.adjoint_drift)
+    stor.dM .-= stor.tmp
+    stor.M1 .= stor.dM * params.solver.dt .+ stor.M0
 
-    mul!(stor.U_tmp, exp(stor.adjoint_drift_tmp * prop.dt), copy(prop.U0))  # U(dt)
+    mul!(stor.U, exp(stor.adjoint_drift * params.solver.dt), copy(params.U0))  # U(dt)
 
     return nothing
 end
 
-function propagator_2nd_order_step!(params, stor)
-    prop = params.propagation_params
+function propagator_2nd_order_step!(params::Params, stor::StorageParams)
 
     # compute H_opt(t) = argmax_H(α) tr(H(α)*M(t))
-    optimal_adjoint_drift_newton!(stor.adjoint_drift_tmp, stor.M_tmp1, params)
+    optimal_adjoint_drift_newton!(stor.adjoint_drift, stor.M1, params)
 
     # U(t+dt) = exp(H_opt * dt) * U(t)
-    mul!(stor.dU, exp(stor.adjoint_drift_tmp .* prop.dt), stor.U_tmp)
-    stor.U_tmp[:] .= stor.dU[:]
+    mul!(stor.dU, exp(stor.adjoint_drift .* params.solver.dt), stor.U)
+    stor.U[:] .= stor.dU[:]
 
     # dM/dt = [H_opt, M(t)]
-    mul!(stor.dM, stor.adjoint_drift_tmp, stor.M_tmp1)
-    mul!(stor.tmp_mat, stor.M_tmp1, stor.adjoint_drift_tmp)
-    stor.dM[:] .-= stor.tmp_mat[:]
+    mul!(stor.dM, stor.adjoint_drift, stor.M1)
+    mul!(stor.tmp, stor.M1, stor.adjoint_drift)
+    stor.dM[:] .-= stor.tmp[:]
 
     # M(t+dt) = 2*dt*[H_opt, M(t)] + M(t-dt)
-    stor.M_tmp2[:] .= (2*prop.dt) .* stor.dM[:] .+ stor.M_tmp0[:]
+    stor.M2[:] .= (2*params.solver.dt) .* stor.dM[:] .+ stor.M0[:]
 
     # M(t-dt) -> M(t)
     # M(t) -> M(t+dt)
-    stor.M_tmp0[:] .= stor.M_tmp1[:]
-    stor.M_tmp1[:] .= stor.M_tmp2[:]
+    stor.M0[:] .= stor.M1[:]
+    stor.M1[:] .= stor.M2[:]
 
     return nothing
 end 
 
-function propagate_2nd_order(m, params, stor; save=false)
-    prop = params.propagation_params
+function propagate_2nd_order(m::Vector{Float64}, params::Params, stor::StorageParams; save=false) 
+    # 574 μs without save and without checks, 630 μs with checks
 
     set_initial_state_2nd_order!(m, params, stor)
-    ts = collect(range(0.0, prop.tmax; step=prop.dt))
+    ts = collect(range(0.0, params.solver.tmax; step=params.solver.dt))
     n = length(ts)
 
-    d1 = distance_objective(prop.U0, params)
-    d2 = distance_objective(stor.U_tmp, params)
+    d1 = distance_objective(params.U0, params, stor)
+    d2 = distance_objective(stor.U, params, stor)
     dmin = min(d1, d2)
 
     if save
-        Us = Vector{typeof(stor.U_tmp)}(undef, n)
-        Ms = Vector{typeof(stor.M_tmp0)}(undef, n)
-        Hs = Vector{typeof(stor.adjoint_drift_tmp)}(undef, n)
+        Us = Vector{typeof(stor.U)}(undef, n)
+        Ms = Vector{typeof(stor.M0)}(undef, n)
+        Hs = Vector{typeof(stor.adjoint_drift)}(undef, n)
         dists = Vector{Float64}(undef, n)
-        Us[1] = copy(prop.U0)
-        Us[2] = copy(stor.U_tmp)
-        Ms[1] = copy(stor.M_tmp0)
-        Ms[2] = copy(stor.M_tmp1)
-        Hs[1] = copy(stor.adjoint_drift_tmp)
-        optimal_adjoint_drift_newton!(stor.tmp_mat, stor.M_tmp1, params)
-        Hs[2] = copy(stor.tmp_mat)
+        Us[1] = copy(params.U0)
+        Us[2] = copy(stor.U)
+        Ms[1] = copy(stor.M0)
+        Ms[2] = copy(stor.M1)
+        Hs[1] = copy(stor.adjoint_drift)
+        optimal_adjoint_drift_newton!(stor.tmp, stor.M1, params)
+        Hs[2] = copy(stor.tmp)
         dists[1] = d1
         dists[2] = d2
     end
 
     for i in eachindex(ts)[3:end]
-        dist = distance_objective(stor.U_tmp, params)
+        dist = distance_objective(stor.U, params, stor)
 
         if !save
-            if dist < prop.coset_tol
+            if dist < params.solver.tol
                 return dist
             elseif dist < dmin
                 dmin = dist
             end
         end
 
-        check_unitarity(stor.U_tmp, i)
-        check_costate(stor.M_tmp0, params, i)
+        check_unitarity(stor.U, i)
+        check_costate(stor.M0, params, i)
         propagator_2nd_order_step!(params, stor)
 
         if save
-            Us[i] = copy(stor.U_tmp)
-            Ms[i] = copy(stor.M_tmp1)
-            Hs[i] = copy(stor.adjoint_drift_tmp)
+            Us[i] = copy(stor.U)
+            Ms[i] = copy(stor.M1)
+            Hs[i] = copy(stor.adjoint_drift)
             dists[i] = dist
         end
     end
@@ -130,7 +130,7 @@ end
 ### Shooting approach to find the best initial costate M0 ###
 
 # represent the search space as n-1 angles on the hyper-sphere ensuring |M(t)| = 1
-function angles_to_directions(angles)
+function angles_to_directions(angles::AbstractVector{Float64})
     n = length(angles) + 1
     m = zeros(n)
     m[1] = cos(angles[1])
@@ -143,13 +143,14 @@ function angles_to_directions(angles)
     return m
 end
 
-function find_best_initial_costate(params, stor)
+function find_best_initial_costate(params::Params, stor::StorageParams)
 
     # check target before propagation
-    check_unitarity(params.system_params.target, 0; note="Target")
-    @assert distance_objective(params.system_params.target, params) < params.propagation_params.coset_tol "Error in target overlap"
+    check_unitarity(params.physics.target, 0; note="Target")
+    targ_dist = distance_objective(params.physics.target, params, stor)
+    @assert targ_dist < params.solver.tol "Error in target overlap: $targ_dist"
 
-    n = length(params.derived_args.p_basis) - 1
+    n = length(params.algebra.p_basis) - 1
     initial_angles = zeros(n)
 
     #thread_stors = [deepcopy(stor) for _ in 1:Threads.nthreads()]
@@ -171,7 +172,7 @@ function find_best_initial_costate(params, stor)
         popsize=24,
         lower = zeros(n),
         upper = [i == 1 ? 2π : π for i in 1:n],
-        ftarget=params.propagation_params.coset_tol
+        ftarget=params.solver.tol
         )
     angles_best = xbest(result)
     m_best = angles_to_directions(angles_best)

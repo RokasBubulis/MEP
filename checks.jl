@@ -13,10 +13,10 @@ function check_unitarity(U, i; note = nothing)
 end
 
 function check_costate(mat1, params, timestep)
-    n = length(params.derived_args.p_basis)
-    dim = size(params.system_params.target,1)
+    n = length(params.algebra.p_basis)
+    dim = size(params.physics.target,1)
     mat = copy(mat1)
-    for element in params.derived_args.p_basis
+    for element in params.algebra.p_basis
         coeff = dot(element, mat) / dot(element, element)
         mat .-= coeff .* element
     end 
