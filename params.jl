@@ -22,9 +22,9 @@ end
 mutable struct SolverParams
     tmax::Float64
     dt::Float64
-    dt_base::Float64
     tol::Float64
     lambda::Float64
+    Newton_steps::Int64
 end
 
 struct Params{T}
@@ -46,7 +46,7 @@ StorageParams{T}(dim::Int) where T = StorageParams{T}(
 
 ### Specific test cases ### 
 
-function prepare_2q_setup_with_target_from_Lie_coeffs(lie_coeffs::Vector{Float64}, tmax::Float64, dt::Float64, tol::Float64, lambda)
+function prepare_2q_setup_with_target_from_Lie_coeffs(lie_coeffs::Vector{Float64}, tmax::Float64, dt::Float64, tol::Float64, lambda::Float64, Newton_steps::Int64)
     n_qubits = 2
     im_control, im_drift = im .* construct_Ryd_generators(n_qubits)
 
@@ -59,7 +59,7 @@ function prepare_2q_setup_with_target_from_Lie_coeffs(lie_coeffs::Vector{Float64
 
     physics = PhysicsParams{ComplexF64}(im_drift, im_control, target, sparse(adjoint(target)), vec(diag(im_control)))
     algebra = AlgebraParams{ComplexF64}(lie_basis, p_basis)
-    solver  = SolverParams(tmax, dt, dt, tol, lambda)
+    solver  = SolverParams(tmax, dt, tol, lambda, Newton_steps)
 
     dim = size(im_control, 1)
     params = Params{ComplexF64}(physics, algebra, solver, Matrix{ComplexF64}(I, dim, dim))

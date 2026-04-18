@@ -9,16 +9,17 @@ tmax = 1.0
 dt = tmax / 100
 tol = 1e-8
 lambda = 0.0
+Newton_steps = 50
 
 # specify target over lie basis
 lie_coeffs = [1.0, 0.1, 0.3, 0.0, 0.0, 0.0, 0.0, 0.0]
 #lie_coeffs = rand(8) * 2 .-1 ./2
 #println(lie_coeffs)
-params, stor = prepare_2q_setup_with_target_from_Lie_coeffs(lie_coeffs, tmax, dt, tol, lambda)
+params, stor = prepare_2q_setup_with_target_from_Lie_coeffs(lie_coeffs, tmax, dt, tol, lambda, Newton_steps)
 
 #params, stor = prepare_2q_setup_CZ(tmax, dt, tol)
 
-m_best = find_best_initial_costate_bbf(params, stor)
+m_best = find_best_initial_costate_autograd(params, stor)
 ts, Us, Ms, Hs, dists = propagate_2nd_order(m_best, params, stor; save = true)
 min_dist = minimum(dists)
 time_of_min_dist = ts[argmin(dists)]

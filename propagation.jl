@@ -48,7 +48,11 @@ function set_initial_state_2nd_order!(m::AbstractVector{TR}, params::Params, sto
     # to build M(dt) for the first step, use first-order approximation
 
     build_M0!(stor.M0, m, params)  # M(0)
-    optimal_adjoint_drift_optimiser!(stor.adjoint_drift, stor.M0, params)  # H_opt(0)
+    if TR <: ForwardDiff.Dual
+        optimal_adjoint_drift_analytic!(stor.adjoint_drift, stor.M0, params)
+    else
+        optimal_adjoint_drift_optimiser!(stor.adjoint_drift, stor.M0, params)  # H_opt(0)
+    end 
 
     # M(dt) = [H_opt(0), M(0)] * dt
     mul!(stor.dM, stor.adjoint_drift, stor.M0)
@@ -64,7 +68,11 @@ end
 function propagator_2nd_order_step!(params::Params, stor::StorageParams)
 
     # compute H_opt(t) = argmax_H(α) tr(H(α)*M(t))
-    optimal_adjoint_drift_optimiser!(stor.adjoint_drift, stor.M1, params)
+    if TR <: ForwardDiff.Dual
+        optimal_adjoint_drift_analytic!(stor.adjoint_drift, stor.M1, params)
+    else
+        optimal_adjoint_drift_optimiser!(stor.adjoint_drift, stor.M1, params)
+    end 
 
     # U(t+dt) = exp(H_opt * dt) * U(t)
     mul!(stor.dU, exp(stor.adjoint_drift .* params.solver.dt), stor.U)
