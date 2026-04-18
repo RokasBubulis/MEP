@@ -1,7 +1,8 @@
-using LinearAlgebra
 include("params.jl")
 
-function build_M0!(M0::Matrix{T}, m::Vector{Float64}, params::Params)
+using ForwardDiff
+
+function build_M0!(M0::Matrix{TC}, m::AbstractVector{TR}, params::Params) where {TR, TC}
     M0 .= 0
     for (i, m_coeff) in enumerate(m)
         M0 .+= m_coeff * params.algebra.p_basis[i]
@@ -29,7 +30,11 @@ function distance_objective(U::Union{Matrix{T}, SparseMatrixCSC{T,Int}},
     tmp_diag = diag(stor.tmp)
 
     dist(β) = 1 - 1/size(U,1) * abs(dot(exp.(β.*params.physics.im_control_vec), tmp_diag))
-    res = optimize(dist, -pi, pi)
+    # res = optimize(dist, -pi, pi)
+    res = optimize(dist, -π, π, Brent(), 
+    abs_tol = 1e-12,   # tighter argument tolerance
+    rel_tol = 1e-12
+)
     β_opt = Optim.minimizer(res)
 
     return dist(β_opt)
@@ -37,13 +42,13 @@ end
 
 ### Propagation ### 
 
-function set_initial_state_2nd_order!(m::Vector{Float64}, params::Params, stor::StorageParams)
+function set_initial_state_2nd_order!(m::AbstractVector{TR}, params::Params, stor::StorageParams) where TR
     # set U_tmp = U(dt) = exp(H_opt(0)*dt) * U(0) and 
     # M_tmp0 = M(0), M_tmp1 = M(dt)
     # to build M(dt) for the first step, use first-order approximation
 
     build_M0!(stor.M0, m, params)  # M(0)
-    optimal_adjoint_drift_newton!(stor.adjoint_drift, stor.M0, params)  # H_opt(0)
+    optimal_adjoint_drift_optimiser!(stor.adjoint_drift, stor.M0, params)  # H_opt(0)
 
     # M(dt) = [H_opt(0), M(0)] * dt
     mul!(stor.dM, stor.adjoint_drift, stor.M0)
@@ -59,7 +64,7 @@ end
 function propagator_2nd_order_step!(params::Params, stor::StorageParams)
 
     # compute H_opt(t) = argmax_H(α) tr(H(α)*M(t))
-    optimal_adjoint_drift_newton!(stor.adjoint_drift, stor.M1, params)
+    optimal_adjoint_drift_optimiser!(stor.adjoint_drift, stor.M1, params)
 
     # U(t+dt) = exp(H_opt * dt) * U(t)
     mul!(stor.dU, exp(stor.adjoint_drift .* params.solver.dt), stor.U)
@@ -81,7 +86,7 @@ function propagator_2nd_order_step!(params::Params, stor::StorageParams)
     return nothing
 end 
 
-function propagate_2nd_order(m::Vector{Float64}, params::Params, stor::StorageParams; save=false) 
+function propagate_2nd_order(m::AbstractVector{TR}, params::Params, stor::StorageParams; save=false) where TR
     # 574 μs without save and without checks, 630 μs with checks
 
     set_initial_state_2nd_order!(m, params, stor)
@@ -102,7 +107,7 @@ function propagate_2nd_order(m::Vector{Float64}, params::Params, stor::StoragePa
         Ms[1] = copy(stor.M0)
         Ms[2] = copy(stor.M1)
         Hs[1] = copy(stor.adjoint_drift)
-        optimal_adjoint_drift_newton!(stor.tmp, stor.M1, params)
+        optimal_adjoint_drift_optimiser!(stor.tmp, stor.M1, params)
         Hs[2] = copy(stor.tmp)
         dists[1] = d1
         dists[2] = d2
@@ -110,7 +115,7 @@ function propagate_2nd_order(m::Vector{Float64}, params::Params, stor::StoragePa
 
     for i in eachindex(ts)[3:end]
 
-        check_unitarity(stor.U, i)
+        check_unitarity(stor.U, stor.tmp, timestep=i)
         check_costate(stor.M0, params, i)
         propagator_2nd_order_step!(params, stor)
         dist = distance_objective(stor.U, params, stor)
@@ -135,9 +140,9 @@ end
 ### Shooting approach to find the best initial costate M0 ###
 
 # represent the search space as n-1 angles on the hyper-sphere ensuring |M(t)| = 1
-function angles_to_directions(angles::AbstractVector{Float64})
+function angles_to_directions(angles::AbstractVector{TR}) where TR
     n = length(angles) + 1
-    m = zeros(n)
+    m = Vector{TR}(undef, n)
     m[1] = cos(angles[1])
     prefix = sin(angles[1])
     for i in 2:n-1
@@ -148,10 +153,10 @@ function angles_to_directions(angles::AbstractVector{Float64})
     return m
 end
 
-function find_best_initial_costate(params::Params, stor::StorageParams)
+function find_best_initial_costate_bbf(params::Params, stor::StorageParams)
 
     # check target before propagation
-    check_unitarity(params.physics.target, 0; note="Target")
+    check_unitarity(params.physics.target, stor.tmp, note="Target")
     targ_dist = distance_objective(params.physics.target, params, stor)
     @assert targ_dist < params.solver.tol "Error in target overlap: $targ_dist"
 
@@ -163,7 +168,9 @@ function find_best_initial_costate(params::Params, stor::StorageParams)
 
     objective = function(angles)
         s = thread_stors[Threads.threadid()]
-        propagate_2nd_order(angles_to_directions(angles), params, s)
+        m = angles_to_directions(angles)
+        list = [0, 1, 2, 2, 3, 4, 4]
+        propagate_2nd_order(m, params, s) + params.solver.lambda *  dot(list, abs.(m).^2)
     end
 
     #objective(angles) = propagate_2nd_order(angles_to_directions(angles), params, stor)
@@ -171,15 +178,48 @@ function find_best_initial_costate(params::Params, stor::StorageParams)
     # use CMA Evolution strategy for optimisation
     result = minimize(
         objective,
-        initial_angles, 1.5;
+        initial_angles, 0.3;
         maxiter=500, verbosity=1,
         multi_threading=true,
         popsize=24,
         lower = zeros(n),
         upper = [i == 1 ? 2π : π for i in 1:n],
-        ftarget=params.solver.tol
+        ftarget=params.solver.lambda != 0 ? params.solver.lambda * params.solver.tol : params.solver.tol
         )
     angles_best = xbest(result)
+    m_best = angles_to_directions(angles_best)
+
+    return m_best
+end
+
+
+function find_best_initial_costate_autograd(params::Params, stor::StorageParams)
+
+    # check target before propagation
+    check_unitarity(params.physics.target, stor.tmp, note="Target")
+    targ_dist = distance_objective(params.physics.target, params, stor)
+    @assert targ_dist < params.solver.tol "Error in target overlap: $targ_dist"
+
+    n = length(params.algebra.p_basis) - 1
+    initial_angles = zeros(n)
+    dim = size(stor.adjoint_drift, 1)
+    list = [0, 1, 2, 2, 3, 4, 4]
+
+    stor_dual_ref = Ref{Any}(nothing)  # placeholder
+
+    objective = function(angles)
+        m = angles_to_directions(angles)
+        storage = eltype(m) <: ForwardDiff.Dual ? stor_dual_ref[] : stor
+        propagate_2nd_order(m, params, storage) + params.solver.lambda * dot(list, abs.(m).^2)
+    end
+
+    # Now build with real tag and fill the ref
+    cfg = ForwardDiff.GradientConfig(objective, initial_angles)
+    T_dual = Complex{eltype(cfg.duals)}
+    stor_dual_ref[] = StorageParams{T_dual}(dim)  # ✅ objective will see this
+
+    od = OnceDifferentiable(objective, initial_angles; autodiff = :forward)
+    angles_best = Optim.minimizer(optimize(od, initial_angles, BFGS(linesearch = BackTracking())))
     m_best = angles_to_directions(angles_best)
 
     return m_best

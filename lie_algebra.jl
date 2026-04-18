@@ -93,6 +93,7 @@ function construct_lie_basis_general(generators::Vector{SparseMatrixCSC{T, Int}}
                     bracket = br(g, last_el)
                     if try_add_orthonormal!(basis_elements, bracket)
                         push!(next_level, bracket)
+                        # println(d)
                     end
                 end
             end
