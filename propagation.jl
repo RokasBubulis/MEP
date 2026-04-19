@@ -23,8 +23,8 @@ end
 # end
 
 # applicable only if diagonal control
-function distance_objective(U::Union{Matrix{T}, SparseMatrixCSC{T,Int}}, 
-    params::Params, stor::StorageParams)
+function distance_objective_optimiser(U::Union{Matrix{T}, SparseMatrixCSC{T,Int}}, 
+    params::Params, stor::StorageParams) where T
 
     mul!(stor.tmp, U, params.physics.adjoint_target)
     tmp_diag = diag(stor.tmp)
@@ -40,7 +40,84 @@ function distance_objective(U::Union{Matrix{T}, SparseMatrixCSC{T,Int}},
     return dist(β_opt)
 end
 
+function distance_objective_analytic(β::TBeta, U::Union{Matrix{TCostate}, SparseMatrixCSC{TSystem, Int}},
+    params::Params, stor::StorageParams) where {TBeta, TCostate, TSystem}
+
+    mul!(stor.tmp, U, params.physics.adjoint_target)
+    A_diag = diag(stor.tmp) # A_jj 
+    dim = size(stor.tmp, 1)
+    expLBeta = exp.(β.*params.physics.im_control_vec)
+
+    return 1 - 1/dim * abs(dot(expLBeta, A_diag))
+end
+
+function distance_objective_analytic_derivatives(β::TBeta, U::Union{Matrix{TCostate}, SparseMatrixCSC{TSystem, Int}},
+    params::Params, stor::StorageParams) where {TBeta, TCostate, TSystem}
+
+    first_der, second_der = zero(TCostate), zero(TCostate)
+    dim = size(stor.tmp, 1)
+    mul!(stor.tmp, U, params.physics.adjoint_target)
+    A_diag = diag(stor.tmp) # A_jj 
+    LexpBetaL = params.physics.im_control_vec .* exp.(β.*params.physics.im_control_vec)
+    first_der = -1/dim * abs(dot(LexpBetaL, A_diag))
+    L2expBetaL = params.physics.im_control_vec .* LexpBetaL
+    second_der = -1/dim * abs(dot(L2expBetaL, A_diag))
+
+    return first_der, second_der
+end 
+
+function minimum_distance_objective_analytic(U::Union{Matrix{TCostate}, SparseMatrixCSC{TSystem, Int}},
+    params::Params, stor::StorageParams) where {TCostate, TSystem}
+
+    β = zero(real(TCostate))
+    for _ in 1:params.solver.Newton_steps
+        first_der, second_der = distance_objective_analytic_derivatives(β, U, params, stor)
+        dβ = first_der / second_der
+        β -= dβ
+        abs(dβ) < 1e-10 && break
+    end 
+    return distance_objective_analytic(β, U, params, stor)
+end     
+
+distance(U::Matrix{<:Complex{<:ForwardDiff.Dual}}, params::Params, stor::StorageParams
+) = minimum_distance_objective_analytic(U, params, stor)
+
+distance(U::Union{Matrix{ComplexF64}, SparseMatrixCSC{ComplexF64, Int}}, params::Params, stor::StorageParams
+) = distance_objective_optimiser(U, params, stor)
+
 ### Propagation ### 
+
+optimal_adjoint_drift!(tmp::Matrix{ComplexF64}, costate::Matrix{ComplexF64}, params::Params
+) = optimal_adjoint_drift_optimiser!(tmp, costate, params)
+
+optimal_adjoint_drift!(tmp::Matrix{<:Complex{<:ForwardDiff.Dual}}, 
+costate::Matrix{<:Complex{<:ForwardDiff.Dual}}, params::Params
+) = optimal_adjoint_drift_analytic!(tmp, costate, params)
+
+function exponent_analytic!(tmp::Matrix{T}, X::Matrix{T}; depth=20) where T
+
+    copyto!(tmp, I)
+    term = similar(tmp)
+    copyto!(term, I)
+    tmp_term = similar(tmp)
+    for n in 1:depth
+        mul!(tmp_term, term, X)
+        term .= tmp_term / n
+        tmp .+= term
+    end
+    return tmp
+end
+
+function exponent_builtin!(tmp::Matrix{T}, X::Matrix{T}) where T 
+    tmp .= exp(X)
+    return tmp
+end 
+
+exponentiate!(tmp::Matrix{ComplexF64}, X::Matrix{ComplexF64}) = exponent_builtin!(tmp, X)
+
+exponentiate!(tmp::Matrix{<:Complex{<:ForwardDiff.Dual}}, 
+X::Matrix{<:Complex{<:ForwardDiff.Dual}}
+) = exponent_analytic!(tmp, X)
 
 function set_initial_state_2nd_order!(m::AbstractVector{TR}, params::Params, stor::StorageParams) where TR
     # set U_tmp = U(dt) = exp(H_opt(0)*dt) * U(0) and 
@@ -48,11 +125,9 @@ function set_initial_state_2nd_order!(m::AbstractVector{TR}, params::Params, sto
     # to build M(dt) for the first step, use first-order approximation
 
     build_M0!(stor.M0, m, params)  # M(0)
-    if TR <: ForwardDiff.Dual
-        optimal_adjoint_drift_analytic!(stor.adjoint_drift, stor.M0, params)
-    else
-        optimal_adjoint_drift_optimiser!(stor.adjoint_drift, stor.M0, params)  # H_opt(0)
-    end 
+    optimal_adjoint_drift!(stor.adjoint_drift, stor.M0, params)  # H_opt(0)
+    exponentiate!(stor.tmp, stor.adjoint_drift * params.solver.dt)
+    mul!(stor.U, stor.tmp, copy(params.U0))  # U(dt)
 
     # M(dt) = [H_opt(0), M(0)] * dt
     mul!(stor.dM, stor.adjoint_drift, stor.M0)
@@ -60,22 +135,17 @@ function set_initial_state_2nd_order!(m::AbstractVector{TR}, params::Params, sto
     stor.dM .-= stor.tmp
     stor.M1 .= stor.dM * params.solver.dt .+ stor.M0
 
-    mul!(stor.U, exp(stor.adjoint_drift * params.solver.dt), copy(params.U0))  # U(dt)
-
     return nothing
 end
 
 function propagator_2nd_order_step!(params::Params, stor::StorageParams)
 
     # compute H_opt(t) = argmax_H(α) tr(H(α)*M(t))
-    if TR <: ForwardDiff.Dual
-        optimal_adjoint_drift_analytic!(stor.adjoint_drift, stor.M1, params)
-    else
-        optimal_adjoint_drift_optimiser!(stor.adjoint_drift, stor.M1, params)
-    end 
+    optimal_adjoint_drift!(stor.adjoint_drift, stor.M1, params)
 
     # U(t+dt) = exp(H_opt * dt) * U(t)
-    mul!(stor.dU, exp(stor.adjoint_drift .* params.solver.dt), stor.U)
+    exponentiate!(stor.tmp, stor.adjoint_drift * params.solver.dt)
+    mul!(stor.dU, stor.tmp, stor.U)
     stor.U[:] .= stor.dU[:]
 
     # dM/dt = [H_opt, M(t)]
@@ -101,8 +171,8 @@ function propagate_2nd_order(m::AbstractVector{TR}, params::Params, stor::Storag
     ts = collect(range(0.0, params.solver.tmax; step=params.solver.dt))
     n = length(ts)
 
-    d1 = distance_objective(params.U0, params, stor)
-    d2 = distance_objective(stor.U, params, stor)
+    d1 = distance(params.U0, params, stor)
+    d2 = distance(stor.U, params, stor)
     dmin = min(d1, d2)
 
     if save
@@ -115,7 +185,7 @@ function propagate_2nd_order(m::AbstractVector{TR}, params::Params, stor::Storag
         Ms[1] = copy(stor.M0)
         Ms[2] = copy(stor.M1)
         Hs[1] = copy(stor.adjoint_drift)
-        optimal_adjoint_drift_optimiser!(stor.tmp, stor.M1, params)
+        optimal_adjoint_drift!(stor.tmp, stor.M1, params)
         Hs[2] = copy(stor.tmp)
         dists[1] = d1
         dists[2] = d2
@@ -126,7 +196,7 @@ function propagate_2nd_order(m::AbstractVector{TR}, params::Params, stor::Storag
         check_unitarity(stor.U, stor.tmp, timestep=i)
         check_costate(stor.M0, params, i)
         propagator_2nd_order_step!(params, stor)
-        dist = distance_objective(stor.U, params, stor)
+        dist = distance(stor.U, params, stor)
 
         if save
             Us[i] = copy(stor.U)
@@ -165,13 +235,12 @@ function find_best_initial_costate_bbf(params::Params, stor::StorageParams)
 
     # check target before propagation
     check_unitarity(params.physics.target, stor.tmp, note="Target")
-    targ_dist = distance_objective(params.physics.target, params, stor)
+    targ_dist = distance(params.physics.target, params, stor)
     @assert targ_dist < params.solver.tol "Error in target overlap: $targ_dist"
 
     n = length(params.algebra.p_basis) - 1
     initial_angles = zeros(n)
 
-    #thread_stors = [deepcopy(stor) for _ in 1:Threads.nthreads()]
     thread_stors = [deepcopy(stor) for _ in 1:Threads.maxthreadid()]
 
     objective = function(angles)
@@ -205,7 +274,7 @@ function find_best_initial_costate_autograd(params::Params, stor::StorageParams)
 
     # check target before propagation
     check_unitarity(params.physics.target, stor.tmp, note="Target")
-    targ_dist = distance_objective(params.physics.target, params, stor)
+    targ_dist = distance(params.physics.target, params, stor)
     @assert targ_dist < params.solver.tol "Error in target overlap: $targ_dist"
 
     n = length(params.algebra.p_basis) - 1
@@ -224,7 +293,7 @@ function find_best_initial_costate_autograd(params::Params, stor::StorageParams)
     # Now build with real tag and fill the ref
     cfg = ForwardDiff.GradientConfig(objective, initial_angles)
     T_dual = Complex{eltype(cfg.duals)}
-    stor_dual_ref[] = StorageParams{T_dual}(dim)  # ✅ objective will see this
+    stor_dual_ref[] = StorageParams{T_dual}(dim)
 
     od = OnceDifferentiable(objective, initial_angles; autodiff = :forward)
     angles_best = Optim.minimizer(optimize(od, initial_angles, BFGS(linesearch = BackTracking())))
