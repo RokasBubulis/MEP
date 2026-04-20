@@ -12,23 +12,37 @@ lambda = 0.0
 Newton_steps = 50
 
 # specify target over lie basis
-lie_coeffs = [1.0, 0.5, 0.3, 0.0, 0.0, 0.0, 0.0, 0.0]
+lie_coeffs = [0.2, 0.4, 0.4, 0.0, 0.4, 0.4, 0.4, 0.5] #4th element is evil?
+
+# lie_coeffs = zeros(8)
+# lie_coeffs[2] = 0.3
+# lie_coeffs[3] = 0.5
+
 #lie_coeffs = rand(8) * 2 .-1 ./2
 #println(lie_coeffs)
 params, stor = prepare_2q_setup_with_target_from_Lie_coeffs(lie_coeffs, tmax, dt, tol, lambda, Newton_steps)
 
 #params, stor = prepare_2q_setup_CZ(tmax, dt, tol)
 
+# m_best = find_best_initial_costate_bbf(params, stor)
+# ts, Us, Ms, dists = propagate_2nd_order(m_best, params, stor; save = true)
+# min_dist = minimum(dists)
+# time_of_min_dist = ts[argmin(dists)]
+# println("BBF Lowest distance $min_dist at time $(ts[argmin(dists)])")
+# println(m_best)
+# p = plot(ts, dists, yscale=:log10, label="BBF")
+# xlabel!(p, "t")
+# ylabel!(p, "Min dist")
+
 m_best = find_best_initial_costate_autograd(params, stor)
-ts, Us, Ms, Hs, dists = propagate_2nd_order(m_best, params, stor; save = true)
+ts, Us, Ms, dists = propagate_2nd_order(m_best, params, stor; save = true)
 min_dist = minimum(dists)
 time_of_min_dist = ts[argmin(dists)]
-println("Lowest distance $min_dist at time $(ts[argmin(dists)])")
+println("Autograd Lowest distance $min_dist at time $(ts[argmin(dists)])")
 println(m_best)
-p = plot(ts, dists, yscale=:log10)
-xlabel!(p, "t")
-ylabel!(p, "Min dist")
-display(p)
+# plot!(p, ts, dists, yscale=:log10, label="Autograd")
+# display(p)
+
 
 # elements = params.algebra.p_basis
 # p1 = plot()

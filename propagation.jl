@@ -2,11 +2,22 @@ include("params.jl")
 
 using ForwardDiff
 
+function check_duals(x, name)
+    if eltype(x) <: ForwardDiff.Dual || eltype(x) <: Complex{<:ForwardDiff.Dual}
+        partials = ForwardDiff.partials.(real.(x))
+        if all(iszero, partials)
+            @warn "Dual parts are zero at $name"
+        end
+    end
+end
+
 function build_M0!(M0::Matrix{TC}, m::AbstractVector{TR}, params::Params) where {TR, TC}
     M0 .= 0
+    check_duals(m, "m")
     for (i, m_coeff) in enumerate(m)
         M0 .+= m_coeff * params.algebra.p_basis[i]
     end
+    check_duals(M0, "M0")
     return nothing
 end 
 
@@ -47,21 +58,22 @@ function distance_objective_analytic(β::TBeta, U::Union{Matrix{TCostate}, Spars
     A_diag = diag(stor.tmp) # A_jj 
     dim = size(stor.tmp, 1)
     expLBeta = exp.(β.*params.physics.im_control_vec)
-
-    return 1 - 1/dim * abs(dot(expLBeta, A_diag))
+    d = dot(expLBeta, A_diag)
+    res =  1 - 1/dim * sqrt(real(d)^2 + imag(d)^2)
+    return res
 end
 
 function distance_objective_analytic_derivatives(β::TBeta, U::Union{Matrix{TCostate}, SparseMatrixCSC{TSystem, Int}},
     params::Params, stor::StorageParams) where {TBeta, TCostate, TSystem}
 
-    first_der, second_der = zero(TCostate), zero(TCostate)
+    first_der, second_der = zero(Float64), zero(Float64)
     dim = size(stor.tmp, 1)
     mul!(stor.tmp, U, params.physics.adjoint_target)
     A_diag = diag(stor.tmp) # A_jj 
     LexpBetaL = params.physics.im_control_vec .* exp.(β.*params.physics.im_control_vec)
-    first_der = -1/dim * abs(dot(LexpBetaL, A_diag))
+    first_der = -1/dim * real(dot(LexpBetaL, A_diag))
     L2expBetaL = params.physics.im_control_vec .* LexpBetaL
-    second_der = -1/dim * abs(dot(L2expBetaL, A_diag))
+    second_der = -1/dim * real(dot(L2expBetaL, A_diag))
 
     return first_der, second_der
 end 
@@ -69,14 +81,15 @@ end
 function minimum_distance_objective_analytic(U::Union{Matrix{TCostate}, SparseMatrixCSC{TSystem, Int}},
     params::Params, stor::StorageParams) where {TCostate, TSystem}
 
-    β = zero(real(TCostate))
+    β = zero(Float64) # forward diff does not need to flow through beta
     for _ in 1:params.solver.Newton_steps
         first_der, second_der = distance_objective_analytic_derivatives(β, U, params, stor)
         dβ = first_der / second_der
         β -= dβ
         abs(dβ) < 1e-10 && break
     end 
-    return distance_objective_analytic(β, U, params, stor)
+    min_dist = distance_objective_analytic(β, U, params, stor)
+    return min_dist
 end     
 
 distance(U::Matrix{<:Complex{<:ForwardDiff.Dual}}, params::Params, stor::StorageParams
@@ -113,11 +126,10 @@ function exponent_builtin!(tmp::Matrix{T}, X::Matrix{T}) where T
     return tmp
 end 
 
-exponentiate!(tmp::Matrix{ComplexF64}, X::Matrix{ComplexF64}) = exponent_builtin!(tmp, X)
+exponent!(tmp::Matrix{ComplexF64}, X::Matrix{ComplexF64}) = exponent_builtin!(tmp, X)
 
-exponentiate!(tmp::Matrix{<:Complex{<:ForwardDiff.Dual}}, 
-X::Matrix{<:Complex{<:ForwardDiff.Dual}}
-) = exponent_analytic!(tmp, X)
+exponent!(tmp::Matrix{<:Complex{<:ForwardDiff.Dual}}, 
+X::Matrix{<:Complex{<:ForwardDiff.Dual}}) = exponent_analytic!(tmp, X)
 
 function set_initial_state_2nd_order!(m::AbstractVector{TR}, params::Params, stor::StorageParams) where TR
     # set U_tmp = U(dt) = exp(H_opt(0)*dt) * U(0) and 
@@ -126,7 +138,7 @@ function set_initial_state_2nd_order!(m::AbstractVector{TR}, params::Params, sto
 
     build_M0!(stor.M0, m, params)  # M(0)
     optimal_adjoint_drift!(stor.adjoint_drift, stor.M0, params)  # H_opt(0)
-    exponentiate!(stor.tmp, stor.adjoint_drift * params.solver.dt)
+    exponent!(stor.tmp, stor.adjoint_drift * params.solver.dt)
     mul!(stor.U, stor.tmp, copy(params.U0))  # U(dt)
 
     # M(dt) = [H_opt(0), M(0)] * dt
@@ -144,7 +156,7 @@ function propagator_2nd_order_step!(params::Params, stor::StorageParams)
     optimal_adjoint_drift!(stor.adjoint_drift, stor.M1, params)
 
     # U(t+dt) = exp(H_opt * dt) * U(t)
-    exponentiate!(stor.tmp, stor.adjoint_drift * params.solver.dt)
+    exponent!(stor.tmp, stor.adjoint_drift * params.solver.dt)
     mul!(stor.dU, stor.tmp, stor.U)
     stor.U[:] .= stor.dU[:]
 
@@ -174,19 +186,16 @@ function propagate_2nd_order(m::AbstractVector{TR}, params::Params, stor::Storag
     d1 = distance(params.U0, params, stor)
     d2 = distance(stor.U, params, stor)
     dmin = min(d1, d2)
+    check_duals(stor.U, "U(dt)")
 
     if save
         Us = Vector{typeof(stor.U)}(undef, n)
         Ms = Vector{typeof(stor.M0)}(undef, n)
-        Hs = Vector{typeof(stor.adjoint_drift)}(undef, n)
         dists = Vector{Float64}(undef, n)
         Us[1] = copy(params.U0)
         Us[2] = copy(stor.U)
         Ms[1] = copy(stor.M0)
         Ms[2] = copy(stor.M1)
-        Hs[1] = copy(stor.adjoint_drift)
-        optimal_adjoint_drift!(stor.tmp, stor.M1, params)
-        Hs[2] = copy(stor.tmp)
         dists[1] = d1
         dists[2] = d2
     end
@@ -198,10 +207,13 @@ function propagate_2nd_order(m::AbstractVector{TR}, params::Params, stor::Storag
         propagator_2nd_order_step!(params, stor)
         dist = distance(stor.U, params, stor)
 
+        check_duals(stor.M0, "M(t)")
+        check_duals(stor.U, "U(t)")
+        check_duals(dist, "dmin(t)")
+
         if save
             Us[i] = copy(stor.U)
             Ms[i] = copy(stor.M1)
-            Hs[i] = copy(stor.adjoint_drift)
             dists[i] = dist
         else
             if dist < params.solver.tol
@@ -211,8 +223,7 @@ function propagate_2nd_order(m::AbstractVector{TR}, params::Params, stor::Storag
             end
         end
     end
-
-    return save ? (ts, Us, Ms, Hs, dists) : dmin
+    return save ? (ts, Us, Ms, dists) : dmin
 end
 
 ### Shooting approach to find the best initial costate M0 ###
@@ -228,6 +239,7 @@ function angles_to_directions(angles::AbstractVector{TR}) where TR
         prefix *= sin(angles[i])
     end
     m[n] = prefix
+    check_duals(m, "m(θ)")
     return m
 end
 
@@ -255,7 +267,7 @@ function find_best_initial_costate_bbf(params::Params, stor::StorageParams)
     # use CMA Evolution strategy for optimisation
     result = minimize(
         objective,
-        initial_angles, 0.3;
+        initial_angles, 1.0;
         maxiter=500, verbosity=1,
         multi_threading=true,
         popsize=24,
@@ -280,23 +292,43 @@ function find_best_initial_costate_autograd(params::Params, stor::StorageParams)
     n = length(params.algebra.p_basis) - 1
     initial_angles = zeros(n)
     dim = size(stor.adjoint_drift, 1)
-    list = [0, 1, 2, 2, 3, 4, 4]
 
-    stor_dual_ref = Ref{Any}(nothing)  # placeholder
-
+    stor_dual_ref = Ref{Any}(nothing)
     objective = function(angles)
         m = angles_to_directions(angles)
-        storage = eltype(m) <: ForwardDiff.Dual ? stor_dual_ref[] : stor
-        propagate_2nd_order(m, params, storage) + params.solver.lambda * dot(list, abs.(m).^2)
+        if eltype(m) <: ForwardDiff.Dual
+            T = Complex{eltype(m)}
+            if typeof(stor_dual_ref[]) != StorageParams{T}
+                stor_dual_ref[] = StorageParams{T}(dim)
+            end
+            storage = stor_dual_ref[]
+        else
+            storage = stor
+        end
+        propagate_2nd_order(m, params, storage)
     end
 
-    # Now build with real tag and fill the ref
-    cfg = ForwardDiff.GradientConfig(objective, initial_angles)
-    T_dual = Complex{eltype(cfg.duals)}
-    stor_dual_ref[] = StorageParams{T_dual}(dim)
-
     od = OnceDifferentiable(objective, initial_angles; autodiff = :forward)
-    angles_best = Optim.minimizer(optimize(od, initial_angles, BFGS(linesearch = BackTracking())))
+    angles_best = Optim.minimizer(
+        optimize(
+            od, initial_angles, BFGS(linesearch = BackTracking()), 
+            Optim.Options(show_trace=true, f_abstol=params.solver.tol)
+        )
+    )
+
+    # best_val = Inf
+    # best_angles = initial_angles
+    # for _ in 1:20
+    #     x0 = rand(6) .* 2π
+    #     od = OnceDifferentiable(objective, x0; autodiff=:forward)
+    #     result = optimize(od, x0, BFGS(linesearch=BackTracking()),
+    #                     Optim.Options(f_abstol=params.solver.tol))
+    #     if Optim.minimum(result) < best_val
+    #         best_val = Optim.minimum(result)
+    #         best_angles = Optim.minimizer(result)
+    #     end
+    # end
+
     m_best = angles_to_directions(angles_best)
 
     return m_best

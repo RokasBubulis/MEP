@@ -22,5 +22,5 @@ function check_costate(mat1, params, timestep)
         coeff = dot(element, mat) / dot(element, element)
         mat .-= coeff .* element
     end 
-    @assert isapprox(norm(mat), 0.0, atol=check_tol) "norm of remainder: $(norm(mat)) at timestep $timestep"
+    @assert isapprox(norm(mat), 0.0, atol=check_tol) "Costate not in p-basis. Norm of the remainder: $(norm(mat)) at timestep $timestep"
 end
