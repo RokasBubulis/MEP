@@ -3,8 +3,7 @@ using Optim, LineSearches
 include("generators.jl")
 include("checks.jl")
 
-# depth of 10 is insufficient to produce oscillatory behaviour with equal peaks
-# TODO test if depth of 20 is sufficient
+# depth of 20 accurate to machine precision
 function adjoint_action_by_campbell(X::SparseMatrixCSC{TX, Int}, 
     Y::SparseMatrixCSC{TY, Int}; depth = 20) where {TX, TY}
     # e^X Y e^(-X) = \sum_n=0^inf 1/n! [X,Y]_n
@@ -18,19 +17,14 @@ function adjoint_action_by_campbell(X::SparseMatrixCSC{TX, Int},
         new_term = br(X, last_term)
         coeff /= n
         result .+= coeff .* new_term
-        last_term = new_term
+        last_term .= new_term
     end
-    result ./= norm(result)
     return result
 end
 
-# temporary expensive implementation, approach above should be made efficient to use later
-# function adjoint_action_by_campbell(X::SparseMatrixCSC{TX, Int}, 
-#     Y::SparseMatrixCSC{TY, Int}) where {TX, TY}
-#     # e^X Y e^(-X) = \sum_n=0^inf 1/n! [X,Y]_n
-#     # X = -α i control, Y = -i drift
-#     return exp(Matrix(X)) * Y * exp(-Matrix(X))
-# end
+function  adjoint_action_Lie_true(X, Y)
+    return exp(Matrix(X)) * Y * exp(-Matrix(X))
+end
 
 function adjoint_drift!(tmp::Matrix{TCostate}, neg_im_drift::SparseMatrixCSC{TSystem,Int}, 
     im_control::SparseMatrixCSC{TSystem,Int}, α::TAlpha) where {TAlpha, TSystem, TCostate}
@@ -73,9 +67,9 @@ function neg_adjoint_drift_obj_2nd_der!(H::Matrix{TAlpha}, x::AbstractVector{TAl
     return nothing 
 end
 
-function optimal_adjoint_drift_optimiser!(tmp::Matrix{TCostate}, costate::Matrix{TCostate}, params::Params) where TCostate
-    neg_im_drift = -params.physics.im_drift
-    im_control = params.physics.im_control
+function optimal_adjoint_drift_optimiser!(tmp::Matrix{TCostate}, costate::Matrix{TCostate}, system::System) where TCostate
+    neg_im_drift = -system.im_drift
+    im_control = system.im_control
     x0 = [0.0]
 
     td = TwiceDifferentiable(
@@ -90,6 +84,7 @@ function optimal_adjoint_drift_optimiser!(tmp::Matrix{TCostate}, costate::Matrix
     adjoint_drift!(tmp, neg_im_drift, im_control, α_optimal)
     # ensure optimal adjoint drift is anti-hermitian
     check_anti_hermiticity(tmp)
+    check_belongs_to_p_subspace(tmp, algebra; identifier="Optimal adjoint drift")
 
     return nothing
 end 
@@ -116,22 +111,30 @@ function neg_adjoint_drift_obj_2nd_der(α::TAlpha,
     return -real(tr(second_der * costate))
 end
 
-function optimal_adjoint_drift_analytic!(tmp::Matrix{TCostate}, costate::Matrix{TCostate}, params::Params) where TCostate
-    neg_im_drift = -params.physics.im_drift
-    im_control = params.physics.im_control
+function optimal_adjoint_drift_analytic!(tmp::Matrix{TCostate}, costate::Matrix{TCostate}, system::System, solver::SolverParams) where TCostate
+    neg_im_drift = -system.im_drift
+    im_control = system.im_control
     α = zero(real(TCostate))
 
-    for _ in 1:params.solver.Newton_steps
+    for _ in 1:solver.Newton_steps
         first_der = neg_adjoint_drift_obj_1st_der(α, neg_im_drift, im_control, costate)
         second_der = neg_adjoint_drift_obj_2nd_der(α, neg_im_drift, im_control, costate)
         dα = first_der / second_der
         α -= first_der / second_der
-        abs(dα) < 1e-10 && break
+        abs(dα) < solver.Newton_tol && break
     end 
 
     adjoint_drift!(tmp, neg_im_drift, im_control, α)
     # ensure optimal adjoint drift is anti-hermitian
     check_anti_hermiticity(tmp)
+    check_belongs_to_p_subspace(tmp, algebra; identifier="Optimal adjoint drift")
 
     return nothing
 end 
+
+optimal_adjoint_drift!(tmp::Matrix{ComplexF64}, costate::Matrix{ComplexF64}, system::System, solver::SolverParams
+) = optimal_adjoint_drift_optimiser!(tmp, costate, system)
+
+optimal_adjoint_drift!(tmp::Matrix{<:Complex{<:ForwardDiff.Dual}}, 
+costate::Matrix{<:Complex{<:ForwardDiff.Dual}}, system::System, solver::SolverParams
+) = optimal_adjoint_drift_analytic!(tmp, costate, system, solver)

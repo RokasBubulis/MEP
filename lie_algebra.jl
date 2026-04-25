@@ -82,7 +82,7 @@ function construct_lie_basis_general(generators::Vector{SparseMatrixCSC{T, Int}}
     gens = copy(generators)
     for g in gens
         try_add_orthonormal!(basis_elements, g)
-        #push!(basis_elements, g)
+        #push!(basis_elements, g)#/norm(g))
     end
     last_level = copy(generators)
     if depth > 1
@@ -101,6 +101,17 @@ function construct_lie_basis_general(generators::Vector{SparseMatrixCSC{T, Int}}
         end
     end
     return basis_elements
+end
+
+function project_algebra(mat, algebra; tol = 1e-8)
+    remainder = copy(mat)
+    coeffs = zeros(Float64,length(algebra.lie_basis))
+    for (i, el) in enumerate(algebra.lie_basis)
+        coeffs[i] = real(dot(el, mat) / dot(el, el))
+        remainder .-= coeffs[i] .* el
+    end 
+    @assert norm(remainder) < tol "element outside algebra, norm(remainder) = $(norm(remainder))"
+    return coeffs
 end
 
 
