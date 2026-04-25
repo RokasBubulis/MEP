@@ -1,6 +1,5 @@
 include("adjoint_drift_maximisation.jl")
 include("distance.jl")
-include("checks.jl")
 
 function check_duals(x, name)
     if eltype(x) <: ForwardDiff.Dual || eltype(x) <: Complex{<:ForwardDiff.Dual}

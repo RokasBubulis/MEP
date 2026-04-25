@@ -19,7 +19,7 @@ function adjoint_action_by_campbell(X::SparseMatrixCSC{TX, Int},
         result .+= coeff .* new_term
         last_term .= new_term
     end
-    return result
+    return result / norm(Y)  # normalisation enables machine precision for the trivial drift only case
 end
 
 function  adjoint_action_Lie_true(X, Y)

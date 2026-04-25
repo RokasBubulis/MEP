@@ -4,8 +4,9 @@ include("optimisation.jl")
 
 # target unitary by Lie coeffs
 lie_coeffs = zeros(8)
-lie_coeffs[2] = 0.4
-lie_coeffs[7] = 0.5
+lie_coeffs[1] = 0.6
+lie_coeffs[2] = 0.6
+lie_coeffs[3] = 0.2
 
 # generators
 im_control, im_drift = im .* construct_Ryd_generators(2)

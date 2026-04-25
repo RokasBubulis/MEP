@@ -1,6 +1,5 @@
-using ForwardDiff
+"distance calculations via optimiser and analytical are valid only if diagonal control"
 
-# applicable only if diagonal control
 function distance_objective_optimiser(U::Union{Matrix{T}, SparseMatrixCSC{T,Int}}, system::System, stor::Storage) where T
 
     mul!(stor.tmp, U, system.adjoint_target)
@@ -24,9 +23,7 @@ function distance_objective_analytic(β::TBeta, U::Union{Matrix{TCostate}, Spars
     A_diag = diag(stor.tmp) # A_jj 
     dim = size(stor.tmp, 1)
     expLBeta = exp.(β.*system.im_control_vec)
-    check_duals(A_diag, "A_diag")
     d = dot(expLBeta, A_diag)
-    check_duals(d, "dot product")
     res =  1 - 1/dim * real(d)
     return res
 end
