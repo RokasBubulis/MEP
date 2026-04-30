@@ -51,7 +51,7 @@ function set_initial_state_2nd_order!(m::AbstractVector{TR}, algebra::Algebra, s
     # to build M(dt) for the first step, use first-order approximation
 
     build_M0!(stor.M0, m, algebra)  # M(0)
-    optimal_adjoint_drift!(stor.adjoint_drift, stor.M0, system, solver)  # H_opt(0)
+    optimal_adjoint_drift!(stor.adjoint_drift, stor.M0, system, solver, stor)  # H_opt(0)
     exponent!(stor.tmp, stor.adjoint_drift * solver.dt)
     mul!(stor.U, stor.tmp, stor.U0)  # U(dt)
 
@@ -67,7 +67,7 @@ end
 function propagator_2nd_order_step!(system::System, solver::SolverParams, stor::Storage)
 
     # compute H_opt(t) = argmax_H(α) tr(H(α)*M(t))
-    optimal_adjoint_drift!(stor.adjoint_drift, stor.M1, system, solver)
+    optimal_adjoint_drift!(stor.adjoint_drift, stor.M1, system, solver, stor)
 
     # U(t+dt) = exp(H_opt * dt) * U(t)
     exponent!(stor.tmp, stor.adjoint_drift * solver.dt)
@@ -117,6 +117,7 @@ function propagate_2nd_order(m::AbstractVector{TR}, algebra::Algebra, system::Sy
     for i in eachindex(ts)[3:end]
 
         check_unitarity(stor.U, stor.tmp, timestep=i)
+        check_belongs_to_p_subspace(stor.adjoint_drift, algebra; timestep=i, identifier="Optimal adjoint drift")
         check_belongs_to_p_subspace(stor.dM, algebra; timestep=i, identifier="Costate differential")
         check_belongs_to_p_subspace(stor.M0, algebra; timestep=i, identifier="Costate")
         propagator_2nd_order_step!(system, solver, stor)

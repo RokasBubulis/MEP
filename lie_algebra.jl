@@ -105,9 +105,9 @@ end
 
 function project_algebra(mat, algebra; tol = 1e-8)
     remainder = copy(mat)
-    coeffs = zeros(Float64,length(algebra.lie_basis))
+    coeffs = zeros(ComplexF64,length(algebra.lie_basis))
     for (i, el) in enumerate(algebra.lie_basis)
-        coeffs[i] = real(dot(el, mat) / dot(el, el))
+        coeffs[i] = dot(el, remainder) / dot(el, el)
         remainder .-= coeffs[i] .* el
     end 
     @assert norm(remainder) < tol "element outside algebra, norm(remainder) = $(norm(remainder))"

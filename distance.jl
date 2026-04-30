@@ -46,7 +46,7 @@ end
 function minimum_distance_objective_analytic(U::Union{Matrix{TCostate}, SparseMatrixCSC{TSystem, Int}},
     system::System, solver::SolverParams, stor::Storage) where {TCostate, TSystem}
 
-    β = zero(real(TCostate))
+    β = zero(TCostate)
     for _ in 1:solver.Newton_steps
         first_der, second_der = distance_objective_analytic_derivatives(β, U, system, stor)
         dβ = first_der / second_der

@@ -36,10 +36,10 @@ end
 mutable struct Storage{T}
     U0::Matrix{T}; M0::Matrix{T}; M1::Matrix{T}; M2::Matrix{T}
     U::Matrix{T}; dU::Matrix{T}; dM::Matrix{T}
-    adjoint_drift::Matrix{T}; tmp::Matrix{T}
+    adjoint_drift::Matrix{T}; tmp::Matrix{T}; tmp1::Matrix{T}; tmp2::Matrix{T}; tmp3::Matrix{T}
 end 
 
 Storage{T}(dim::Int) where T = Storage{T}(
     Matrix{T}(I, dim, dim),
-    (Matrix{T}(undef, dim, dim) for _ in 1:8)...
+    (Matrix{T}(undef, dim, dim) for _ in 1:11)...
 )

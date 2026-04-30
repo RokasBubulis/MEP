@@ -6,18 +6,26 @@ include("checks.jl")
 ### Shooting approach to find the best initial costate M0 ###
 
 # represent the search space as n-1 angles on the hyper-sphere ensuring |M(t)| = 1
-function angles_to_directions(angles::AbstractVector{T}) where T
-    n = length(angles) + 1
-    m = Vector{T}(undef, n)
-    m[1] = cos(angles[1])
-    prefix = sin(angles[1])
-    for i in 2:n-1
-        m[i] = prefix * cos(angles[i])
-        prefix *= sin(angles[i])
+# function angles_to_directions(angles::AbstractVector{T}) where T
+#     n = length(angles) + 1
+#     m = Vector{T}(undef, n)
+#     m[1] = cos(angles[1])
+#     prefix = sin(angles[1])
+#     for i in 2:n-1
+#         m[i] = prefix * cos(angles[i])
+#         prefix *= sin(angles[i])
+#     end
+#     m[n] = prefix
+#     check_duals(m, "m(θ)")
+#     return m
+# end
+
+function angles_to_directions(v::AbstractVector{T}) where T
+    n = norm(v)
+    if n < eps(real(T))
+        return v ./ one(real(T))  # fallback, shouldn't happen
     end
-    m[n] = prefix
-    check_duals(m, "m(θ)")
-    return m
+    return v ./ n
 end
 
 function find_best_initial_costate_bbf(algebra::Algebra, system::System, solver::SolverParams, stor::Storage)
@@ -57,15 +65,21 @@ function find_best_initial_costate_bbf(algebra::Algebra, system::System, solver:
 end
 
 
-function find_best_initial_costate_autograd(algebra::Algebra, system::System, solver::SolverParams, stor::Storage)
+function find_best_initial_costate_autograd(algebra::Algebra, system::System, solver::SolverParams, stor::Storage; verbose = true)
 
     # check target before propagation
     check_unitarity(system.target, stor.tmp, note="Target")
     targ_dist = distance(system.target, system, solver, stor)
     @assert targ_dist < solver.tol "Error in target overlap: $targ_dist"
 
-    n = length(algebra.p_basis) - 1
-    initial_angles = zeros(n)
+    # n-hypersphere angles
+    # n = length(algebra.p_basis) - 1
+    # x0 = zeros(n)
+
+    # n independent directions
+    x0 = zeros(length(algebra.p_basis))
+    x0[1] = 1.0
+
     dim = size(stor.adjoint_drift, 1)
     stor_dual_ref = Ref{Any}(nothing)
     objective = function(angles)
@@ -82,13 +96,19 @@ function find_best_initial_costate_autograd(algebra::Algebra, system::System, so
         propagate_2nd_order(m, algebra, system, solver, storage)
     end
 
-    od = OnceDifferentiable(objective, initial_angles; autodiff = :forward)
+    g! = (G, x) -> ForwardDiff.gradient!(G, objective, x)
+    od = OnceDifferentiable(objective, g!, x0)
+
+    # Test that ForwardDiff can actually differentiate your objective
+    grad = ForwardDiff.gradient(objective, x0)
+    @assert any(!iszero, grad) "Initial gradient is all zeros"
+    # od = OnceDifferentiable(objective, initial_angles; autodiff = :forward)
     angles_best = Optim.minimizer(
         optimize(
-            od, initial_angles, 
+            od, x0, 
             BFGS(linesearch = BackTracking()), 
             Optim.Options(
-                show_trace=true, 
+                show_trace=verbose, 
                 f_abstol=solver.tol,
                 g_tol=1e-12,
                 )

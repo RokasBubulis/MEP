@@ -1,20 +1,28 @@
 include("structs.jl")
 include("optimisation.jl")
 
+using Plots
+
 
 # target unitary by Lie coeffs
 lie_coeffs = zeros(8)
-lie_coeffs[1] = 0.6
-lie_coeffs[2] = 0.6
-lie_coeffs[3] = 0.2
+lie_coeffs[1] = 0.0
+lie_coeffs[2] = 2.0
+# lie_coeffs[3] = 0.2
+lie_coeffs[8] = 0.5
+# lie_coeffs = [1.0, 1.0, 0.3, 
+#             0.4, 0.2, 0.6, 
+#             0.7, 0.1]
+
+# lie_coeffs = rand(Float64, 8) .*2 .-1
 
 # generators
 im_control, im_drift = im .* construct_Ryd_generators(2)
 dim = size(im_control, 1)
 
 # solver parameters
-tmax = 1.0
-dt = tmax / 100
+tmax = 3.0
+dt = 5e-3
 tol = 1e-8
 lambda = 0.0
 Newton_steps = 100
@@ -27,6 +35,10 @@ c2 = tr(im_control * adjoint(im_control))
 im_drift_orthogonal = im_drift - c1/c2 * im_control
 @assert isapprox(tr(im_drift_orthogonal * adjoint(im_control)), 0.0, atol=1e-10)
 
+# normalise generators 
+im_control /= norm(im_control)
+im_drift_orthogonal /= norm(im_drift_orthogonal)
+
 # prepare Lie algebra struct 
 algebra = Algebra(im_control, im_drift_orthogonal)
 @assert length(lie_coeffs) == length(algebra.lie_basis)
@@ -37,6 +49,10 @@ target = sparse(exp(-Matrix(
         lie_coeffs[i] * algebra.lie_basis[i] for i in eachindex(lie_coeffs)
         )
     )))
+
+# target = SparseMatrixCSC{ComplexF64, Int}(I, dim, dim)
+# target[5,5] = -1.0
+
 system = System{ComplexF64}(im_control, im_drift_orthogonal, target)
 
 # prepare mutable storage 
@@ -50,5 +66,7 @@ time_of_min_dist = ts[argmin(dists)]
 println("Target in Lie coeffs: $lie_coeffs")
 println("Autograd Lowest distance $min_dist at time $(ts[argmin(dists)])")
 println(m_best)
+# p = plot(ts, dists)
+# display(p)
 
 
