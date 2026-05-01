@@ -20,7 +20,8 @@ function build_M0!(M0::Matrix{TC}, m::AbstractVector{TR}, algebra::Algebra) wher
     return nothing
 end 
 
-function exponent_analytic!(tmp::Matrix{T}, X::Matrix{T}; depth=20) where T
+# function exponent_analytic!(tmp::Matrix{T}, X::Matrix{T}; depth=20) where T
+function exponent_analytic!(tmp, X; depth=20)
 
     copyto!(tmp, I)
     term = similar(tmp)
@@ -33,6 +34,14 @@ function exponent_analytic!(tmp::Matrix{T}, X::Matrix{T}; depth=20) where T
     end
     return tmp
 end
+
+function adjoint_action_series!(tmp, X, Y, stor)
+    exponent_analytic!(stor.tmp1, X)
+    exponent_analytic!(stor.tmp2, -X)
+    mul!(stor.tmp3, Y, stor.tmp2)
+    mul!(tmp, stor.tmp1, stor.tmp3)
+    return nothing
+end 
 
 function exponent_builtin!(tmp::Matrix{T}, X::Matrix{T}) where T 
     tmp .= exp(X)
@@ -51,7 +60,7 @@ function set_initial_state_2nd_order!(m::AbstractVector{TR}, algebra::Algebra, s
     # to build M(dt) for the first step, use first-order approximation
 
     build_M0!(stor.M0, m, algebra)  # M(0)
-    optimal_adjoint_drift!(stor.adjoint_drift, stor.M0, system, solver, stor)  # H_opt(0)
+    optimal_adjoint_drift!(stor.adjoint_drift, stor.M0, algebra, system, solver, stor)  # H_opt(0)
     exponent!(stor.tmp, stor.adjoint_drift * solver.dt)
     mul!(stor.U, stor.tmp, stor.U0)  # U(dt)
 
@@ -67,7 +76,7 @@ end
 function propagator_2nd_order_step!(system::System, solver::SolverParams, stor::Storage)
 
     # compute H_opt(t) = argmax_H(α) tr(H(α)*M(t))
-    optimal_adjoint_drift!(stor.adjoint_drift, stor.M1, system, solver, stor)
+    optimal_adjoint_drift!(stor.adjoint_drift, stor.M1, algebra, system, solver, stor)
 
     # U(t+dt) = exp(H_opt * dt) * U(t)
     exponent!(stor.tmp, stor.adjoint_drift * solver.dt)
@@ -84,8 +93,10 @@ function propagator_2nd_order_step!(system::System, solver::SolverParams, stor::
 
     # M(t-dt) -> M(t)
     # M(t) -> M(t+dt)
-    stor.M0[:] .= stor.M1[:]
-    stor.M1[:] .= stor.M2[:]
+    # stor.M0[:] .= stor.M1[:]
+    # stor.M1[:] .= stor.M2[:]
+    stor.M0 .= stor.M1
+    stor.M1 .= stor.M2
 
     return nothing
 end 
@@ -116,11 +127,11 @@ function propagate_2nd_order(m::AbstractVector{TR}, algebra::Algebra, system::Sy
 
     for i in eachindex(ts)[3:end]
 
-        check_unitarity(stor.U, stor.tmp, timestep=i)
+        propagator_2nd_order_step!(system, solver, stor)
         check_belongs_to_p_subspace(stor.adjoint_drift, algebra; timestep=i, identifier="Optimal adjoint drift")
         check_belongs_to_p_subspace(stor.dM, algebra; timestep=i, identifier="Costate differential")
         check_belongs_to_p_subspace(stor.M0, algebra; timestep=i, identifier="Costate")
-        propagator_2nd_order_step!(system, solver, stor)
+        check_unitarity(stor.U, stor.tmp, timestep=i)
         dist = distance(stor.U, system, solver, stor)
 
         check_duals(stor.M0, "M(t)")

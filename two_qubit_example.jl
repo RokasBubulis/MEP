@@ -9,7 +9,7 @@ lie_coeffs = zeros(8)
 lie_coeffs[1] = 0.0
 lie_coeffs[2] = 2.0
 # lie_coeffs[3] = 0.2
-lie_coeffs[8] = 0.5
+lie_coeffs[6] = 0.5
 # lie_coeffs = [1.0, 1.0, 0.3, 
 #             0.4, 0.2, 0.6, 
 #             0.7, 0.1]
@@ -21,7 +21,7 @@ im_control, im_drift = im .* construct_Ryd_generators(2)
 dim = size(im_control, 1)
 
 # solver parameters
-tmax = 3.0
+tmax = 2.5
 dt = 5e-3
 tol = 1e-8
 lambda = 0.0
@@ -69,4 +69,33 @@ println(m_best)
 # p = plot(ts, dists)
 # display(p)
 
-
+# alphas = range(-100, 100, 1000)
+# errors_Campbell_br = zeros(length(alphas))
+# errors_Campbell_tensor = zeros(length(alphas))
+# errors_series = zeros(length(alphas))
+# errors_true = zeros(length(alphas))
+# remainders_br = zeros(length(alphas))
+# remainders_tensor = zeros(length(alphas))
+# for (i,α) in enumerate(alphas)
+#     adjoint_action_by_campbell!(stor.M0, -α * system.im_control, -system.im_drift, stor)
+#     stor.adjoint_drift = adjoint_action_true(-α * system.im_control, -system.im_drift)
+#     errors_Campbell_br[i] = error_belongs_to_p_subspace(stor.M0, algebra)
+#     remainders_br[i] = norm(stor.M0 - stor.adjoint_drift)
+#     adjoint_action_by_campbell_structure_tensor!(stor.M0, -α * system.im_control, -system.im_drift, algebra, stor)
+#     errors_Campbell_tensor[i] = error_belongs_to_p_subspace(stor.M0, algebra)
+#     remainders_tensor[i] = norm(stor.M0 - stor.adjoint_drift)
+#     # adjoint_action_series!(stor.tmp, -α * system.im_control, -system.im_drift, stor)
+#     # errors_series[i] = error_belongs_to_p_subspace(stor.tmp, algebra)
+#     # stor.tmp = adjoint_action_true(-α * system.im_control, -system.im_drift)
+#     # errors_true[i] = error_belongs_to_p_subspace(stor.tmp, algebra)
+# end 
+# p = plot()
+# p = plot(alphas, errors_Campbell_br, label="Campbell bracket error", yscale=:log10)
+# plot!(alphas, remainders_br, label="Remainder Campbell Bracket - True", yscale=:log10)
+# plot!(p, alphas, remainders_tensor, label="Remainder Campbell Tensor - True", yscale=:log10)
+# plot!(p, alphas, errors_Campbell_tensor, label="Campbell tensor error", yscale=:log10)
+# # plot!(p, alphas, errors_series, label="Series", yscale=:log10)
+# # plot!(p, alphas, errors_true, label="True", yscale=:log10)
+# xlabel!("α")
+# ylabel!("norm(residual) out of p-basis")
+# display(p)

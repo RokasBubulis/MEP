@@ -4,12 +4,14 @@ include("lie_algebra.jl")
 struct Algebra{T}
     lie_basis::Vector{SparseMatrixCSC{T, Int}}
     p_basis::Vector{SparseMatrixCSC{T, Int}}
+    structure_tensor::Array{Float64, 3}
 end
 
 function Algebra(im_control::SparseMatrixCSC{T, Int}, im_drift::SparseMatrixCSC{T, Int})
     lie_basis = construct_lie_basis_general([copy(im_control), copy(im_drift)])
     p_basis = lie_basis[2:end]
-    return Algebra{T}(lie_basis, p_basis)
+    structure_tensor = build_structure_tensor(lie_basis)
+    return Algebra{T}(lie_basis, p_basis, structure_tensor)
 end 
 
 struct System{T}
@@ -34,12 +36,16 @@ struct SolverParams
 end 
 
 mutable struct Storage{T}
-    U0::Matrix{T}; M0::Matrix{T}; M1::Matrix{T}; M2::Matrix{T}
+    U0::Matrix{T}; tmp_array1::Vector{T}; 
+    tmp_array2::Vector{T}; tmp_array3::Vector{T}; tmp_array4::Vector{T}; tmp_array5::Vector{T}
+    M0::Matrix{T}; M1::Matrix{T}; M2::Matrix{T}
     U::Matrix{T}; dU::Matrix{T}; dM::Matrix{T}
-    adjoint_drift::Matrix{T}; tmp::Matrix{T}; tmp1::Matrix{T}; tmp2::Matrix{T}; tmp3::Matrix{T}
+    adjoint_drift::Matrix{T}; tmp::Matrix{T}; 
+    tmp1::Matrix{T}; tmp2::Matrix{T}; tmp3::Matrix{T}
 end 
 
 Storage{T}(dim::Int) where T = Storage{T}(
-    Matrix{T}(I, dim, dim),
+    Matrix{T}(I, dim, dim), 
+    (Vector{T}(undef, 8) for _ in 1:5)... ,
     (Matrix{T}(undef, dim, dim) for _ in 1:11)...
 )

@@ -114,6 +114,32 @@ function project_algebra(mat, algebra; tol = 1e-8)
     return coeffs
 end
 
+function project_to_algebra!(coeffs, mat, algebra, stor; tol = 1e-8) where T
+    # orthonormal basis assumed 
+    for (i, el) in enumerate(algebra.lie_basis)
+        coeffs[i] = real(tr(el' * mat))
+    end 
+    stor.tmp = mat - sum(coeffs[i] * algebra.lie_basis[i] for i in eachindex(coeffs))
+    @assert norm(stor.tmp) < tol "element outside algebra, norm(remainder) = $(norm(stor.tmp))"
+    return nothing
+end
+
+function build_structure_tensor(lie_basis::Vector{SparseMatrixCSC{T, Int}}; tol=1e-10)
+    # Assumes an orthonormal basis
+    n = length(lie_basis)
+    f = zeros(T, n, n, n)
+    for a in 1:n, b in a+1:n
+        comm = br(lie_basis[a], lie_basis[b])
+        for c in 1:n
+            val = tr(lie_basis[c]' * comm)
+            f[c,a,b] = real(val)
+            f[c,b,a] = -f[c,a,b]
+            @assert abs(imag(val)) < tol "structure constant [$c, $a, $b] has large imaginary part: $(imag(val))"
+
+        end 
+    end 
+    return f
+end 
 
 function construct_adjoint_representations(lie_basis::Vector{SparseMatrixCSC{T,Int}},
                                            generators::Vector{SparseMatrixCSC{T, Int}})
