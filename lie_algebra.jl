@@ -105,22 +105,27 @@ end
 
 function project_algebra(mat, algebra; tol = 1e-8)
     remainder = copy(mat)
-    coeffs = zeros(ComplexF64,length(algebra.lie_basis))
+    coeffs = zeros(real(eltype(mat)),length(algebra.lie_basis))
     for (i, el) in enumerate(algebra.lie_basis)
-        coeffs[i] = dot(el, remainder) / dot(el, el)
+        coeffs[i] = real(dot(el, remainder) / dot(el, el))
         remainder .-= coeffs[i] .* el
     end 
     @assert norm(remainder) < tol "element outside algebra, norm(remainder) = $(norm(remainder))"
     return coeffs
 end
 
-function project_to_algebra!(coeffs, mat, algebra, stor; tol = 1e-8) where T
+function project_to_algebra!(coeffs, mat, algebra, stor; tol = 1e-8, identifier=nothing)
     # orthonormal basis assumed 
+    fill!(coeffs, zero(eltype(coeffs)))
     for (i, el) in enumerate(algebra.lie_basis)
         coeffs[i] = real(tr(el' * mat))
     end 
-    stor.tmp = mat - sum(coeffs[i] * algebra.lie_basis[i] for i in eachindex(coeffs))
-    @assert norm(stor.tmp) < tol "element outside algebra, norm(remainder) = $(norm(stor.tmp))"
+    stor.proj_alg_tmp .= mat 
+    for (i, el) in enumerate(algebra.lie_basis)
+        stor.proj_alg_tmp .-= coeffs[i] .* el 
+    end 
+
+    @assert norm(stor.proj_alg_tmp) < tol "element outside algebra, norm(remainder) = $(norm(stor.proj_alg_tmp)), coeffs: $coeffs. Found for $identifier"
     return nothing
 end
 
@@ -135,10 +140,34 @@ function build_structure_tensor(lie_basis::Vector{SparseMatrixCSC{T, Int}}; tol=
             f[c,a,b] = real(val)
             f[c,b,a] = -f[c,a,b]
             @assert abs(imag(val)) < tol "structure constant [$c, $a, $b] has large imaginary part: $(imag(val))"
-
         end 
     end 
     return f
+end 
+
+function lie_bracket_coeffs!(res::Vector{T}, f::Array{Tf, 3}, x::Vector{T}, y::Vector{T}) where {T, Tf}
+    n = length(x)
+    fill!(res, zero(T))
+    for a in 1:n, b in a+1:n 
+        xayb = x[a] * y[b] - x[b] * y[a]  # since f is antisymmetric
+        iszero(xayb) && continue 
+        for c in 1:n 
+            res[c] += f[c,a,b] * xayb
+        end 
+    end 
+    return nothing 
+end 
+
+function bracket_via_lie_coeffs!(res, X, Y, algebra, stor; identifier="")
+    # [X,Y] via Lie basis elements
+    project_to_algebra!(stor.bracket_array1, X, algebra, stor; identifier=identifier * "X")
+    project_to_algebra!(stor.bracket_array2, Y, algebra, stor; identifier=identifier * "Y")
+    lie_bracket_coeffs!(stor.bracket_array3, algebra.structure_tensor, stor.bracket_array1, stor.bracket_array2)
+    fill!(res, zero(eltype(res)))
+    for μ in eachindex(stor.bracket_array3)
+        res .+= stor.bracket_array3[μ] .* algebra.lie_basis[μ]
+    end 
+    return nothing 
 end 
 
 function construct_adjoint_representations(lie_basis::Vector{SparseMatrixCSC{T,Int}},

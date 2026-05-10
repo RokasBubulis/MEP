@@ -30,10 +30,11 @@ function check_belongs_to_p_subspace(mat::Union{Matrix{T}, SparseMatrixCSC{T, In
         remainder .-= coeff .* element
     end 
     if !isapprox(norm(remainder), 0.0, atol=check_tol)
+        println("Norm of dM: $(norm(mat))")
         element = algebra.lie_basis[1]
         c = abs(dot(element, remainder) / dot(element, element))
         # remainder .-= c * element
-        @warn("$identifier not in p-subspace. Norm of the remainder: $(norm(remainder)) at timestep $timestep. Overlap with control: $c")
+        throw("$identifier not in p-subspace. Norm of the remainder: $(norm(remainder)) at timestep $timestep. Overlap with control: $c")
     end 
 end
 

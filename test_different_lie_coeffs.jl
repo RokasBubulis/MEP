@@ -10,13 +10,14 @@ im_control, im_drift = im .* construct_Ryd_generators(2)
 dim = size(im_control, 1)
 
 # solver parameters
-tmax = 2.5
+tmax = 3.0
 dt = 1e-2
 tol = 1e-8
 lambda = 0.0
-Newton_steps = 100
+Newton_steps = 50
 Newton_tol = 1e-10
-solver = SolverParams(tmax, dt, tol, lambda, Newton_steps, Newton_tol)
+Newton_damping = 1.0
+solver = SolverParams(tmax, dt, tol, lambda, Newton_steps, Newton_tol, Newton_damping)
 
 # orthogonalise drift wrt control
 c1 = tr(im_control * adjoint(im_drift))
@@ -33,7 +34,7 @@ algebra = Algebra(im_control, im_drift_orthogonal)
 # @assert length(lie_coeffs) == length(algebra.lie_basis)
 
 # prepare mutable storage 
-stor = Storage{ComplexF64}(dim)
+stor = Storage{ComplexF64}(dim, length(algebra.lie_basis))
 
 # Loop only over what changes
 vary_indices = [3, 4, 6]
@@ -56,7 +57,7 @@ for idx in vary_indices
         system = System{ComplexF64}(im_control, im_drift_orthogonal, target)
         try 
             m_best = find_best_initial_costate_autograd(algebra, system, solver, stor; verbose = false)
-            _, _, _, dists = propagate_2nd_order(m_best, algebra, system, solver, stor; save = true)
+            _, _, _, dists = propagate(m_best, algebra, system, solver, stor; save = true)
             push!(min_dists, abs(minimum(dists)))
         catch e 
             if e isa InterruptException
