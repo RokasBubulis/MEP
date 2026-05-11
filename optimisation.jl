@@ -28,41 +28,42 @@ function angles_to_directions(v::AbstractVector{T}) where T
     return v ./ n
 end
 
-# function find_best_initial_costate_bbf(algebra::Algebra, system::System, solver::SolverParams, stor::Storage)
+function find_best_initial_costate_bbf(algebra::Algebra, system::System, solver::SolverParams, stor::Storage)
 
-#     # check target before propagation
-#     check_unitarity(system.target, stor.tmp, note="Target")
-#     targ_dist = distance(system.target, system, solver,stor)
-#     @assert targ_dist < solver.tol "Error in target overlap: $targ_dist"
+    # check target before propagation
+    check_unitarity(system.target, stor.tmp, note="Target")
+    targ_dist = distance(system.target, system, solver,stor)
+    @assert targ_dist < solver.tol "Error in target overlap: $targ_dist"
 
-#     n = length(algebra.p_basis) - 1
-#     initial_angles = zeros(n)
+    n = length(algebra.p_basis) #- 1
+    initial_angles = zeros(n)
 
-#     thread_stors = [deepcopy(stor) for _ in 1:Threads.maxthreadid()]
+    thread_stors = [deepcopy(stor) for _ in 1:Threads.maxthreadid()]
 
-#     objective = function(angles)
-#         s = thread_stors[Threads.threadid()]
-#         m = angles_to_directions(angles)
-#         list = [0, 1, 2, 2, 3, 4, 4]
-#         propagate(m, algebra, system, solver, s) + solver.lambda *  dot(list, abs.(m).^2)
-#     end
+    objective = function(angles)
+        s = thread_stors[Threads.threadid()]
+        m = angles_to_directions(angles)
+        #list = [0, 1, 2, 2, 3, 4, 4]
+        propagate(m, algebra, system, solver, s)# + solver.lambda *  dot(list, abs.(m).^2)
+    end
 
-#     # use CMA Evolution strategy for optimisation
-#     result = minimize(
-#         objective,
-#         initial_angles, 1.0;
-#         maxiter=500, verbosity=1,
-#         multi_threading=true,
-#         popsize=24,
-#         lower = zeros(n),
-#         upper = [i == 1 ? 2π : π for i in 1:n],
-#         ftarget=solver.lambda != 0 ? solver.lambda * solver.tol : solver.tol
-#         )
-#     angles_best = xbest(result)
-#     m_best = angles_to_directions(angles_best)
+    # use CMA Evolution strategy for optimisation
+    # result = minimize(
+    #     objective,
+    #     initial_angles, 1.0;
+    #     maxiter=500, verbosity=1,
+    #     multi_threading=true,
+    #     popsize=24,
+    #     lower = zeros(n),
+    #     upper = [i == 1 ? 2π : π for i in 1:n],
+    #     ftarget=solver.lambda != 0 ? solver.lambda * solver.tol : solver.tol
+    #     )
+    result = Optim.optimize(objective, initial_angles, NelderMead())
+    angles_best = result.minimizer()
+    m_best = angles_to_directions(angles_best)
 
-#     return m_best
-# end
+    return m_best
+end
 
 
 function find_best_initial_costate_autograd(algebra::Algebra, system::System, solver::SolverParams, stor::Storage; verbose = true)
@@ -78,7 +79,7 @@ function find_best_initial_costate_autograd(algebra::Algebra, system::System, so
 
     # n independent directions
     x0 = zeros(length(algebra.p_basis))
-    x0[1] = 1.0
+    x0[4] = 1.0
 
     dim = size(stor.adjoint_drift, 1)
     stor_dual_ref = Ref{Any}(nothing)

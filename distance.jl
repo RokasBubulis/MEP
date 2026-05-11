@@ -53,6 +53,8 @@ function minimum_distance_objective_analytic(U::Union{Matrix{TCostate}, SparseMa
         β -= dβ
         abs(dβ) < solver.Newton_tol && break
     end 
+    final_first_der, final_second_der = distance_objective_analytic_derivatives(β, U, system, stor)
+    @assert isapprox(final_first_der, 0.0, atol=1e-10) && final_second_der > 0 "Minimisation of distance to target coset failed: f' = $final_first_der, f'' = $final_second_der"
     min_dist = distance_objective_analytic(β, U, system, stor)
     return min_dist
 end     

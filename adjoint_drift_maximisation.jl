@@ -59,17 +59,6 @@ function adjoint_action_by_campbell_structure_tensor!(res, X::SparseMatrixCSC{TX
     for c in eachindex(res_lie_coeffs)
         res .+= res_lie_coeffs[c] .* algebra.lie_basis[c]
     end 
-    # try 
-    #     project_to_algebra!(stor.campbell_array2, res, algebra, stor; identifier="TEST")
-    # catch e 
-    #     println("x_lie: $x_lie_coeffs")
-    #     println("y_lie: $y_lie_coeffs")
-    #     println("last_term_lie_coeffs: $last_term_lie_coeffs")
-    #     println("new_term_lie_coeffs: $new_term_lie_coeffs")
-    #     println("res_lie_coeffs: $res_lie_coeffs")
-
-    #     rethrow(e)
-    # end 
     return nothing
 
 end 
@@ -135,8 +124,13 @@ function optimal_adjoint_drift_analytic!(tmp::Matrix{TCostate}, costate::Matrix{
         @warn("Unusually large |α| encountered: $(abs(stor.alpha))")
     end 
     adjoint_drift!(tmp, stor.alpha, algebra, system, stor)
-    final_first_der = ForwardDiff.value(adjoint_drift_obj_1st_der(stor.alpha, costate, algebra, system, solver, stor))
-    final_second_der = ForwardDiff.value(adjoint_drift_obj_2nd_der(stor.alpha, costate, algebra, system, solver, stor))
+    if eltype(costate) <:ForwardDiff.Dual
+        final_first_der = ForwardDiff.value(adjoint_drift_obj_1st_der(stor.alpha, costate, algebra, system, solver, stor))
+        final_second_der = ForwardDiff.value(adjoint_drift_obj_2nd_der(stor.alpha, costate, algebra, system, solver, stor))
+    else
+        final_first_der = adjoint_drift_obj_1st_der(stor.alpha, costate, algebra, system, solver, stor)
+        final_second_der = adjoint_drift_obj_2nd_der(stor.alpha, costate, algebra, system, solver, stor)
+    end 
     @assert isapprox(final_first_der, 0.0, atol=1e-10) && final_second_der < 0 "Maximisation of adjoint drift failed: f' = $final_first_der, f'' = $final_second_der"
     # ensure optimal adjoint drift is anti-hermitian
     check_anti_hermiticity(tmp)
