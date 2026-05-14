@@ -79,12 +79,12 @@ function find_best_initial_costate_autograd(algebra::Algebra, system::System, so
 
     # n independent directions
     x0 = zeros(length(algebra.p_basis))
-    x0[4] = 1.0
+    x0[1] = 1.0  # setting a different initial direction causes either diverging gradients or operators not in lie basis
 
     dim = size(stor.adjoint_drift, 1)
     stor_dual_ref = Ref{Any}(nothing)
-    objective = function(angles)
-        m = angles_to_directions(angles)
+    objective = function(m)
+        #m = angles_to_directions(angles)
         if eltype(m) <: ForwardDiff.Dual
             T = Complex{eltype(m)}
             if typeof(stor_dual_ref[]) != Storage{T}
@@ -104,7 +104,7 @@ function find_best_initial_costate_autograd(algebra::Algebra, system::System, so
     # grad = ForwardDiff.gradient(objective, x0)
     # @assert any(!iszero, grad) "Initial gradient is all zeros"
     # od = OnceDifferentiable(objective, initial_angles; autodiff = :forward)
-    angles_best = Optim.minimizer(
+    m_best = Optim.minimizer(
         optimize(
             od, x0, 
             BFGS(linesearch = BackTracking()), 
@@ -116,7 +116,7 @@ function find_best_initial_costate_autograd(algebra::Algebra, system::System, so
         )
     )
 
-    m_best = angles_to_directions(angles_best)
+    # m_best = angles_to_directions(angles_best)
 
     return m_best
 end

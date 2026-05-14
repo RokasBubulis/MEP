@@ -9,7 +9,7 @@ lie_coeffs = zeros(8)
 lie_coeffs[1] = 0.0
 lie_coeffs[2] = 2.0
 # lie_coeffs[3] = 0.2
-lie_coeffs[6] = 0.3
+lie_coeffs[6] = 0.4
 # # lie_coeffs = [1.0, 1.0, 0.3, 
 # #             0.4, 0.2, 0.6, 
 # #             0.7, 0.1]
@@ -70,5 +70,5 @@ println("Target in Lie coeffs: $lie_coeffs")
 println("Autograd Lowest distance $min_dist at time $(ts[argmin(dists)])")
 println(m_best)
 
-p = plot(ts, dists)
-display(p)
+# p = plot(ts, dists)
+# display(p)

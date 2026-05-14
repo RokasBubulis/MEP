@@ -46,9 +46,10 @@ end
 function minimum_distance_objective_analytic(U::Union{Matrix{TCostate}, SparseMatrixCSC{TSystem, Int}},
     system::System, solver::SolverParams, stor::Storage) where {TCostate, TSystem}
 
-    β = zero(TCostate)
+    β = zero(Float64)
     for _ in 1:solver.Newton_steps
         first_der, second_der = distance_objective_analytic_derivatives(β, U, system, stor)
+        check_duals(first_der, "distance first der")
         dβ = first_der / second_der
         β -= dβ
         abs(dβ) < solver.Newton_tol && break
@@ -59,10 +60,10 @@ function minimum_distance_objective_analytic(U::Union{Matrix{TCostate}, SparseMa
     return min_dist
 end     
 
-distance(U::Matrix{<:Complex{<:ForwardDiff.Dual}}, system::System, solver::SolverParams, 
-stor::Storage{<:Complex{<:ForwardDiff.Dual}}
+distance(U::Union{Matrix{<:Complex{<:ForwardDiff.Dual}}, Matrix{ComplexF64}, SparseMatrixCSC{ComplexF64, Int}}, system::System, solver::SolverParams, 
+stor::Storage
 ) = minimum_distance_objective_analytic(U, system, solver, stor)
 
-distance(U::Union{Matrix{ComplexF64}, SparseMatrixCSC{ComplexF64, Int}}, system::System, 
-solver::SolverParams, stor::Storage{ComplexF64}
-) = distance_objective_optimiser(U, system, stor)
+# distance(U::Union{Matrix{ComplexF64}, SparseMatrixCSC{ComplexF64, Int}}, system::System, 
+# solver::SolverParams, stor::Storage{ComplexF64}
+# ) = distance_objective_optimiser(U, system, stor)

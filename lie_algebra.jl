@@ -4,6 +4,8 @@ commutes(x, y; tol = 1e-6) = maximum(abs.(br(x, y))) < tol
 
 T = ComplexF64
 
+using ForwardDiff
+
 # this is actually orthogonal!
 function try_add_orthonormal!(basis::Vector{SparseMatrixCSC{T,Int}}, 
                         candidate:: SparseMatrixCSC{T,Int};
@@ -145,7 +147,7 @@ function build_structure_tensor(lie_basis::Vector{SparseMatrixCSC{T, Int}}; tol=
     return f
 end 
 
-function lie_bracket_coeffs!(res::Vector{T}, f::Array{Tf, 3}, x::Vector{T}, y::Vector{T}) where {T, Tf}
+function lie_bracket_coeffs!(res::Vector{T}, f::Array{Tf, 3}, x::Vector{T1}, y::Vector{T2}) where {T, Tf, T1, T2}
     n = length(x)
     fill!(res, zero(T))
     for a in 1:n, b in a+1:n 
@@ -160,12 +162,21 @@ end
 
 function bracket_via_lie_coeffs!(res, X, Y, algebra, stor; identifier="")
     # [X,Y] via Lie basis elements
-    project_to_algebra!(stor.bracket_array1, X, algebra, stor; identifier=identifier * "X")
-    project_to_algebra!(stor.bracket_array2, Y, algebra, stor; identifier=identifier * "Y")
-    lie_bracket_coeffs!(stor.bracket_array3, algebra.structure_tensor, stor.bracket_array1, stor.bracket_array2)
+    if real(eltype(res)) <: ForwardDiff.Dual
+        arr1 = stor.bracket_array1_dual
+        arr2 = stor.bracket_array2_dual
+        arr3 = stor.bracket_array3_dual
+    else
+        arr1 = stor.bracket_array1
+        arr2 = stor.bracket_array2
+        arr3 = stor.bracket_array3
+    end 
+    project_to_algebra!(arr1, X, algebra, stor; identifier=identifier * "X")
+    project_to_algebra!(arr2, Y, algebra, stor; identifier=identifier * "Y")
+    lie_bracket_coeffs!(arr3, algebra.structure_tensor, arr1, arr2)
     fill!(res, zero(eltype(res)))
-    for μ in eachindex(stor.bracket_array3)
-        res .+= stor.bracket_array3[μ] .* algebra.lie_basis[μ]
+    for μ in eachindex(arr3)
+        res .+= arr3[μ] .* algebra.lie_basis[μ]
     end 
     return nothing 
 end 
