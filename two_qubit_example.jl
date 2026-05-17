@@ -9,7 +9,7 @@ lie_coeffs = zeros(8)
 lie_coeffs[1] = 0.0
 lie_coeffs[2] = 2.0
 # lie_coeffs[3] = 0.2
-lie_coeffs[6] = 0.4
+lie_coeffs[4] = 0.1
 # # lie_coeffs = [1.0, 1.0, 0.3, 
 # #             0.4, 0.2, 0.6, 
 # #             0.7, 0.1]
@@ -61,8 +61,8 @@ system = System{ComplexF64}(im_control, im_drift_orthogonal, target)
 stor = Storage{ComplexF64}(dim, length(algebra.lie_basis))
 
 # results
-m_best = find_best_initial_costate_autograd(algebra, system, solver, stor)
-#m_best = find_best_initial_costate_bbf(algebra, system, solver, stor)
+#m_best = find_best_initial_costate_autograd(algebra, system, solver, stor)
+m_best = find_best_initial_costate_bbf(algebra, system, solver, stor)
 ts, Us, Ms, dists = propagate(m_best, algebra, system, solver, stor; save = true)
 min_dist = minimum(dists)
 time_of_min_dist = ts[argmin(dists)]

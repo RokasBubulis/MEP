@@ -128,7 +128,7 @@ function adjoint_drift_obj_2nd_der(α::TAlpha, costate::Matrix{TCostate}, algebr
     bracket_via_lie_coeffs!(stor.tmp_adjoint_drift_1st_der, stor.tmp_adjoint_drift, system.im_control, algebra, stor; identifier="First der for second: ")
     bracket_via_lie_coeffs!(stor.tmp_adjoint_drift_2nd_der, stor.tmp_adjoint_drift_1st_der, system.im_control, algebra, stor; identifier="Second der: ")
     mul!(stor.tmp_adjoint_drift_2nd_der_obj, stor.tmp_adjoint_drift_2nd_der, costate)
-    return real(tr(stor.tmp_adjoint_drift_2nd_der_obj)) - solver.lambda * 2
+    return real(tr(stor.tmp_adjoint_drift_2nd_der_obj))
 end 
 
 function differentiable_mod(α, system)
@@ -145,6 +145,10 @@ function optimal_adjoint_drift_analytic!(tmp::Matrix{TCostate}, costate::Matrix{
     for i in 1:solver.Newton_steps
         first_der = adjoint_drift_obj_1st_der(α, stor.tmp_primal_costate, algebra, system, solver, stor)
         second_der = adjoint_drift_obj_2nd_der(α, stor.tmp_primal_costate, algebra, system, solver, stor)
+        println("f'=$first_der, f''=$second_der at step $i (ADM)")
+        # if isapprox(second_der, 0.0)
+        #     throw("f'=$first_der, f''=$second_der at step $i (ADM)")
+        # end 
         dα = solver.Newton_damping * first_der / second_der
         abs(dα) < solver.Newton_tol && break
         # @show first_der
@@ -157,7 +161,6 @@ function optimal_adjoint_drift_analytic!(tmp::Matrix{TCostate}, costate::Matrix{
         end 
         
         α = differentiable_mod(α, system)
-
     end 
 
     if abs(α) > 8.0 # alpha=8 corresponds to an error of order -9
@@ -181,7 +184,8 @@ function optimal_adjoint_drift_analytic!(tmp::Matrix{TCostate}, costate::Matrix{
     else 
         stor.alpha = α
     end 
-
+    println("---")
+    @show stor.alpha
     adjoint_drift!(tmp, stor.alpha, algebra, system, stor)
 
     final_first_der = adjoint_drift_obj_1st_der(primal(stor.alpha), stor.tmp_primal_costate, algebra, system, solver, stor)
@@ -196,11 +200,38 @@ function optimal_adjoint_drift_analytic!(tmp::Matrix{TCostate}, costate::Matrix{
     return nothing
 end 
 
-# optimal_adjoint_drift!(tmp::Matrix{ComplexF64}, costate::Matrix{ComplexF64}, algebra::Algebra, system::System, solver::SolverParams, stor::Storage
-# ) = optimal_adjoint_drift_optimiser!(tmp, costate, algebra, system, stor)
+function optimal_adjoint_drift_optimiser!(tmp::Matrix{TCostate}, costate::Matrix{TCostate}, algebra::Algebra, system::System, solver::SolverParams, stor::Storage) where TCostate
+    x0 = [0.0]
 
-# optimal_adjoint_drift!(tmp::Matrix{<:Complex{<:ForwardDiff.Dual}}, 
-# costate::Matrix{<:Complex{<:ForwardDiff.Dual}}, 
+    td = TwiceDifferentiable(
+    x -> -adjoint_drift_obj(x[], costate, algebra, solver, stor),
+    (G, x) -> (G .= -adjoint_drift_obj_1st_der(x[], costate, algebra, system, solver, stor)),
+    (H, x) -> (H .= -adjoint_drift_obj_2nd_der(x[], costate, algebra, system, solver, stor)),
+    x0
+    )
+    res = Optim.optimize(td, x0, Newton(linesearch = LineSearches.BackTracking()))
+    α_optimal = Optim.minimizer(res)[]
 
-optimal_adjoint_drift!(tmp, costate, algebra::Algebra, system::System, solver::SolverParams, stor::Storage
-) = optimal_adjoint_drift_analytic!(tmp, costate, algebra, system, solver, stor)
+    if abs(α_optimal) > 8.0 # alpha=8 corresponds to an error of order -9
+        @warn("Unusually large |α| encountered: $(abs(α_optimal))")
+    end 
+
+    final_first_der = adjoint_drift_obj_1st_der(α_optimal, costate, algebra, system, solver, stor)
+    final_second_der = adjoint_drift_obj_2nd_der(α_optimal, costate, algebra, system, solver, stor)
+
+    if ! (isapprox(final_first_der, 0.0, atol=solver.tol) && final_second_der < 0)
+        @warn "Maximisation of adjoint drift failed: f' = $final_first_der, f'' = $final_second_der, α = $α_optimal"
+    end
+
+    adjoint_drift!(tmp, α_optimal, algebra, system, stor)
+    # ensure optimal adjoint drift is anti-hermitian
+    check_anti_hermiticity(tmp)
+
+    return nothing 
+end 
+
+optimal_adjoint_drift!(tmp::Matrix{<:Complex{<:ForwardDiff.Dual}}, 
+costate::Matrix{<:Complex{<:ForwardDiff.Dual}}, algebra::Algebra, system::System, solver::SolverParams, stor::Storage) = optimal_adjoint_drift_analytic!(tmp, costate, algebra, system, solver, stor)
+
+optimal_adjoint_drift!(tmp::Matrix{ComplexF64}, costate::Matrix{ComplexF64}, algebra::Algebra, system::System, solver::SolverParams, stor::Storage
+) = optimal_adjoint_drift_optimiser!(tmp, costate, algebra, system, solver, stor)

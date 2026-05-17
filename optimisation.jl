@@ -35,32 +35,22 @@ function find_best_initial_costate_bbf(algebra::Algebra, system::System, solver:
     targ_dist = distance(system.target, system, solver,stor)
     @assert targ_dist < solver.tol "Error in target overlap: $targ_dist"
 
-    n = length(algebra.p_basis) #- 1
-    initial_angles = zeros(n)
+    n = length(algebra.p_basis)
+    m0 = zeros(n)
+    m0[1] = 1.0
 
-    thread_stors = [deepcopy(stor) for _ in 1:Threads.maxthreadid()]
-
-    objective = function(angles)
-        s = thread_stors[Threads.threadid()]
-        m = angles_to_directions(angles)
-        #list = [0, 1, 2, 2, 3, 4, 4]
-        propagate(m, algebra, system, solver, s)# + solver.lambda *  dot(list, abs.(m).^2)
+    objective = function(m)
+        m ./= norm(m)
+        propagate(m, algebra, system, solver, stor)
     end
 
-    # use CMA Evolution strategy for optimisation
-    # result = minimize(
-    #     objective,
-    #     initial_angles, 1.0;
-    #     maxiter=500, verbosity=1,
-    #     multi_threading=true,
-    #     popsize=24,
-    #     lower = zeros(n),
-    #     upper = [i == 1 ? 2π : π for i in 1:n],
-    #     ftarget=solver.lambda != 0 ? solver.lambda * solver.tol : solver.tol
-    #     )
-    result = Optim.optimize(objective, initial_angles, NelderMead())
-    angles_best = result.minimizer()
-    m_best = angles_to_directions(angles_best)
+    result = Optim.optimize(objective, m0, NelderMead(), Optim.Options(
+        show_trace  = true,   # print iteration log
+        #extended_trace = true, # include simplex details
+        iterations  = 100,
+        f_abstol = solver.tol,
+    ))
+    m_best = result.minimizer
 
     return m_best
 end
@@ -72,10 +62,6 @@ function find_best_initial_costate_autograd(algebra::Algebra, system::System, so
     check_unitarity(system.target, stor.tmp, note="Target")
     targ_dist = distance(system.target, system, solver, stor)
     @assert targ_dist < solver.tol "Error in target overlap: $targ_dist"
-
-    # n-hypersphere angles
-    # n = length(algebra.p_basis) - 1
-    # x0 = zeros(n)
 
     # n independent directions
     x0 = zeros(length(algebra.p_basis))
