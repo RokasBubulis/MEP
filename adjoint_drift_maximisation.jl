@@ -97,9 +97,20 @@ function  adjoint_action_true(X, Y)
     return exp(Matrix(X)) * Y * exp(-Matrix(X))
 end
 
+function  adjoint_action_true!(res, X, Y, stor)
+    copyto!(stor.tmp1, X)
+    LinearAlgebra.exp!(stor.tmp1) 
+    mul!(stor.tmp2, stor.tmp1, Y)
+    mul!(res, stor.tmp2, stor.tmp1')
+    return nothing
+end
+
 
 function adjoint_drift!(res::Matrix{TCostate}, α::TAlpha, algebra::Algebra, system::System, stor::Storage) where {TAlpha, TCostate}
-    adjoint_action_by_campbell_structure_tensor!(res, -α * system.im_control, -system.im_drift, algebra, stor)
+    #adjoint_action_by_campbell_structure_tensor!(res, -α * system.im_control, -system.im_drift, algebra, stor)
+    copyto!(stor.tmp, system.im_control)
+    lmul!(-α, stor.tmp) 
+    adjoint_action_true!(res, stor.tmp, -system.im_drift, stor)
     return nothing 
 end 
 
@@ -212,9 +223,9 @@ function optimal_adjoint_drift_optimiser!(tmp::Matrix{TCostate}, costate::Matrix
     res = Optim.optimize(td, x0, Newton(linesearch = LineSearches.BackTracking()))
     α_optimal = Optim.minimizer(res)[]
 
-    if abs(α_optimal) > 8.0 # alpha=8 corresponds to an error of order -9
-        @warn("Unusually large |α| encountered: $(abs(α_optimal))")
-    end 
+    # if abs(α_optimal) > 8.0 # alpha=8 corresponds to an error of order -9
+    #     @warn("Unusually large |α| encountered: $(abs(α_optimal))")
+    # end 
 
     final_first_der = adjoint_drift_obj_1st_der(α_optimal, costate, algebra, system, solver, stor)
     final_second_der = adjoint_drift_obj_2nd_der(α_optimal, costate, algebra, system, solver, stor)

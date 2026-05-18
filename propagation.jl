@@ -122,7 +122,7 @@ function propagate(m::AbstractVector{TR}, algebra::Algebra, system::System, solv
 
     d1 = distance(stor.U0, system, solver, stor)
     d2 = distance(stor.U, system, solver, stor)
-    dmin = min(d1, d2)
+    dmin = 1.0 # min(d1, d2)
     #check_duals(d1, "d1")
     check_duals(stor.U, "U(step 1)")
     check_duals(d2, "d2")
@@ -162,7 +162,7 @@ function propagate(m::AbstractVector{TR}, algebra::Algebra, system::System, solv
         else
             if dist < solver.tol
                 return dist
-            elseif dist < dmin
+            elseif dist < dmin && ts[i] > 5
                 dmin = dist
             end
         end

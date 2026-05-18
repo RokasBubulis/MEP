@@ -38,6 +38,7 @@ function find_best_initial_costate_bbf(algebra::Algebra, system::System, solver:
     n = length(algebra.p_basis)
     m0 = zeros(n)
     m0[1] = 1.0
+    #m0 = [0.8194245393044408, -0.2542203669425132, 0.3590516415189143, 0.03710082896748145, -0.3609277527186667, 0.00885616735135394, 0.05721540218433601]
 
     objective = function(m)
         m ./= norm(m)
@@ -47,7 +48,6 @@ function find_best_initial_costate_bbf(algebra::Algebra, system::System, solver:
     result = Optim.optimize(objective, m0, NelderMead(), Optim.Options(
         show_trace  = true,   # print iteration log
         #extended_trace = true, # include simplex details
-        iterations  = 100,
         f_abstol = solver.tol,
     ))
     m_best = result.minimizer
@@ -97,7 +97,7 @@ function find_best_initial_costate_autograd(algebra::Algebra, system::System, so
             Optim.Options(
                 show_trace=verbose, 
                 f_abstol=solver.tol,
-                g_tol=1e-12,
+                f_reltol=solver.tol,
                 )
         )
     )
