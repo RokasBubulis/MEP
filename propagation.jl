@@ -63,8 +63,13 @@ function set_initial_state_2nd_order!(m::AbstractVector{TR}, algebra::Algebra, s
     check_duals(stor.M0, "M0 initial set")
     optimal_adjoint_drift!(stor.adjoint_drift, stor.M0, algebra, system, solver, stor)  # H_opt(0)
     check_duals(stor.adjoint_drift, "Initial adjoint drift")
-    exponent!(stor.tmp, stor.adjoint_drift * solver.dt)
-    mul!(stor.U, stor.tmp, stor.U0)  # U(dt)
+    if real(eltype(stor.M0)) <: ForwardDiff.Dual
+        tmp = stor.tmp_dual 
+    else
+        tmp = stor.tmp 
+    end 
+    exponent!(tmp, stor.adjoint_drift * solver.dt)
+    mul!(stor.U, tmp, stor.U0)  # U(dt)
 
     # M(dt) = [H_opt(0), M(0)] * dt + M0
     bracket_via_lie_coeffs!(stor.dM, stor.adjoint_drift, stor.M0, algebra, stor)
@@ -79,9 +84,15 @@ function propagator_2nd_order_step!(algebra::Algebra, system::System, solver::So
     optimal_adjoint_drift!(stor.adjoint_drift, stor.M1, algebra, system, solver, stor)
     check_duals(stor.adjoint_drift, "Adjoint drift")
 
+    if real(eltype(stor.M0)) <: ForwardDiff.Dual
+        tmp = stor.tmp_dual 
+    else
+        tmp = stor.tmp 
+    end 
+
     # U(t+dt) = exp(H_opt * dt) * U(t)
-    exponent!(stor.tmp, stor.adjoint_drift * solver.dt)
-    mul!(stor.dU, stor.tmp, stor.U)
+    exponent!(tmp, stor.adjoint_drift * solver.dt)
+    mul!(stor.dU, tmp, stor.U)
     stor.U[:] .= stor.dU[:]
     check_duals(stor.U, "U")
 
@@ -120,13 +131,13 @@ function propagate(m::AbstractVector{TR}, algebra::Algebra, system::System, solv
     ts = collect(range(0.0, solver.tmax; step=solver.dt))
     n = length(ts)
 
-    d1 = distance(stor.U0, system, solver, stor)
-    d2 = distance(stor.U, system, solver, stor)
+    # d1 = distance(stor.U0, system, solver, stor)
+    # @show d1
+    # d2 = distance(stor.U, system, solver, stor)
     dmin = 1.0 # min(d1, d2)
     #check_duals(d1, "d1")
     check_duals(stor.U, "U(step 1)")
-    check_duals(d2, "d2")
-
+    # check_duals(d2, "d2")
     if save
         Us = Vector{typeof(stor.U)}(undef, n)
         Ms = Vector{typeof(stor.M0)}(undef, n)
@@ -135,8 +146,8 @@ function propagate(m::AbstractVector{TR}, algebra::Algebra, system::System, solv
         Us[2] = copy(stor.U)
         Ms[1] = copy(stor.M0)
         Ms[2] = copy(stor.M1)
-        dists[1] = d1
-        dists[2] = d2
+        dists[1] = distance(stor.U0, system, solver, stor)
+        dists[2] = distance(stor.U, system, solver, stor)
     end
 
     for i in eachindex(ts)[3:end]
@@ -149,8 +160,7 @@ function propagate(m::AbstractVector{TR}, algebra::Algebra, system::System, solv
         @assert norm(stor.M0) < 2 "norm of M0: $(norm(stor.M0)) at timestep  $i"
         @assert norm(stor.M1) < 2 "norm of M1: $(norm(stor.M1)) at timestep  $i"
         @assert norm(stor.M2) < 2 "norm of M2: $(norm(stor.M2)) at timestep  $i"
-        dist = distance(stor.U, system, solver, stor)
-
+        dist = distance(stor.U, system, solver, stor) 
         check_duals(stor.M0, "M(t)")
         check_duals(stor.U, "U(t)")
         check_duals(dist, "dmin(t)")
@@ -162,7 +172,7 @@ function propagate(m::AbstractVector{TR}, algebra::Algebra, system::System, solv
         else
             if dist < solver.tol
                 return dist
-            elseif dist < dmin && ts[i] > 5
+            elseif dist < dmin #&& 5 < ts[i]
                 dmin = dist
             end
         end

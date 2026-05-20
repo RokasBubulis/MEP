@@ -2,12 +2,29 @@
 
 function distance_objective_optimiser(U::Union{Matrix{T}, SparseMatrixCSC{T,Int}}, system::System, stor::Storage) where T
 
-    mul!(stor.tmp, U, system.adjoint_target)
-    tmp_diag = diag(stor.tmp)
+#     mul!(stor.tmp, U, system.adjoint_target)
+#     tmp_diag = diag(stor.tmp)
 
-    dist(β) = 1 - 1/size(U,1) * abs(dot(exp.(β.*system.im_control_vec), tmp_diag))
+#     dist(β) = 1 - 1/size(U,1) * abs(dot(exp.(β.*system.im_control_vec), tmp_diag))
+#     # res = optimize(dist, -pi, pi)
+#     res = optimize(dist, -2π, 2π, Brent(), 
+#     abs_tol = 1e-12,   # tighter argument tolerance
+#     rel_tol = 1e-12
+# )
+#     β_opt = Optim.minimizer(res)
+
+#     return dist(β_opt)
+
+    stor.U_logic[1:2, 1:2] .= U[1:2, 1:2]
+    stor.U_logic[1:2, 3:4] .= U[1:2, 4:5]
+    stor.U_logic[3:4, 1:2] .= U[3:4, 4:5]
+    stor.U_logic[3:4, 3:4] .= U[4:5, 4:5]
+    mul!(stor.tmp_logic, stor.U_logic, system.adjoint_target_logic)
+    tmp_diag = diag(stor.tmp_logic)
+
+    dist(β) = 1 - 1/size(stor.U_logic,1) * abs(dot(exp.(β.*system.im_control_vec_logic), tmp_diag))
     # res = optimize(dist, -pi, pi)
-    res = optimize(dist, -π, π, Brent(), 
+    res = optimize(dist, -2π, 2π, Brent(), 
     abs_tol = 1e-12,   # tighter argument tolerance
     rel_tol = 1e-12
 )
@@ -19,9 +36,15 @@ end
 function distance_objective_analytic(β::TBeta, U::Union{Matrix{TCostate}, SparseMatrixCSC{TSystem, Int}},
     system::System, stor::Storage) where {TBeta, TCostate, TSystem}
 
-    mul!(stor.tmp, U, system.adjoint_target)
-    A_diag = diag(stor.tmp) # A_jj 
-    dim = size(stor.tmp, 1)
+    if real(eltype(stor.M0)) <: ForwardDiff.Dual
+        tmp = stor.tmp_dual 
+    else
+        tmp = stor.tmp 
+    end 
+
+    mul!(tmp, U, system.adjoint_target)
+    A_diag = diag(tmp) # A_jj 
+    dim = size(tmp, 1)
     expLBeta = exp.(β.*system.im_control_vec)
     d = dot(expLBeta, A_diag)
     res =  1 - 1/dim * real(d)
@@ -33,8 +56,13 @@ function distance_objective_analytic_derivatives(β::TBeta, U::Union{Matrix{TCos
 
     first_der, second_der = zero(TBeta), zero(TBeta)
     dim = size(stor.tmp, 1)
-    mul!(stor.tmp, U, system.adjoint_target)
-    A_diag = diag(stor.tmp) # A_jj 
+    if real(eltype(stor.M0)) <: ForwardDiff.Dual
+        tmp = stor.tmp_dual 
+    else
+        tmp = stor.tmp 
+    end 
+    mul!(tmp, U, system.adjoint_target)
+    A_diag = diag(tmp) # A_jj 
     LexpBetaL = system.im_control_vec .* exp.(β.*system.im_control_vec)
     first_der = -1/dim * real(dot(LexpBetaL, A_diag))
     L2expBetaL = system.im_control_vec .* LexpBetaL
@@ -56,7 +84,7 @@ function minimum_distance_objective_analytic(U::Union{Matrix{TCostate}, SparseMa
     end 
 
     beta = ForwardDiff.value(β)
-    final_first_der, final_second_der = distance_objective_analytic_derivatives(beta, U, system, stor)
+    final_first_der, final_second_der = primal.(distance_objective_analytic_derivatives(beta, U, system, stor))
 
     if real(eltype(U)) <: ForwardDiff.Dual 
         p = ForwardDiff.partials(real(final_first_der)) / (-ForwardDiff.value(final_second_der))

@@ -32,9 +32,9 @@ lie_coeffs = zeros(8)
 # lie_coeffs[4] = 0.2
 
 # solver parameters
-tmax = 35
+tmax = 15
 dt = 1e-2
-tol = 1e-6
+tol = 1e-8
 lambda = 0.0
 Newton_steps = 50
 Newton_tol = 1e-10
@@ -54,8 +54,9 @@ else
     )))
     title="Lie coeffs: $lie_coeffs"
 end 
-
-system = System{ComplexF64}(im_control, im_drift_orthogonal, target)
+target_logic = SparseMatrixCSC{ComplexF64, Int}(I, 4, 4)
+target_logic[4,4] = -1.0
+system = System{ComplexF64}(im_control, im_drift_orthogonal, target, target_logic)
 
 # prepare mutable storage 
 stor = Storage{ComplexF64}(dim, length(algebra.lie_basis))

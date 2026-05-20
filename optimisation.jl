@@ -38,6 +38,9 @@ function find_best_initial_costate_bbf(algebra::Algebra, system::System, solver:
     n = length(algebra.p_basis)
     m0 = zeros(n)
     m0[1] = 1.0
+    #m0 = rand(n) .* .-1
+    # m0 ./= norm(m0)
+    # println("m0 = $(round.(m0, sigdigits=3))")
     #m0 = [0.8194245393044408, -0.2542203669425132, 0.3590516415189143, 0.03710082896748145, -0.3609277527186667, 0.00885616735135394, 0.05721540218433601]
 
     objective = function(m)
@@ -85,11 +88,6 @@ function find_best_initial_costate_autograd(algebra::Algebra, system::System, so
 
     g! = (G, x) -> ForwardDiff.gradient!(G, objective, x)
     od = OnceDifferentiable(objective, g!, x0)
-
-    # Test that ForwardDiff can actually differentiate your objective
-    # grad = ForwardDiff.gradient(objective, x0)
-    # @assert any(!iszero, grad) "Initial gradient is all zeros"
-    # od = OnceDifferentiable(objective, initial_angles; autodiff = :forward)
     m_best = Optim.minimizer(
         optimize(
             od, x0, 
@@ -101,8 +99,6 @@ function find_best_initial_costate_autograd(algebra::Algebra, system::System, so
                 )
         )
     )
-
-    # m_best = angles_to_directions(angles_best)
 
     return m_best
 end

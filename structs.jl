@@ -20,14 +20,18 @@ struct System{T}
     im_control::SparseMatrixCSC{T, Int}
     im_drift::SparseMatrixCSC{T, Int}
     target::SparseMatrixCSC{T, Int}
+    target_logic::SparseMatrixCSC{T, Int}
     adjoint_target::SparseMatrixCSC{T, Int}
+    adjoint_target_logic::SparseMatrixCSC{T, Int}
     im_control_vec::Vector{T}
+    im_control_vec_logic::Vector{T}
     period_im_control::Real
 
-    function System{T}(im_control, im_drift, target) where T
+    function System{T}(im_control, im_drift, target, target_logic) where T
         eig = abs(eigvals(Matrix(im_control))[1])
         @assert eig != 0.0 "Control period eigenvalue assumption failed"
-        new{T}(im_control, im_drift, target, sparse(adjoint(target)), diag(im_control),2*pi/eig)
+        new{T}(im_control, im_drift, target, target_logic, sparse(adjoint(target)), sparse(adjoint(target_logic)), 
+        diag(im_control), diag(im_control)[[1,2,4,5]], 2*pi/eig)
     end 
 end 
 
@@ -63,6 +67,9 @@ mutable struct Storage{T, R}
     # state matrices
     U0::Matrix{ComplexF64}
 
+    tmp_logic::Matrix{ComplexF64}
+    U_logic::Matrix{ComplexF64}
+
     # never dual — Newton loop scratch (only used to find α)
     tmp_adjoint_drift::Matrix{ComplexF64}
     tmp_adjoint_drift_1st_der::Matrix{ComplexF64}
@@ -72,15 +79,19 @@ mutable struct Storage{T, R}
     tmp_adjoint_drift_2nd_der_obj::Matrix{ComplexF64}
     tmp_primal_costate::Matrix{ComplexF64}
 
+        # output/intermediate matrices
+    tmp::Matrix{ComplexF64}
+    tmp1::Matrix{ComplexF64}; tmp2::Matrix{ComplexF64}; tmp3::Matrix{ComplexF64}
+
     # dual
     M0::Matrix{T}; M1::Matrix{T}; M2::Matrix{T}
     U::Matrix{T}; dU::Matrix{T}; dM::Matrix{T}
     adjoint_drift::Matrix{T}
     tmp_adjoint_drift_1st_der_obj_dual::Matrix{T}
 
-    # output/intermediate matrices
-    tmp::Matrix{T}
-    tmp1::Matrix{T}; tmp2::Matrix{T}; tmp3::Matrix{T}
+        # output/intermediate matrices
+    tmp_dual::Matrix{T}
+    tmp1_dual::Matrix{T}; tmp2_dual::Matrix{T}; tmp3_dual::Matrix{T}
 
     # project algebra tmp 
     proj_alg_tmp::Matrix{T}
@@ -101,7 +112,8 @@ end
 Storage{T}(dim::Int, n_basis::Int) where T = Storage{T, real(T)}(
     zero(real(T)),
     Matrix{ComplexF64}(I, dim, dim), # U0
-    (Matrix{ComplexF64}(undef, dim, dim) for _ in 1:7)...,  # Newton loop tmps for alpha
+    (Matrix{Complex}(undef, 4, 4) for _ in 1:2)...,
+    (Matrix{ComplexF64}(undef, dim, dim) for _ in 1:11)...,  # Newton loop tmps for alpha
     (Matrix{T}(undef, dim, dim) for _ in 1:13)...,
     (Vector{ComplexF64}(undef, n_basis) for _ in 1:8)..., # Campbell formula tmp arrays + non dual bracket tmps
     (Vector{T}(undef, n_basis) for _ in 1:8)...

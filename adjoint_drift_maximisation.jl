@@ -54,8 +54,7 @@ function adjoint_action_by_campbell!(res, X::SparseMatrixCSC{TX, Int},
     return nothing
 end
 
-function adjoint_action_by_campbell_structure_tensor!(res, X::SparseMatrixCSC{TX, Int}, 
-    Y::SparseMatrixCSC{TY, Int}, algebra::Algebra, stor::Storage; depth = 20) where {TX, TY}
+function adjoint_action_by_campbell_structure_tensor!(res, X, Y, algebra::Algebra, stor::Storage; depth = 20)
 
     if real(eltype(res)) <: ForwardDiff.Dual
         x_lie_coeffs = stor.campbell_array1_dual
@@ -106,13 +105,20 @@ function  adjoint_action_true!(res, X, Y, stor)
 end
 
 
-function adjoint_drift!(res::Matrix{TCostate}, α::TAlpha, algebra::Algebra, system::System, stor::Storage) where {TAlpha, TCostate}
-    #adjoint_action_by_campbell_structure_tensor!(res, -α * system.im_control, -system.im_drift, algebra, stor)
+function adjoint_drift!(res::Matrix{ComplexF64}, α::Float64, algebra::Algebra, system::System, stor::Storage)
     copyto!(stor.tmp, system.im_control)
     lmul!(-α, stor.tmp) 
     adjoint_action_true!(res, stor.tmp, -system.im_drift, stor)
     return nothing 
 end 
+
+function adjoint_drift!(res::Matrix{<:Complex{<:ForwardDiff.Dual}}, α::TAlpha, algebra::Algebra, system::System, stor::Storage) where TAlpha
+    copyto!(stor.tmp_dual, system.im_control)
+    lmul!(-α, stor.tmp_dual) 
+    adjoint_action_by_campbell_structure_tensor!(res, stor.tmp_dual, -system.im_drift, algebra, stor)
+    return nothing 
+end 
+
 
 function adjoint_drift_obj(α::TAlpha, costate::Matrix{TCostate}, algebra::Algebra, solver::SolverParams, stor::Storage) where {TAlpha, TCostate}
     adjoint_drift!(stor.tmp_adjoint_drift, α, algebra, system, stor)
@@ -156,15 +162,11 @@ function optimal_adjoint_drift_analytic!(tmp::Matrix{TCostate}, costate::Matrix{
     for i in 1:solver.Newton_steps
         first_der = adjoint_drift_obj_1st_der(α, stor.tmp_primal_costate, algebra, system, solver, stor)
         second_der = adjoint_drift_obj_2nd_der(α, stor.tmp_primal_costate, algebra, system, solver, stor)
-        println("f'=$first_der, f''=$second_der at step $i (ADM)")
-        # if isapprox(second_der, 0.0)
-        #     throw("f'=$first_der, f''=$second_der at step $i (ADM)")
-        # end 
+        if isapprox(second_der, 0.0)
+            throw("f'=$first_der, f''=$second_der at step $i (ADM)")
+        end 
         dα = solver.Newton_damping * first_der / second_der
         abs(dα) < solver.Newton_tol && break
-        # @show first_der
-        # @show second_der
-        # @show dα
         if second_der < 0
             α -= dα
         elseif second_der > 0
@@ -183,7 +185,6 @@ function optimal_adjoint_drift_analytic!(tmp::Matrix{TCostate}, costate::Matrix{
         f1_dual = adjoint_drift_obj_1st_der(α, costate, algebra, system, solver, stor)
         f2_primal = adjoint_drift_obj_2nd_der(α, stor.tmp_primal_costate, algebra, system, solver, stor)
 
-        # @show f2_primal
         if abs(f2_primal) > solver.tol 
             p = ForwardDiff.partials(real(f1_dual)) / (-f2_primal)
         else 
@@ -195,8 +196,6 @@ function optimal_adjoint_drift_analytic!(tmp::Matrix{TCostate}, costate::Matrix{
     else 
         stor.alpha = α
     end 
-    println("---")
-    @show stor.alpha
     adjoint_drift!(tmp, stor.alpha, algebra, system, stor)
 
     final_first_der = adjoint_drift_obj_1st_der(primal(stor.alpha), stor.tmp_primal_costate, algebra, system, solver, stor)
@@ -223,6 +222,7 @@ function optimal_adjoint_drift_optimiser!(tmp::Matrix{TCostate}, costate::Matrix
     res = Optim.optimize(td, x0, Newton(linesearch = LineSearches.BackTracking()))
     α_optimal = Optim.minimizer(res)[]
 
+    # α_optimal = differentiable_mod(α_optimal, system)
     # if abs(α_optimal) > 8.0 # alpha=8 corresponds to an error of order -9
     #     @warn("Unusually large |α| encountered: $(abs(α_optimal))")
     # end 
