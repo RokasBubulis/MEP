@@ -71,5 +71,5 @@ println("Lowest distance $min_dist at time $(ts[argmin(dists)])")
 println(m_best)
 
 p = plot(ts, dists)
-title!(p, title * "\n tmax: $tmax, dt: $dt, dmin: $(round(min_dist, sigdigits=2))")
+title!(p, title * "\n tmax: $tmax, dt: $dt, dmin: $(round(min_dist, sigdigits=3)), t*: $(round(time_of_min_dist, sigdigits=4))")
 display(p)
