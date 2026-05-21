@@ -14,12 +14,12 @@ c2 = tr(im_control * adjoint(im_control))
 im_drift_orthogonal = im_drift - c1/c2 * im_control
 @assert isapprox(tr(im_drift_orthogonal * adjoint(im_control)), 0.0, atol=1e-10)
 
-# normalise generators 
-im_control /= norm(im_control)
-im_drift_orthogonal /= norm(im_drift_orthogonal)
+# # normalise generators 
+# im_control /= norm(im_control)
+# im_drift_orthogonal /= norm(im_drift_orthogonal)
 
 # prepare Lie algebra struct 
-algebra = Algebra(im_control, im_drift_orthogonal)
+algebra = Algebra(im_control, im_drift)
 #@assert length(lie_coeffs) == length(algebra.lie_basis)
 ##
 
@@ -32,7 +32,7 @@ lie_coeffs = zeros(8)
 # lie_coeffs[4] = 0.2
 
 # solver parameters
-tmax = 15
+tmax = 10
 dt = 1e-2
 tol = 1e-8
 lambda = 0.0
@@ -56,7 +56,7 @@ else
 end 
 target_logic = SparseMatrixCSC{ComplexF64, Int}(I, 4, 4)
 target_logic[4,4] = -1.0
-system = System{ComplexF64}(im_control, im_drift_orthogonal, target, target_logic)
+system = System{ComplexF64}(im_control, im_drift, target, target_logic)
 
 # prepare mutable storage 
 stor = Storage{ComplexF64}(dim, length(algebra.lie_basis))

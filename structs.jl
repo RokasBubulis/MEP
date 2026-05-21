@@ -82,6 +82,7 @@ mutable struct Storage{T, R}
         # output/intermediate matrices
     tmp::Matrix{ComplexF64}
     tmp1::Matrix{ComplexF64}; tmp2::Matrix{ComplexF64}; tmp3::Matrix{ComplexF64}
+    tmp1_adj::Matrix{ComplexF64}
 
     # dual
     M0::Matrix{T}; M1::Matrix{T}; M2::Matrix{T}
@@ -113,7 +114,7 @@ Storage{T}(dim::Int, n_basis::Int) where T = Storage{T, real(T)}(
     zero(real(T)),
     Matrix{ComplexF64}(I, dim, dim), # U0
     (Matrix{Complex}(undef, 4, 4) for _ in 1:2)...,
-    (Matrix{ComplexF64}(undef, dim, dim) for _ in 1:11)...,  # Newton loop tmps for alpha
+    (Matrix{ComplexF64}(undef, dim, dim) for _ in 1:12)...,  # Newton loop tmps for alpha
     (Matrix{T}(undef, dim, dim) for _ in 1:13)...,
     (Vector{ComplexF64}(undef, n_basis) for _ in 1:8)..., # Campbell formula tmp arrays + non dual bracket tmps
     (Vector{T}(undef, n_basis) for _ in 1:8)...

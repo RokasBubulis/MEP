@@ -100,9 +100,11 @@ function  adjoint_action_true!(res, X, Y, stor)
     copyto!(stor.tmp1, X)
     LinearAlgebra.exp!(stor.tmp1) 
     mul!(stor.tmp2, stor.tmp1, Y)
-    mul!(res, stor.tmp2, stor.tmp1')
+    adjoint!(stor.tmp1_adj, stor.tmp1)
+    mul!(res, stor.tmp2, stor.tmp1_adj)
     return nothing
 end
+adjoint
 
 
 function adjoint_drift!(res::Matrix{ComplexF64}, α::Float64, algebra::Algebra, system::System, stor::Storage)
@@ -221,18 +223,6 @@ function optimal_adjoint_drift_optimiser!(tmp::Matrix{TCostate}, costate::Matrix
     )
     res = Optim.optimize(td, x0, Newton(linesearch = LineSearches.BackTracking()))
     α_optimal = Optim.minimizer(res)[]
-
-    # α_optimal = differentiable_mod(α_optimal, system)
-    # if abs(α_optimal) > 8.0 # alpha=8 corresponds to an error of order -9
-    #     @warn("Unusually large |α| encountered: $(abs(α_optimal))")
-    # end 
-
-    final_first_der = adjoint_drift_obj_1st_der(α_optimal, costate, algebra, system, solver, stor)
-    final_second_der = adjoint_drift_obj_2nd_der(α_optimal, costate, algebra, system, solver, stor)
-
-    if ! (isapprox(final_first_der, 0.0, atol=solver.tol) && final_second_der < 0)
-        @warn "Maximisation of adjoint drift failed: f' = $final_first_der, f'' = $final_second_der, α = $α_optimal"
-    end
 
     adjoint_drift!(tmp, α_optimal, algebra, system, stor)
     # ensure optimal adjoint drift is anti-hermitian

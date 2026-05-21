@@ -96,7 +96,7 @@ function construct_Ryd_generators(n_qubits::Int)
         A += operator(XopRyd([i]), n_qubits) * Qnot
     end
     B = sum(operator(ZopRyd([i]), n_qubits) for i in 1:n_qubits)
-    return [B, A]
+    return [B/2, A/2]
 end
 
 function construct_Ryd_generators_2levels(n_qubits::Int)
