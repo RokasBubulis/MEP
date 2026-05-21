@@ -39,7 +39,6 @@ struct SolverParams
     tmax::Float64
     dt::Float64
     tol::Float64
-    lambda::Float64
     Newton_steps::Int64
     Newton_tol::Float64
     Newton_damping::Float64
@@ -79,13 +78,13 @@ mutable struct Storage{T, R}
     tmp_adjoint_drift_2nd_der_obj::Matrix{ComplexF64}
     tmp_primal_costate::Matrix{ComplexF64}
 
-        # output/intermediate matrices
+    # output/intermediate matrices
     tmp::Matrix{ComplexF64}
     tmp1::Matrix{ComplexF64}; tmp2::Matrix{ComplexF64}; tmp3::Matrix{ComplexF64}
     tmp1_adj::Matrix{ComplexF64}
 
     # dual
-    M0::Matrix{T}; M1::Matrix{T}; M2::Matrix{T}
+    M0::Matrix{T}; M1::Matrix{T}; M2::Matrix{T}; M::Matrix{T}
     U::Matrix{T}; dU::Matrix{T}; dM::Matrix{T}
     adjoint_drift::Matrix{T}
     tmp_adjoint_drift_1st_der_obj_dual::Matrix{T}
@@ -104,6 +103,17 @@ mutable struct Storage{T, R}
     # scratch for bracket_via_lie_coeffs (exclusive) non dual versions
     bracket_array1::Vector{ComplexF64}; bracket_array2::Vector{ComplexF64}; bracket_array3::Vector{ComplexF64}
 
+    # RK4 temps
+    adjoint_drift_arr::Vector{ComplexF64}
+    M_arr::Vector{ComplexF64}
+    k1_arr::Vector{ComplexF64}
+    k2_arr::Vector{ComplexF64}
+    k3_arr::Vector{ComplexF64}
+    k4_arr::Vector{ComplexF64}
+    tmp_array1::Vector{ComplexF64}
+    tmp_array2::Vector{ComplexF64}
+    tmp_array3::Vector{ComplexF64}
+
     # dual versions for tmp arrays
     bracket_array1_dual::Vector{T}; bracket_array2_dual::Vector{T}; bracket_array3_dual::Vector{T}
     campbell_array1_dual::Vector{T}; campbell_array2_dual::Vector{T}
@@ -115,8 +125,9 @@ Storage{T}(dim::Int, n_basis::Int) where T = Storage{T, real(T)}(
     Matrix{ComplexF64}(I, dim, dim), # U0
     (Matrix{Complex}(undef, 4, 4) for _ in 1:2)...,
     (Matrix{ComplexF64}(undef, dim, dim) for _ in 1:12)...,  # Newton loop tmps for alpha
-    (Matrix{T}(undef, dim, dim) for _ in 1:13)...,
+    (Matrix{T}(undef, dim, dim) for _ in 1:14)...,
     (Vector{ComplexF64}(undef, n_basis) for _ in 1:8)..., # Campbell formula tmp arrays + non dual bracket tmps
+    (Vector{ComplexF64}(undef, n_basis) for _ in 1:9)..., # pbasis coefficients for M, H_opt, use full lie
     (Vector{T}(undef, n_basis) for _ in 1:8)...
 )
 

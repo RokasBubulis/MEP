@@ -38,20 +38,17 @@ function find_best_initial_costate_bbf(algebra::Algebra, system::System, solver:
     n = length(algebra.p_basis)
     m0 = zeros(n)
     m0[1] = 1.0
-    #m0 = rand(n) .* .-1
-    # m0 ./= norm(m0)
-    # println("m0 = $(round.(m0, sigdigits=3))")
-    #m0 = [0.8194245393044408, -0.2542203669425132, 0.3590516415189143, 0.03710082896748145, -0.3609277527186667, 0.00885616735135394, 0.05721540218433601]
-
     objective = function(m)
         m ./= norm(m)
-        propagate(m, algebra, system, solver, stor)
+        #propagate_midpoint(m, algebra, system, solver, stor)
+        propagate_RK4(m, algebra, system, solver, stor)
     end
 
     result = Optim.optimize(objective, m0, NelderMead(), Optim.Options(
         show_trace  = true,   # print iteration log
         #extended_trace = true, # include simplex details
         f_abstol = solver.tol,
+        show_every=50
     ))
     m_best = result.minimizer
 
@@ -83,7 +80,7 @@ function find_best_initial_costate_autograd(algebra::Algebra, system::System, so
         else
             storage = stor
         end
-        propagate(m, algebra, system, solver, storage)
+        propagate_midpoint(m, algebra, system, solver, storage)
     end
 
     g! = (G, x) -> ForwardDiff.gradient!(G, objective, x)

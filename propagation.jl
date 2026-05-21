@@ -110,7 +110,7 @@ function propagator_2nd_order_step!(algebra::Algebra, system::System, solver::So
     return nothing
 end 
 
-function propagate(m::AbstractVector{TR}, algebra::Algebra, system::System, solver::SolverParams, stor::Storage; save=false) where TR
+function propagate_midpoint(m::AbstractVector{TR}, algebra::Algebra, system::System, solver::SolverParams, stor::Storage; save=false) where TR
     # 574 μs without save and without checks, 630 μs with checks
 
     set_initial_state_2nd_order!(m, algebra, system, solver, stor)
@@ -159,6 +159,82 @@ function propagate(m::AbstractVector{TR}, algebra::Algebra, system::System, solv
             if dist < solver.tol
                 return dist
             elseif dist < dmin #&& 5 < ts[i]
+                dmin = dist
+            end
+        end
+    end
+    return save ? (ts, Us, Ms, dists) : dmin
+end
+
+
+function RK4_step!(stor::Storage, algebra::Algebra, system::System, solver::SolverParams)
+
+    # convert costate to Hilbert space 
+    fill!(stor.M, zero(eltype(stor.M)))
+    for μ in eachindex(stor.M_arr)
+        stor.M .+= stor.M_arr[μ] .* algebra.lie_basis[μ]
+    end 
+
+    # H_opt(t) = argmax_H tr(H*M(t))
+    optimal_adjoint_drift!(stor.adjoint_drift, stor.M, algebra, system, solver, stor)
+
+    # U(t+dt) = exp(H_opt(t) * dt) * U(t)
+    exponent!(stor.tmp, stor.adjoint_drift * solver.dt)
+    mul!(stor.dU, stor.tmp, stor.U)
+    stor.U .= stor.dU
+
+    # convert adjoint drift to lie coeffs
+    project_to_algebra!(stor.adjoint_drift_arr, stor.adjoint_drift, algebra, stor)
+    # convert M(t) to lie coeffs (extract the last one)
+
+    # k1 = [H_opt(t), M(t)] in coeffs
+    lie_bracket_coeffs!(stor.k1_arr, algebra.structure_tensor, stor.adjoint_drift_arr, stor.M_arr)
+    # k2 = [H_opt(t), M(t) + k1*dt/2]
+    stor.tmp_array1 .= stor.M_arr .+ stor.k1_arr .* solver.dt ./ 2
+    lie_bracket_coeffs!(stor.k2_arr, algebra.structure_tensor, stor.adjoint_drift_arr, stor.tmp_array1)
+    # k3 = [H_opt(t), M(t) + k2*dt/2]
+    stor.tmp_array2 .= stor.M_arr .+ stor.k2_arr .* solver.dt ./ 2
+    lie_bracket_coeffs!(stor.k3_arr, algebra.structure_tensor, stor.adjoint_drift_arr, stor.tmp_array2)
+    # k4 = [H_opt(t), M(t) + k3*dt]
+    stor.tmp_array3 .= stor.M_arr .+ stor.k3_arr .* solver.dt 
+    # M(t+dt) = M(t) + dt/6 * (k1 + 2k2 + 2k3 + k4)
+    stor.M_arr .+= solver.dt / 6 .* (stor.k1_arr .+ stor.k2_arr .+ stor.k3_arr .+ stor.k4_arr)
+
+    return nothing
+end 
+
+function propagate_RK4(m::AbstractVector{TR}, algebra::Algebra, system::System, solver::SolverParams, stor::Storage; save=false) where TR
+
+    build_M0!(stor.M, m, algebra)
+    stor.M_arr[1]= 0.0
+    stor.M_arr[2:end] .= m
+    copyto!(stor.U, stor.U0)
+    ts = collect(range(0.0, solver.tmax; step=solver.dt))
+    n = length(ts)
+    dmin = 1.0
+    if save
+        Us = Vector{typeof(stor.U)}(undef, n)
+        Ms = Vector{typeof(stor.M)}(undef, n)
+        dists = Vector{Float64}(undef, n)
+        Us[1] = copy(stor.U0)
+        Ms[1] = copy(stor.M)
+        dists[1] = distance(stor.U0, system, solver, stor)
+    end
+
+    for i in eachindex(ts)[2:end]
+
+        RK4_step!(stor, algebra, system, solver)
+        check_unitarity(stor.U, stor.tmp, timestep=i)
+        dist = distance(stor.U, system, solver, stor) 
+
+        if save
+            Us[i] = copy(stor.U)
+            Ms[i] = copy(stor.M)
+            dists[i] = dist
+        else
+            if dist < solver.tol
+                return dist
+            elseif dist < dmin
                 dmin = dist
             end
         end
