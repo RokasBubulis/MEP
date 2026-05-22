@@ -92,7 +92,7 @@ function propagator_2nd_order_step!(algebra::Algebra, system::System, solver::So
     # U(t+dt) = exp(H_opt * dt) * U(t)
     exponent!(tmp, stor.adjoint_drift * solver.dt)
     mul!(stor.dU, tmp, stor.U)
-    stor.U[:] .= stor.dU[:]
+    stor.U .= stor.dU
 
     # dM/dt = [H_opt, M(t)]
     bracket_via_lie_coeffs!(stor.dM, stor.adjoint_drift, stor.M1, algebra, stor)
@@ -110,7 +110,7 @@ function propagator_2nd_order_step!(algebra::Algebra, system::System, solver::So
     return nothing
 end 
 
-function propagate_midpoint(m::AbstractVector{TR}, algebra::Algebra, system::System, solver::SolverParams, stor::Storage; save=false) where TR
+function propagate_RK2(m::AbstractVector{TR}, algebra::Algebra, system::System, solver::SolverParams, stor::Storage; save=false) where TR
     # 574 μs without save and without checks, 630 μs with checks
 
     set_initial_state_2nd_order!(m, algebra, system, solver, stor)
@@ -185,7 +185,6 @@ function RK4_step!(stor::Storage, algebra::Algebra, system::System, solver::Solv
 
     # convert adjoint drift to lie coeffs
     project_to_algebra!(stor.adjoint_drift_arr, stor.adjoint_drift, algebra, stor)
-    # convert M(t) to lie coeffs (extract the last one)
 
     # k1 = [H_opt(t), M(t)] in coeffs
     lie_bracket_coeffs!(stor.k1_arr, algebra.structure_tensor, stor.adjoint_drift_arr, stor.M_arr)
@@ -197,8 +196,9 @@ function RK4_step!(stor::Storage, algebra::Algebra, system::System, solver::Solv
     lie_bracket_coeffs!(stor.k3_arr, algebra.structure_tensor, stor.adjoint_drift_arr, stor.tmp_array2)
     # k4 = [H_opt(t), M(t) + k3*dt]
     stor.tmp_array3 .= stor.M_arr .+ stor.k3_arr .* solver.dt 
+    lie_bracket_coeffs!(stor.k4_arr, algebra.structure_tensor, stor.adjoint_drift_arr, stor.tmp_array3)
     # M(t+dt) = M(t) + dt/6 * (k1 + 2k2 + 2k3 + k4)
-    stor.M_arr .+= solver.dt / 6 .* (stor.k1_arr .+ stor.k2_arr .+ stor.k3_arr .+ stor.k4_arr)
+    stor.M_arr .+= solver.dt / 6 .* (stor.k1_arr .+ 2 .* stor.k2_arr .+ 2 .* stor.k3_arr .+ stor.k4_arr)
 
     return nothing
 end 

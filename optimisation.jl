@@ -28,7 +28,7 @@ function angles_to_directions(v::AbstractVector{T}) where T
     return v ./ n
 end
 
-function find_best_initial_costate_bbf(algebra::Algebra, system::System, solver::SolverParams, stor::Storage)
+function find_best_initial_costate_bbf_RK2(algebra::Algebra, system::System, solver::SolverParams, stor::Storage)
 
     # check target before propagation
     check_unitarity(system.target, stor.tmp, note="Target")
@@ -40,14 +40,39 @@ function find_best_initial_costate_bbf(algebra::Algebra, system::System, solver:
     m0[1] = 1.0
     objective = function(m)
         m ./= norm(m)
-        #propagate_midpoint(m, algebra, system, solver, stor)
+        propagate_RK2(m, algebra, system, solver, stor)
+    end
+
+    result = Optim.optimize(objective, m0, NelderMead(), Optim.Options(
+        show_trace  = true,   # print iteration log
+        #extended_trace = true, # include simplex details
+        g_abstol = solver.tol,
+        show_every=50
+    ))
+    m_best = result.minimizer
+
+    return m_best
+end
+
+function find_best_initial_costate_bbf_RK4(algebra::Algebra, system::System, solver::SolverParams, stor::Storage)
+
+    # check target before propagation
+    check_unitarity(system.target, stor.tmp, note="Target")
+    targ_dist = distance(system.target, system, solver,stor)
+    @assert targ_dist < solver.tol "Error in target overlap: $targ_dist"
+
+    n = length(algebra.p_basis)
+    m0 = zeros(n)
+    m0[1] = 1.0
+    objective = function(m)
+        m ./= norm(m)
         propagate_RK4(m, algebra, system, solver, stor)
     end
 
     result = Optim.optimize(objective, m0, NelderMead(), Optim.Options(
         show_trace  = true,   # print iteration log
         #extended_trace = true, # include simplex details
-        f_abstol = solver.tol,
+        g_abstol = solver.tol,
         show_every=50
     ))
     m_best = result.minimizer
@@ -80,7 +105,7 @@ function find_best_initial_costate_autograd(algebra::Algebra, system::System, so
         else
             storage = stor
         end
-        propagate_midpoint(m, algebra, system, solver, storage)
+        propagate_RK2(m, algebra, system, solver, storage)
     end
 
     g! = (G, x) -> ForwardDiff.gradient!(G, objective, x)
