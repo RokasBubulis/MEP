@@ -82,6 +82,7 @@ mutable struct Storage{T, R}
 
     # scratch for bracket_via_lie_coeffs (exclusive) non dual versions
     bracket_array1::Vector{R}; bracket_array2::Vector{R}; bracket_array3::Vector{R}
+    tmp_array_for_adj_drift_comp::Vector{R}
 
     # RK4 temps
     adjoint_drift_arr::Vector{R}
@@ -104,5 +105,5 @@ Storage{T}(dim::Int, n_basis::Int) where T = Storage{T, real(T)}(
     Matrix{T}(I, dim, dim), # U0
     (Matrix{T}(undef, 4, 4) for _ in 1:2)..., # logical subspace, TODO generalise dimension
     (Matrix{T}(undef, dim, dim) for _ in 1:20)...,  # remaining matrices
-    (Vector{real(T)}(undef, n_basis) for _ in 1:21)...
+    (Vector{real(T)}(undef, n_basis) for _ in 1:22)...
 )

@@ -18,18 +18,18 @@ function adjoint_action_by_campbell_structure_tensor_arr!(res_arr::Vector{T}, x_
 end 
 
 function adjoint_drift_arr!(res_arr::Vector{T}, α::T, im_control_arr::Vector{T}, neg_im_drift_arr::Vector{T}, algebra::Algebra, stor::Storage) where T
-    im_control_arr .*= -α
-    adjoint_action_by_campbell_structure_tensor_arr!(res_arr, im_control_arr, neg_im_drift_arr, algebra, stor)
+    stor.tmp_array_for_adj_drift_comp .= im_control_arr .* (-α)
+    adjoint_action_by_campbell_structure_tensor_arr!(res_arr, stor.tmp_array_for_adj_drift_comp, neg_im_drift_arr, algebra, stor)
     return nothing 
 end 
 
-function Lie_to_Hilbert!(res::Matrix{T}, res_arr::Vector{T}, algebra::Algebra)
-    res .= 0
-    for (i,μ) in enumerate(res_arr)
-        res .+= μ .* algebra.lie_basis[i]
-    end 
-    return nothing 
-end 
+# function Lie_to_Hilbert!(res::Matrix{T}, res_arr::Vector{T}, algebra::Algebra)
+#     res .= 0
+#     for (i,μ) in enumerate(res_arr)
+#         res .+= μ .* algebra.lie_basis[i]
+#     end 
+#     return nothing 
+# end 
 
 function project_to_algebra!(coeffs::Vector{Float64}, mat::Matrix{T}, algebra, stor; tol = 1e-8, identifier=nothing) where T
     # orthonormal basis assumed 
@@ -63,18 +63,20 @@ end
 
 function adjoint_drift_obj_arr(α::Float64, costate_arr::Vector{Float64}, im_control_arr::Vector{Float64}, neg_im_drift_arr::Vector{Float64}, algebra::Algebra, stor::Storage)
     adjoint_drift_arr!(stor.tmp_adj_drift_arr, α, im_control_arr, neg_im_drift_arr, algebra, stor)
-    return -dot(stor.tmp_adj_drift1_arr, costate_arr)
+    return -dot(stor.tmp_adj_drift_arr, costate_arr)
 end
 
 function optimal_adjoint_drift_optimiser_arr!(res_arr::Vector{T}, costate_arr::Vector{T}, algebra::Algebra, stor::Storage) where T
     x0 = [0.0]
+    α_limit = 8.0 # TODO relate to the provided depth of Campbell identity
     obj(x) = -adjoint_drift_obj_arr(x[], costate_arr, algebra.im_control_lie, algebra.neg_im_drift_lie, algebra, stor)
-    res = Optim.optimize(obj, x0, Newton(linesearch = LineSearches.BackTracking()))
+    #res = Optim.optimize(obj, x0, Newton(linesearch = LineSearches.BackTracking()))
+    res = Optim.optimize(obj, -α_limit, α_limit, Brent())
     α_optimal = Optim.minimizer(res)[]
     adjoint_drift_arr!(res_arr, α_optimal, algebra.im_control_lie, algebra.neg_im_drift_lie, algebra, stor)
 
-    if abs(α_optimal) > 8.0
-        @warn("|α_opt| = $α_optimal > 8.0 while Campbell identity is used, consider changing series depth")
+    if abs(α_optimal) > α_limit
+        @warn("|α_opt| = $α_optimal > $α_limit while Campbell identity is used, consider changing series depth")
     end 
 
     return nothing 

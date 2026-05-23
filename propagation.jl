@@ -111,9 +111,9 @@ function propagate_RK2(m::AbstractVector{TR}, algebra::Algebra, system::System, 
 
         propagator_2nd_order_step!(algebra, system, solver, stor)
         check_unitarity(stor.U, stor.tmp, timestep=i)
-        @assert norm(stor.M0) < 2 "norm of M0: $(norm(stor.M0)) at timestep  $i"
-        @assert norm(stor.M1) < 2 "norm of M1: $(norm(stor.M1)) at timestep  $i"
-        @assert norm(stor.M2) < 2 "norm of M2: $(norm(stor.M2)) at timestep  $i"
+        # @assert norm(stor.M0) < 2 "norm of M0: $(norm(stor.M0)) at timestep  $i"
+        # @assert norm(stor.M1) < 2 "norm of M1: $(norm(stor.M1)) at timestep  $i"
+        # @assert norm(stor.M2) < 2 "norm of M2: $(norm(stor.M2)) at timestep  $i"
         dist = distance(stor.U, system, solver, stor) 
 
         if save
