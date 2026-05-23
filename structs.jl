@@ -7,13 +7,19 @@ struct Algebra{T}
     lie_basis::Vector{SparseMatrixCSC{T, Int}}
     p_basis::Vector{SparseMatrixCSC{T, Int}}
     structure_tensor::Array{Float64, 3}
+    im_control_lie::Vector{T}
+    neg_im_drift_lie::Vector{T}
 end
 
 function Algebra(im_control::SparseMatrixCSC{T, Int}, im_drift::SparseMatrixCSC{T, Int})
     lie_basis = construct_lie_basis_general([copy(im_control), copy(im_drift)])
     p_basis = lie_basis[2:end]
     structure_tensor = build_structure_tensor(lie_basis)
-    return Algebra{T}(lie_basis, p_basis, structure_tensor)
+    im_control_lie = zeros(T, length(lie_basis))
+    neg_im_drift_lie = zeros(T, length(lie_basis))
+    project_to_algebra!(im_control_lie, im_control, algebra, stor)
+    project_to_algebra!(neg_im_drift_lie, -im_drift, algebra, stor)
+    return Algebra{T}(lie_basis, p_basis, structure_tensor, im_control_lie, neg_im_drift_lie)
 end 
 
 struct System{T}
@@ -43,21 +49,6 @@ struct SolverParams
     Newton_tol::Float64
     Newton_damping::Float64
 end 
-
-# mutable struct Storage{T}
-#     U0::Matrix{T}; tmp_array1::Vector{T}; 
-#     tmp_array2::Vector{T}; tmp_array3::Vector{T}; tmp_array4::Vector{T}; tmp_array5::Vector{T}
-#     M0::Matrix{T}; M1::Matrix{T}; M2::Matrix{T}
-#     U::Matrix{T}; dU::Matrix{T}; dM::Matrix{T}
-#     adjoint_drift::Matrix{T}; tmp::Matrix{T}; 
-#     tmp1::Matrix{T}; tmp2::Matrix{T}; tmp3::Matrix{T}
-# end 
-
-# Storage{T}(dim::Int) where T = Storage{T}(
-#     Matrix{T}(I, dim, dim), 
-#     (Vector{T}(undef, 8) for _ in 1:5)... ,
-#     (Matrix{T}(undef, dim, dim) for _ in 1:11)...
-# )
 
 mutable struct Storage{T, R}
 
@@ -110,9 +101,13 @@ mutable struct Storage{T, R}
     k2_arr::Vector{ComplexF64}
     k3_arr::Vector{ComplexF64}
     k4_arr::Vector{ComplexF64}
-    tmp_array1::Vector{ComplexF64}
-    tmp_array2::Vector{ComplexF64}
-    tmp_array3::Vector{ComplexF64}
+    tmp_adj_drift_arr::Vector{ComplexF64}
+    tmp_adj_drift1_arr::Vector{ComplexF64}
+    tmp_adj_drift2_arr::Vector{ComplexF64}
+    tmp_adj_drift3_arr::Vector{ComplexF64}
+    tmp_M1_arr::Vector{ComplexF64}
+    tmp_M2_arr::Vector{ComplexF64}
+    tmp_M3_arr::Vector{ComplexF64}
 
     # dual versions for tmp arrays
     bracket_array1_dual::Vector{T}; bracket_array2_dual::Vector{T}; bracket_array3_dual::Vector{T}
@@ -127,7 +122,7 @@ Storage{T}(dim::Int, n_basis::Int) where T = Storage{T, real(T)}(
     (Matrix{ComplexF64}(undef, dim, dim) for _ in 1:12)...,  # Newton loop tmps for alpha
     (Matrix{T}(undef, dim, dim) for _ in 1:14)...,
     (Vector{ComplexF64}(undef, n_basis) for _ in 1:8)..., # Campbell formula tmp arrays + non dual bracket tmps
-    (Vector{ComplexF64}(undef, n_basis) for _ in 1:9)..., # pbasis coefficients for M, H_opt, use full lie
+    (Vector{ComplexF64}(undef, n_basis) for _ in 1:13)..., # pbasis coefficients for M, H_opt, use full lie
     (Vector{T}(undef, n_basis) for _ in 1:8)...
 )
 

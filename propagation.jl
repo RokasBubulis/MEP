@@ -1,14 +1,6 @@
 include("adjoint_drift_maximisation.jl")
 include("distance.jl")
-
-# function check_duals(x, name)
-#     if eltype(x) <: ForwardDiff.Dual || eltype(x) <: Complex{<:ForwardDiff.Dual}
-#         partials = ForwardDiff.partials.(real.(x))
-#         if all(iszero, partials)
-#             @warn "Dual parts are zero at $name"
-#         end
-#     end
-# end
+include("adm_lie.jl")
 
 function build_M0!(M0::Matrix{TC}, m::AbstractVector{TR}, algebra::Algebra) where {TR, TC}
     M0 .= 0
@@ -186,17 +178,24 @@ function RK4_step!(stor::Storage, algebra::Algebra, system::System, solver::Solv
     # convert adjoint drift to lie coeffs
     project_to_algebra!(stor.adjoint_drift_arr, stor.adjoint_drift, algebra, stor)
 
-    # k1 = [H_opt(t), M(t)] in coeffs
+    # k1 = [H_opt(M(t)), M(t)] in coeffs
     lie_bracket_coeffs!(stor.k1_arr, algebra.structure_tensor, stor.adjoint_drift_arr, stor.M_arr)
-    # k2 = [H_opt(t), M(t) + k1*dt/2]
-    stor.tmp_array1 .= stor.M_arr .+ stor.k1_arr .* solver.dt ./ 2
-    lie_bracket_coeffs!(stor.k2_arr, algebra.structure_tensor, stor.adjoint_drift_arr, stor.tmp_array1)
-    # k3 = [H_opt(t), M(t) + k2*dt/2]
-    stor.tmp_array2 .= stor.M_arr .+ stor.k2_arr .* solver.dt ./ 2
-    lie_bracket_coeffs!(stor.k3_arr, algebra.structure_tensor, stor.adjoint_drift_arr, stor.tmp_array2)
-    # k4 = [H_opt(t), M(t) + k3*dt]
-    stor.tmp_array3 .= stor.M_arr .+ stor.k3_arr .* solver.dt 
-    lie_bracket_coeffs!(stor.k4_arr, algebra.structure_tensor, stor.adjoint_drift_arr, stor.tmp_array3)
+
+    # k2 = [H_opt(M(t) + k1*dt/2), M(t) + k1*dt/2]
+    stor.tmp_M1_arr .= stor.M_arr .+ stor.k1_arr .* solver.dt ./ 2
+    optimal_adjoint_drift!(stor.tmp_adj_drift1_arr, stor.tmp_M1_arr, algebra, system, solver, stor)
+    lie_bracket_coeffs!(stor.k2_arr, algebra.structure_tensor, stor.tmp_adj_drift1_arr, stor.tmp_M1_arr)
+
+    # k3 = [H_opt(M(t) + k2*dt/2), M(t) + k2*dt/2]
+    stor.tmp_M2_arr .= stor.M_arr .+ stor.k2_arr .* solver.dt ./ 2
+    optimal_adjoint_drift!(stor.tmp_adj_drift2_arr, stor.tmp_M2_arr, algebra, system, solver, stor)
+    lie_bracket_coeffs!(stor.k3_arr, algebra.structure_tensor, stor.tmp_adj_drift2_arr, stor.tmp_M2_arr)
+
+    # k4 = [H_opt(M(t) + k3*dt), M(t) + k3*dt]
+    stor.tmp_M3_arr .= stor.M_arr .+ stor.k3_arr .* solver.dt 
+    optimal_adjoint_drift!(stor.tmp_adj_drift3_arr, stor.tmp_M3_arr, algebra, system, solver, stor)
+    lie_bracket_coeffs!(stor.k4_arr, algebra.structure_tensor, stor.tmp_adj_drift3_arr, stor.tmp_M3_arr)
+    
     # M(t+dt) = M(t) + dt/6 * (k1 + 2k2 + 2k3 + k4)
     stor.M_arr .+= solver.dt / 6 .* (stor.k1_arr .+ 2 .* stor.k2_arr .+ 2 .* stor.k3_arr .+ stor.k4_arr)
 
