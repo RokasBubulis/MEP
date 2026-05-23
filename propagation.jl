@@ -4,11 +4,9 @@ include("adm_lie.jl")
 
 function build_M0!(M0::Matrix{TC}, m::AbstractVector{TR}, algebra::Algebra) where {TR, TC}
     M0 .= 0
-    check_duals(m, "m")
     for (i, m_coeff) in enumerate(m)
         M0 .+= m_coeff * algebra.p_basis[i]
     end
-    check_duals(M0, "M0")
     return nothing
 end 
 
@@ -52,16 +50,9 @@ function set_initial_state_2nd_order!(m::AbstractVector{TR}, algebra::Algebra, s
     # to build M(dt) for the first step, use first-order approximation
 
     build_M0!(stor.M0, m, algebra)  # M(0)
-    check_duals(stor.M0, "M0 initial set")
     optimal_adjoint_drift!(stor.adjoint_drift, stor.M0, algebra, system, solver, stor)  # H_opt(0)
-    check_duals(stor.adjoint_drift, "Initial adjoint drift")
-    if real(eltype(stor.M0)) <: ForwardDiff.Dual
-        tmp = stor.tmp_dual 
-    else
-        tmp = stor.tmp 
-    end 
-    exponent!(tmp, stor.adjoint_drift * solver.dt)
-    mul!(stor.U, tmp, stor.U0)  # U(dt)
+    exponent!(stor.tmp, stor.adjoint_drift * solver.dt)
+    mul!(stor.U, stor.tmp, stor.U0)  # U(dt)
 
     # M(dt) = [H_opt(0), M(0)] * dt + M0
     bracket_via_lie_coeffs!(stor.dM, stor.adjoint_drift, stor.M0, algebra, stor)
@@ -73,17 +64,11 @@ end
 function propagator_2nd_order_step!(algebra::Algebra, system::System, solver::SolverParams, stor::Storage)
 
     # compute H_opt(t) = argmax_H(α) tr(H(α)*M(t))
-    optimal_adjoint_drift!(stor.adjoint_drift, stor.M1, algebra, system, solver, stor)
-
-    if real(eltype(stor.M0)) <: ForwardDiff.Dual
-        tmp = stor.tmp_dual 
-    else
-        tmp = stor.tmp 
-    end 
+    optimal_adjoint_drift!(stor.adjoint_drift, stor.M1, algebra, system, solver, stor) 
 
     # U(t+dt) = exp(H_opt * dt) * U(t)
-    exponent!(tmp, stor.adjoint_drift * solver.dt)
-    mul!(stor.dU, tmp, stor.U)
+    exponent!(stor.tmp, stor.adjoint_drift * solver.dt)
+    mul!(stor.dU, stor.tmp, stor.U)
     stor.U .= stor.dU
 
     # dM/dt = [H_opt, M(t)]
@@ -108,14 +93,8 @@ function propagate_RK2(m::AbstractVector{TR}, algebra::Algebra, system::System, 
     set_initial_state_2nd_order!(m, algebra, system, solver, stor)
     ts = collect(range(0.0, solver.tmax; step=solver.dt))
     n = length(ts)
+    dmin = 1.0
 
-    # d1 = distance(stor.U0, system, solver, stor)
-    # @show d1
-    # d2 = distance(stor.U, system, solver, stor)
-    dmin = 1.0 # min(d1, d2)
-    #check_duals(d1, "d1")
-    # check_duals(stor.U, "U(step 1)")
-    # check_duals(d2, "d2")
     if save
         Us = Vector{typeof(stor.U)}(undef, n)
         Ms = Vector{typeof(stor.M0)}(undef, n)
@@ -130,18 +109,12 @@ function propagate_RK2(m::AbstractVector{TR}, algebra::Algebra, system::System, 
 
     for i in eachindex(ts)[3:end]
 
-        # check_belongs_to_p_subspace(stor.adjoint_drift, algebra; timestep=i, identifier="Optimal adjoint drift")
-        # check_belongs_to_p_subspace(stor.M1, algebra; timestep=i, identifier="Costate")
         propagator_2nd_order_step!(algebra, system, solver, stor)
-        # check_belongs_to_p_subspace(stor.dM, algebra; timestep=i, identifier="Costate differential")
         check_unitarity(stor.U, stor.tmp, timestep=i)
         @assert norm(stor.M0) < 2 "norm of M0: $(norm(stor.M0)) at timestep  $i"
         @assert norm(stor.M1) < 2 "norm of M1: $(norm(stor.M1)) at timestep  $i"
         @assert norm(stor.M2) < 2 "norm of M2: $(norm(stor.M2)) at timestep  $i"
         dist = distance(stor.U, system, solver, stor) 
-        # check_duals(stor.M0, "M(t)")
-        # check_duals(stor.U, "U(t)")
-        # check_duals(dist, "dmin(t)")
 
         if save
             Us[i] = copy(stor.U)

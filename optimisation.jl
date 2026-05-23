@@ -28,7 +28,7 @@ function angles_to_directions(v::AbstractVector{T}) where T
     return v ./ n
 end
 
-function find_best_initial_costate_bbf_RK2(algebra::Algebra, system::System, solver::SolverParams, stor::Storage)
+function find_best_initial_costate_RK2(algebra::Algebra, system::System, solver::SolverParams, stor::Storage)
 
     # check target before propagation
     check_unitarity(system.target, stor.tmp, note="Target")
@@ -54,7 +54,7 @@ function find_best_initial_costate_bbf_RK2(algebra::Algebra, system::System, sol
     return m_best
 end
 
-function find_best_initial_costate_bbf_RK4(algebra::Algebra, system::System, solver::SolverParams, stor::Storage)
+function find_best_initial_costate_RK4(algebra::Algebra, system::System, solver::SolverParams, stor::Storage)
 
     # check target before propagation
     check_unitarity(system.target, stor.tmp, note="Target")
@@ -81,47 +81,47 @@ function find_best_initial_costate_bbf_RK4(algebra::Algebra, system::System, sol
 end
 
 
-function find_best_initial_costate_autograd(algebra::Algebra, system::System, solver::SolverParams, stor::Storage; verbose = true)
+# function find_best_initial_costate_autograd(algebra::Algebra, system::System, solver::SolverParams, stor::Storage; verbose = true)
 
-    # check target before propagation
-    check_unitarity(system.target, stor.tmp, note="Target")
-    targ_dist = distance(system.target, system, solver, stor)
-    @assert targ_dist < solver.tol "Error in target overlap: $targ_dist"
+#     # check target before propagation
+#     check_unitarity(system.target, stor.tmp, note="Target")
+#     targ_dist = distance(system.target, system, solver, stor)
+#     @assert targ_dist < solver.tol "Error in target overlap: $targ_dist"
 
-    # n independent directions
-    x0 = zeros(length(algebra.p_basis))
-    x0[1] = 1.0  # setting a different initial direction causes either diverging gradients or operators not in lie basis
+#     # n independent directions
+#     x0 = zeros(length(algebra.p_basis))
+#     x0[1] = 1.0  # setting a different initial direction causes either diverging gradients or operators not in lie basis
 
-    dim = size(stor.adjoint_drift, 1)
-    stor_dual_ref = Ref{Any}(nothing)
-    objective = function(m)
-        #m = angles_to_directions(angles)
-        if eltype(m) <: ForwardDiff.Dual
-            T = Complex{eltype(m)}
-            if typeof(stor_dual_ref[]) != Storage{T}
-                stor_dual_ref[] = Storage{T}(dim, length(algebra.lie_basis))
-            end
-            storage = stor_dual_ref[]
-        else
-            storage = stor
-        end
-        propagate_RK2(m, algebra, system, solver, storage)
-    end
+#     dim = size(stor.adjoint_drift, 1)
+#     stor_dual_ref = Ref{Any}(nothing)
+#     objective = function(m)
+#         #m = angles_to_directions(angles)
+#         if eltype(m) <: ForwardDiff.Dual
+#             T = Complex{eltype(m)}
+#             if typeof(stor_dual_ref[]) != Storage{T}
+#                 stor_dual_ref[] = Storage{T}(dim, length(algebra.lie_basis))
+#             end
+#             storage = stor_dual_ref[]
+#         else
+#             storage = stor
+#         end
+#         propagate_RK2(m, algebra, system, solver, storage)
+#     end
 
-    g! = (G, x) -> ForwardDiff.gradient!(G, objective, x)
-    od = OnceDifferentiable(objective, g!, x0)
-    m_best = Optim.minimizer(
-        optimize(
-            od, x0, 
-            BFGS(linesearch = BackTracking()), 
-            Optim.Options(
-                show_trace=verbose, 
-                f_abstol=solver.tol,
-                f_reltol=solver.tol,
-                )
-        )
-    )
+#     g! = (G, x) -> ForwardDiff.gradient!(G, objective, x)
+#     od = OnceDifferentiable(objective, g!, x0)
+#     m_best = Optim.minimizer(
+#         optimize(
+#             od, x0, 
+#             BFGS(linesearch = BackTracking()), 
+#             Optim.Options(
+#                 show_trace=verbose, 
+#                 f_abstol=solver.tol,
+#                 f_reltol=solver.tol,
+#                 )
+#         )
+#     )
 
-    return m_best
-end
+#     return m_best
+# end
 
