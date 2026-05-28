@@ -82,12 +82,12 @@ function adjoint_drift!(res::Matrix{ComplexF64}, α::Float64, algebra::Algebra, 
     return nothing 
 end 
 
-function adjoint_drift!(res::Matrix{<:Complex{<:ForwardDiff.Dual}}, α::TAlpha, algebra::Algebra, system::System, stor::Storage) where TAlpha
-    copyto!(stor.tmp_dual, system.im_control)
-    lmul!(-α, stor.tmp_dual) 
-    adjoint_action_by_campbell_structure_tensor!(res, stor.tmp_dual, -system.im_drift, algebra, stor)
-    return nothing 
-end 
+# function adjoint_drift!(res::Matrix{<:Complex{<:ForwardDiff.Dual}}, α::TAlpha, algebra::Algebra, system::System, stor::Storage) where TAlpha
+#     copyto!(stor.tmp_dual, system.im_control)
+#     lmul!(-α, stor.tmp_dual) 
+#     adjoint_action_by_campbell_structure_tensor!(res, stor.tmp_dual, -system.im_drift, algebra, stor)
+#     return nothing 
+# end 
 
 
 function adjoint_drift_obj(α::TAlpha, costate::Matrix{TCostate}, algebra::Algebra, solver::SolverParams, stor::Storage) where {TAlpha, TCostate}
@@ -130,8 +130,7 @@ function optimal_adjoint_drift_optimiser!(tmp::Matrix{TCostate}, costate::Matrix
     )
     res = Optim.optimize(td, x0, Newton(linesearch = LineSearches.BackTracking()))
     α_optimal = Optim.minimizer(res)[]
-
-    adjoint_drift!(tmp, α_optimal, algebra, system, stor)
+    adjoint_drift!(tmp, α_optimal , algebra, system, stor)
     # ensure optimal adjoint drift is anti-hermitian
     check_anti_hermiticity(tmp)
 

@@ -1,8 +1,6 @@
 include("generators.jl")
 include("lie_algebra.jl")
 
-using ForwardDiff
-
 struct Algebra{T}
     lie_basis::Vector{SparseMatrixCSC{T, Int}}
     p_basis::Vector{SparseMatrixCSC{T, Int}}
@@ -43,9 +41,6 @@ struct SolverParams
     tmax::Float64
     dt::Float64
     tol::Float64
-    Newton_steps::Int64
-    Newton_tol::Float64
-    Newton_damping::Float64
 end 
 
 mutable struct Storage{T, R}

@@ -87,7 +87,7 @@ function propagator_2nd_order_step!(algebra::Algebra, system::System, solver::So
     return nothing
 end 
 
-function propagate_RK2(m::AbstractVector{TR}, algebra::Algebra, system::System, solver::SolverParams, stor::Storage; save=false) where TR
+function propagate_MP(m::AbstractVector{TR}, algebra::Algebra, system::System, solver::SolverParams, stor::Storage; save=false, save_only_U=false) where TR
     # 574 μs without save and without checks, 630 μs with checks
 
     set_initial_state_2nd_order!(m, algebra, system, solver, stor)
@@ -105,6 +105,10 @@ function propagate_RK2(m::AbstractVector{TR}, algebra::Algebra, system::System, 
         Ms[2] = copy(stor.M1)
         dists[1] = distance(stor.U0, system, solver, stor)
         dists[2] = distance(stor.U, system, solver, stor)
+    elseif save_only_U
+        Us = Vector{typeof(stor.U)}(undef, n)
+        Us[1] = copy(stor.U0)
+        Us[2] = copy(stor.U)
     end
 
     for i in eachindex(ts)[3:end]
@@ -120,6 +124,8 @@ function propagate_RK2(m::AbstractVector{TR}, algebra::Algebra, system::System, 
             Us[i] = copy(stor.U)
             Ms[i] = copy(stor.M0)  # instead of M1
             dists[i] = dist
+        elseif save_only_U
+            Us[i] = copy(stor.U)
         else
             if dist < solver.tol
                 return dist
@@ -128,7 +134,13 @@ function propagate_RK2(m::AbstractVector{TR}, algebra::Algebra, system::System, 
             end
         end
     end
-    return save ? (ts, Us, Ms, dists) : dmin
+    if save 
+        return ts, Us, Ms, dists 
+    elseif save_only_U
+        return Us 
+    else 
+        return dmin 
+    end 
 end
 
 
@@ -175,7 +187,7 @@ function RK4_step!(stor::Storage, algebra::Algebra, system::System, solver::Solv
     return nothing
 end 
 
-function propagate_RK4(m::AbstractVector{TR}, algebra::Algebra, system::System, solver::SolverParams, stor::Storage; save=false) where TR
+function propagate_RK4(m::AbstractVector{TR}, algebra::Algebra, system::System, solver::SolverParams, stor::Storage; save=false, save_only_U=false) where TR
 
     build_M0!(stor.M, m, algebra)
     stor.M_arr[1]= 0.0
@@ -191,6 +203,9 @@ function propagate_RK4(m::AbstractVector{TR}, algebra::Algebra, system::System, 
         Us[1] = copy(stor.U0)
         Ms[1] = copy(stor.M)
         dists[1] = distance(stor.U0, system, solver, stor)
+    elseif save_only_U
+        Us = Vector{typeof(stor.U)}(undef, n)
+        Us[1] = copy(stor.U0)
     end
 
     for i in eachindex(ts)[2:end]
@@ -203,6 +218,8 @@ function propagate_RK4(m::AbstractVector{TR}, algebra::Algebra, system::System, 
             Us[i] = copy(stor.U)
             Ms[i] = copy(stor.M)
             dists[i] = dist
+        elseif save_only_U
+            Us[i] = copy(stor.U)
         else
             if dist < solver.tol
                 return dist
@@ -211,5 +228,11 @@ function propagate_RK4(m::AbstractVector{TR}, algebra::Algebra, system::System, 
             end
         end
     end
-    return save ? (ts, Us, Ms, dists) : dmin
+    if save 
+        return ts, Us, Ms, dists 
+    elseif save_only_U
+        return Us 
+    else 
+        return dmin 
+    end 
 end

@@ -40,7 +40,7 @@ function find_best_initial_costate_RK2(algebra::Algebra, system::System, solver:
     m0[1] = 1.0
     objective = function(m)
         m ./= norm(m)
-        propagate_RK2(m, algebra, system, solver, stor)
+        propagate_MP(m, algebra, system, solver, stor)
     end
 
     result = Optim.optimize(objective, m0, NelderMead(), Optim.Options(

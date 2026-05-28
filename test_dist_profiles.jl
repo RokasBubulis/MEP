@@ -31,7 +31,7 @@ stor = Storage{ComplexF64}(dim, length(algebra.lie_basis))
 solver = SolverParams(tmax, dt, tol, Newton_steps, Newton_tol, Newton_damping)
 
 m0= rand(length(algebra.p_basis))
-ts, Us_mp, Ms_mp, dists_mp = propagate_RK2(m0, algebra, system, solver, stor; save = true)
+ts, Us_mp, Ms_mp, dists_mp = propagate_MP(m0, algebra, system, solver, stor; save = true)
 ts, Us_rk, Ms_rk, dists_rk = propagate_RK4(m0, algebra, system, solver, stor; save = true)
 p = plot(ts, dists_mp, label="Midpoint")
 plot!(p, ts, dists_rk, label="RK4")
