@@ -4,7 +4,6 @@ commutes(x, y; tol = 1e-6) = maximum(abs.(br(x, y))) < tol
 
 T = ComplexF64
 
-# this is actually orthogonal!
 function try_add_orthonormal!(basis::Vector{SparseMatrixCSC{T,Int}}, 
                         candidate:: SparseMatrixCSC{T,Int};
                         tol = 1e-6)
@@ -28,11 +27,9 @@ end
 
 function construct_lie_basis_general(generators::Vector{SparseMatrixCSC{T, Int}}; depth = 10)
     basis_elements = SparseMatrixCSC{T,Int}[]
-    # gens = [im * g for g in generators]
     gens = copy(generators)
     for g in gens
         try_add_orthonormal!(basis_elements, g)
-        #push!(basis_elements, g)#/norm(g))
     end
     last_level = copy(generators)
     if depth > 1
@@ -90,7 +87,7 @@ end
 function build_structure_tensor(lie_basis::Vector{SparseMatrixCSC{T, Int}}; tol=1e-10)
     # Assumes an orthonormal basis
     n = length(lie_basis)
-    f = zeros(T, n, n, n)
+    f = zeros(real(T), n, n, n)
     for a in 1:n, b in a+1:n
         comm = br(lie_basis[a], lie_basis[b])
         for c in 1:n
@@ -114,4 +111,24 @@ function lie_bracket_coeffs!(res::AbstractVector{T}, f::Array{Tf, 3}, x::Vector{
         end 
     end 
     return nothing 
-end 
+end
+
+# adjoint representation map
+function build_adjoint_representation_map(x_lie::Vector{T}, f::Array{T, 3}) where T
+    # ad_X(Y) = [X,Y], X,Y in Lie algebra
+
+    n = length(x_lie)
+    res_mat = zeros(T, n, n)
+    for ν in eachindex(x_lie)
+        for μ in ν+1:length(x_lie)
+            xμ = x_lie[μ]
+            xν = x_lie[ν]
+            for λ in eachindex(x_lie)
+                val = f[μ, ν, λ]
+                res_mat[λ, ν] += xμ * val
+                res_mat[λ, μ] -= xν * val
+            end
+        end
+    end
+    return res_mat
+end

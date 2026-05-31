@@ -5,6 +5,7 @@ struct Algebra{T}
     lie_basis::Vector{SparseMatrixCSC{T, Int}}
     p_basis::Vector{SparseMatrixCSC{T, Int}}
     structure_tensor::Array{Float64, 3}
+    adj_repr_map::Array{Float64, 2}
     im_control_lie::Vector{Float64}
     neg_im_drift_lie::Vector{Float64}
 end
@@ -14,8 +15,9 @@ function Algebra(im_control::SparseMatrixCSC{T, Int}, im_drift::SparseMatrixCSC{
     p_basis = lie_basis[2:end]
     structure_tensor = build_structure_tensor(lie_basis)
     im_control_lie = project_algebra(im_control, lie_basis)
+    adj_repr_map = build_adjoint_representation_map(im_control_lie, structure_tensor)
     neg_im_drift_lie = project_algebra(-im_drift, lie_basis)
-    return Algebra{T}(lie_basis, p_basis, structure_tensor, im_control_lie, neg_im_drift_lie)
+    return Algebra{T}(lie_basis, p_basis, structure_tensor, adj_repr_map, im_control_lie, neg_im_drift_lie)
 end 
 
 struct System{T}
@@ -68,6 +70,8 @@ mutable struct Storage{T, R}
 
     # arrays Lie 
     tmp_adj_drift_arr::Vector{R}
+    tmp_adj_drift_first_der_arr::Vector{R}
+    tmp_adj_drift_second_der_arr::Vector{R}
     H_opt_lie::Vector{R}
 end
 
@@ -77,5 +81,5 @@ Storage{T}(dim::Int, n_basis::Int) where T = Storage{T, real(T)}(
     (Matrix{T}(undef, dim, dim) for _ in 1:2)...,
     (Matrix{T}(undef, 4, 4) for _ in 1:2)...,
     Matrix{real(T)}(undef, n_basis, n_basis), 
-    (Vector{real(T)}(undef, n_basis) for _ in 1:2)...,
+    (Vector{real(T)}(undef, n_basis) for _ in 1:4)...,
 )
