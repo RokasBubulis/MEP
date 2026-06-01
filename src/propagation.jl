@@ -47,6 +47,10 @@ function propagate(m0::Vector{Float64}, algebra::Algebra, system::System, solver
     function step_update(u, t, integrator)
         system, stor, tracker = integrator.p[2], integrator.p[4], integrator.p[5]
         dist = distance_objective_optimiser(u.U, system, stor)
+        if dist < 0.0
+            @warn("Negative dist to target coset obtained: $dist, setting to positive")
+            dist = abs(dist)
+        end 
         tracker.min_dist = min(tracker.min_dist, dist)
     end
 
@@ -56,7 +60,7 @@ function propagate(m0::Vector{Float64}, algebra::Algebra, system::System, solver
     end
 
     function affect!(integrator)
-        println("Distance below tolerance $(integrator.p[3].dist_tol) reached at t = $(integrator.t)")
+        println("Distance $(integrator.p[5].min_dist) below tolerance $(integrator.p[3].dist_tol) reached at t = $(integrator.t). Terminating solver")
         terminate!(integrator)
     end
 
@@ -103,7 +107,6 @@ function find_best_initial_costate(algebra::Algebra, system::System, solver::Sol
         show_every=50
     ))
     m_best = result.minimizer
-    dmin = result.minimum
 
-    return m_best, dmin
+    return m_best
 end
