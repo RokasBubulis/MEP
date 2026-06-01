@@ -32,7 +32,12 @@ end
 struct QopRyd<: RydbergOp
     sites::Vector{Int}
 end
-
+struct OopRyd<: RydbergOp
+    sites::Vector{Int}
+end 
+struct RopRyd<: RydbergOp
+    sites::Vector{Int}
+end
 
 operator_matrix(::Xop) = sparse(T[0 1; 1 0])
 operator_matrix(::Zop) = sparse(T[1 0; 0 -1])
@@ -42,6 +47,8 @@ operator_matrix(::XopRyd) = sparse(T[1 0 0; 0 0 1; 0 1 0])
 operator_matrix(::ZopRyd) = sparse(T[1 0 0; 0 1 0; 0 0 -1])
 operator_matrix(::YopRyd) = sparse(T[0 0 0; 0 0 -im; 0 im 0])
 operator_matrix(::QopRyd) = sparse(T[1 0 0; 0 1 0; 0 0 0])
+operator_matrix(::OopRyd) = sparse(T[1 0 0; 0 0 0; 0 0 0])
+operator_matrix(::RopRyd) = sparse(T[0 0 0; 0 0 0; 0 0 1])
 
 function return_n_levels(op::PauliOp)
     return 2
@@ -86,6 +93,23 @@ end
 function construct_Ryd_generators(n_qubits::Int)
     # returns control first and drift second
     A = spzeros(T, 3^n_qubits, 3^n_qubits)
+    for i in 1:n_qubits
+        Qnot = sparse(Matrix{T}(I, 3^n_qubits, 3^n_qubits))
+        for j in 1:n_qubits
+            if j != i 
+                Qnot *= operator(QopRyd([j]), n_qubits)
+            end
+        end
+        A += operator(XopRyd([i]), n_qubits) * Qnot
+    end
+    B = sum(operator(ZopRyd([i]), n_qubits) for i in 1:n_qubits)
+    return [B/2, A/2]
+end
+
+function construct_Ryd_generators_extra_drift_term(n_qubits::Int)
+    # returns control first and drift second
+    A = spzeros(T, 3^n_qubits, 3^n_qubits)
+    extra_term = spzeros(T, 3^n_qubits, 3^n_qubits)
     for i in 1:n_qubits
         Qnot = sparse(Matrix{T}(I, 3^n_qubits, 3^n_qubits))
         for j in 1:n_qubits

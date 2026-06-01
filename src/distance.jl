@@ -9,9 +9,22 @@ function project_propagator_to_logical_subspace!(tmp, U)
     return nothing
 end 
 
+function project_from_3_to_2_levels!(res, U, system, stor)
+    # U^(2) = Φ * Ψ' * U^(3) * Ψ * Φ' 
+    # where Ψ is a matrix stacked with basis vectors obtained by n tensor products among {(1,0,0), (0,1,0)}
+    # Φ is a matrix stacked with basis vectors obtained by n tensor products among {(1,0), (0,1)}
+    # where n is the number of particles 
+    # this allows projection from 3 level operator to 2 where |r> states are excluded
+
+    mul!(stor.tmp_logical1, U, system.ryd_to_logic_conv_mat)
+    mul!(res, system.ryd_to_logic_conv_mat_adj, stor.tmp_logical1)
+    return nothing
+end
+
 function distance_objective_optimiser(U::AbstractMatrix, system::System, stor::Storage)
 
-    project_propagator_to_logical_subspace!(stor.U_logic, U)
+    # project_propagator_to_logical_subspace!(stor.U_logic, U)
+    project_from_3_to_2_levels!(stor.U_logic, U, system, stor)
     mul!(stor.tmp_logic, stor.U_logic, system.adjoint_target_logic)
     tmp_diag = diag(stor.tmp_logic)
     dist(β) = 1 - 1/size(stor.U_logic,1) * abs(dot(exp.(β.*system.im_control_vec_logic), tmp_diag))

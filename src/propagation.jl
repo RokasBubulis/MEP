@@ -107,6 +107,7 @@ function find_best_initial_costate(algebra::Algebra, system::System, solver::Sol
         show_every=50
     ))
     m_best = result.minimizer
+    dmin = result.minimum
 
-    return m_best
+    return m_best, dmin
 end

@@ -20,6 +20,12 @@ function Algebra(im_control::SparseMatrixCSC{T, Int}, im_drift::SparseMatrixCSC{
     return Algebra{T}(lie_basis, p_basis, structure_tensor, adj_repr_map, im_control_lie, neg_im_drift_lie)
 end 
 
+function tensor_basis(n_particles::Int, n_levels::Int)
+    e = [I(n_levels)[:, 1], I(n_levels)[:, 2]]
+    return hcat([reduce(kron, [e[b] for b in idx])
+                 for idx in Iterators.product(fill(1:2, n_particles)...)]...)
+end
+
 struct System{T}
     im_control::SparseMatrixCSC{T, Int}
     im_drift::SparseMatrixCSC{T, Int}
@@ -29,12 +35,18 @@ struct System{T}
     adjoint_target_logic::SparseMatrixCSC{T, Int}
     im_control_vec::Vector{T}
     im_control_vec_logic::Vector{T}
+    ryd_to_logic_conv_mat::Matrix{T}
+    ryd_to_logic_conv_mat_adj::Matrix{T}
 
     function System{T}(im_control, im_drift, target, target_logic) where T
-        eig = abs(eigvals(Matrix(im_control))[1])
-        @assert eig != 0.0 "Control period eigenvalue assumption failed"
+        # assumes a control and drift in 3 level description
+        n_particles = round(Int, (size(im_control,1)^(1/3)))
+        Ψ = tensor_basis(n_particles, 3) 
+        Φ = tensor_basis(n_particles, 2)
+        ryd_to_logic_conv_mat = Ψ * Φ'
+
         new{T}(im_control, im_drift, target, target_logic, sparse(adjoint(target)), sparse(adjoint(target_logic)), 
-        diag(im_control), diag(im_control)[[1,2,4,5]])
+        diag(im_control), diag(im_control)[[1,2,4,5]], ryd_to_logic_conv_mat, adjoint(ryd_to_logic_conv_mat))
     end 
 end 
 
@@ -73,6 +85,10 @@ mutable struct Storage{T, R}
     tmp_adj_drift_first_der_arr::Vector{R}
     tmp_adj_drift_second_der_arr::Vector{R}
     H_opt_lie::Vector{R}
+
+    # temporary matrices for projection to logical subspace 
+    tmp_logical1::Matrix{T}
+
 end
 
 Storage{T}(dim::Int, n_basis::Int) where T = Storage{T, real(T)}(
@@ -82,4 +98,5 @@ Storage{T}(dim::Int, n_basis::Int) where T = Storage{T, real(T)}(
     (Matrix{T}(undef, 4, 4) for _ in 1:2)...,
     Matrix{real(T)}(undef, n_basis, n_basis), 
     (Vector{real(T)}(undef, n_basis) for _ in 1:4)...,
+    Matrix{T}(undef, dim, 4), 
 )
