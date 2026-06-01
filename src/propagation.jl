@@ -23,10 +23,8 @@ end
 
 function f!(dx, x, p, t)
     algebra, stor, = p[1], p[4]
-    optimal_adjoint_drift_lie!(stor.H_opt_lie, x.M, algebra, stor)
-    lie_bracket_coeffs!(dx.M, algebra.structure_tensor, stor.H_opt_lie, x.M)
-    Lie_to_Hilbert!(stor.H_opt, stor.H_opt_lie, algebra)
-    mul!(dx.U, stor.H_opt, x.U)
+    optimal_adjoint_drift_lie!(stor.H_opt_lie, x, algebra, stor)
+    lie_bracket_coeffs!(dx, algebra.structure_tensor, stor.H_opt_lie, x)
 end
 
 function propagate(m0::Vector{Float64}, algebra::Algebra, system::System, solver::SolverParams, stor::Storage, method; return_sol = false, kwargs...)
@@ -35,18 +33,25 @@ function propagate(m0::Vector{Float64}, algebra::Algebra, system::System, solver
     min_dist_tracker = MinDistanceTracker(1.0)
     m0_arr = zeros(Float64, length(algebra.lie_basis))
     m0_arr[2:end] = m0
-    x0 = ComponentArray(
-        U = stor.U0,
-        M = m0_arr)
+    x0 = m0_arr
 
     # set up problem
     params = algebra, system, solver, stor, min_dist_tracker
     prob = ODEProblem(f!, x0, (0.0, solver.tmax), params)
+    stor.U .= stor.U0
 
     # Step-wise computation to update minimum distance to target coset
     function step_update(u, t, integrator)
         system, stor, tracker = integrator.p[2], integrator.p[4], integrator.p[5]
-        dist = distance_objective_optimiser(u.U, system, stor)
+        optimal_adjoint_drift_lie!(stor.H_opt_lie, u, algebra, stor)
+        Lie_to_Hilbert!(stor.H_opt, stor.H_opt_lie, algebra)
+        copyto!(stor.H_opt_dt, stor.H_opt)
+        lmul!(integrator.dt, stor.H_opt_dt)
+        stor.dU .= exp(stor.H_opt_dt)
+        mul!(stor.U_buffer, stor.dU, stor.U)
+        stor.U .= stor.U_buffer
+
+        dist = distance_objective_optimiser(stor.U, system, stor)
         if dist < 0.0
             @warn("Negative dist to target coset obtained: $dist, setting to positive")
             dist = abs(dist)
