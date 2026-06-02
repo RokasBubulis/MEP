@@ -1,24 +1,19 @@
-using DifferentialEquations
-using ComponentArrays
+using DifferentialEquations, OrdinaryDiffEqLowOrderRK
 using DiffEqCallbacks
 
 include("adm.jl")
 include("distance.jl")
 
-check_tol = 1e-6
 function check_anti_hermiticity(H)
     # H = -adjoint(H)
-    @assert isapprox(H, -adjoint(H)) "Adjoint drift is not anti-hermitian"
+    @assert isapprox(H, -adjoint(H), atol=1e-16, rtol=0) "Adjoint drift is not anti-hermitian"
 end
 
-function check_unitarity(U, tmp; timestep = nothing, note = nothing)
-    if any(isnan, U)
-        error("$(note !== nothing ? note : "") NaN in propagator at timestep $timestep")
-    end
+function check_unitarity(U, tmp, tol)
     # U*adjoint(U) = I
     mul!(tmp, U, adjoint(U))
     nrm = norm(tmp) - sqrt(size(U,1))
-    @assert nrm < check_tol "$(note !== nothing ? note : "") Propagator is not unitary at timestep $timestep: norm(U*adjoint(U) - I) = $nrm"
+    @assert nrm < tol "Propagator is not unitary: norm(U*adjoint(U) - I) = $nrm"
 end
 
 function f!(dx, x, p, t)
@@ -42,14 +37,16 @@ function propagate(m0::Vector{Float64}, algebra::Algebra, system::System, solver
 
     # Step-wise computation to update minimum distance to target coset
     function step_update(u, t, integrator)
-        system, stor, tracker = integrator.p[2], integrator.p[4], integrator.p[5]
+        system, solver, stor, tracker = integrator.p[2], integrator.p[3], integrator.p[4], integrator.p[5]
         optimal_adjoint_drift_lie!(stor.H_opt_lie, u, algebra, stor)
         Lie_to_Hilbert!(stor.H_opt, stor.H_opt_lie, algebra)
+        check_anti_hermiticity(stor.H_opt)
         copyto!(stor.H_opt_dt, stor.H_opt)
         lmul!(integrator.dt, stor.H_opt_dt)
         stor.dU .= exp(stor.H_opt_dt)
         mul!(stor.U_buffer, stor.dU, stor.U)
         stor.U .= stor.U_buffer
+        check_unitarity(stor.U, stor.U_unitary_buffer_check, solver.unitary_tol)
 
         dist = distance_objective_optimiser(stor.U, system, stor)
         if dist < 0.0
@@ -86,17 +83,17 @@ end
 
 #############
 
-function find_best_initial_costate(algebra::Algebra, system::System, solver::SolverParams, stor::Storage, method=Tsit5(); kwargs...)
+function find_best_initial_costate(algebra::Algebra, system::System, solver::SolverParams, stor::Storage, method=Tsit5(); show_trace=true, kwargs...)
 
     # check target before propagation
-    check_unitarity(system.target, stor.tmp, note="Target")
+    check_unitarity(system.target, stor.tmp, solver.unitary_tol)
     targ_dist = distance(system.target, system, solver, stor)
     @assert targ_dist < solver.dist_tol "Error in target overlap: $targ_dist"
 
     n = length(algebra.p_basis)
     m0 = zeros(n)
     m0[1] = 1.0
-    objective = function(m)
+    objective = function(m) 
         m ./= norm(m)
         propagate(m, algebra, system, solver, stor, method; save_everystep = false,
         save_start = false,
@@ -106,9 +103,9 @@ function find_best_initial_costate(algebra::Algebra, system::System, solver::Sol
     end
 
     result = Optim.optimize(objective, m0, NelderMead(), Optim.Options(
-        show_trace  = true, 
-        f_abstol = solver.dist_tol,
-        g_abstol = solver.opt_tol,
+        callback = state -> state.f_lowest < solver.dist_tol,
+        show_trace  = show_trace, 
+        g_abstol = solver.grad_tol,
         show_every=50
     ))
     m_best = result.minimizer

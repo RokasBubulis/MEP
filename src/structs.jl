@@ -55,7 +55,8 @@ struct SolverParams
     reltol::Float64
     abstol::Float64
     dist_tol::Float64
-    opt_tol::Float64
+    grad_tol::Float64
+    unitary_tol::Float64
 end 
 
 mutable struct MinDistanceTracker
@@ -76,6 +77,7 @@ mutable struct Storage{T, R}
     tmp::Matrix{T}
     H_opt_dt::Matrix{T}
     U_buffer::Matrix{T}
+    U_unitary_buffer_check::Matrix{T}
     
     # temporary matrices Hilbert reduced logical
     tmp_logic::Matrix{T}
@@ -98,7 +100,7 @@ end
 Storage{T}(dim::Int, n_basis::Int) where T = Storage{T, real(T)}(
     zero(real(T)), 
     Matrix{T}(I, dim, dim), # U0
-    (Matrix{T}(undef, dim, dim) for _ in 1:6)...,
+    (Matrix{T}(undef, dim, dim) for _ in 1:7)...,
     (Matrix{T}(undef, 4, 4) for _ in 1:2)...,
     Matrix{real(T)}(undef, n_basis, n_basis), 
     (Vector{real(T)}(undef, n_basis) for _ in 1:4)...,
