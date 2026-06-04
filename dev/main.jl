@@ -30,10 +30,10 @@ grad_tol = 1e-8
 unitary_tol = 1e-10
 adaptive=false
 solver = SolverParams(tmax, reltol, abstol, dist_tol, grad_tol, unitary_tol)
-
-dt_number = 12
+##
+dt_number = 20
 methods_lst = [Midpoint()]
-dts = logrange(1e0, 5e-1, dt_number)
+dts = logrange(1e-3, 5e-1, dt_number)
 
 min_dists = zeros(Float64, length(methods_lst), dt_number)
 @assert Threads.nthreads() != 1

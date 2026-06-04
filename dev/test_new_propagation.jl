@@ -27,14 +27,13 @@ abstol = 1e-8
 dist_tol = 1e-8
 grad_tol = 1e-8
 unitary_tol = 1e-6
-adaptive=false
 solver = SolverParams(tmax, reltol, abstol, dist_tol, grad_tol, unitary_tol)
 n = size(system.im_control, 1)
 ##
 method_baseline = Vern9()
 dt_baseline = 1e-4
 stor = Storage{ComplexF64}(dim, length(algebra.lie_basis))
-sol = propagate(m0, algebra, system, solver, stor, method_baseline, dt=dt_baseline, adaptive=false, saveat=solver.tmax, return_sol=true)
+sol = propagate(m0, algebra, system, solver, stor, method_baseline, dt=dt_baseline, saveat=solver.tmax, return_sol=true)
 U_baseline = copy(stor.U)
 println("Baseline computed")
 ##
@@ -49,7 +48,7 @@ for (i,method) in enumerate(methods_lst)
     for j in ProgressBar(1:dt_number)
         dt = dts[j]
         stor = Storage{ComplexF64}(dim, length(algebra.lie_basis))
-        sol = propagate(m0, algebra, system, solver, stor, method, dt=dt, adaptive=false, saveat=solver.tmax, return_sol=true)
+        sol = propagate(m0, algebra, system, solver, stor, method, dt=dt, saveat=solver.tmax, return_sol=true)
         Uts[i,j] = copy(stor.U)
     end 
 end 
@@ -84,7 +83,7 @@ display(p1)
 ## 
 
 stor = Storage{ComplexF64}(dim, length(algebra.lie_basis))
-sol = propagate(m0, algebra, system, solver, stor, Vern9(), adaptive=true, dt=1e-3, return_sol=true)
+sol = propagate(m0, algebra, system, solver, stor, Vern9(), dt=1e-3, return_sol=true)
 
 println("min dt: $(minimum(diff(sol.t))), max dt: $(maximum(diff(sol.t))), median dt: $(median(diff(sol.t)))")
 U = copy(stor.U)

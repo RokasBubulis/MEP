@@ -76,13 +76,22 @@ function project_to_algebra!(coeffs, mat, algebra, stor; tol = 1e-8, identifier=
     return nothing
 end
 
-function Lie_to_Hilbert!(res::Matrix{T}, res_arr::Vector{Float64}, algebra)
-    res .= 0
-    for (i,μ) in enumerate(res_arr)
-        res .+= μ .* algebra.lie_basis[i]
-    end 
-    return nothing 
-end 
+# function Lie_to_Hilbert!(res::Matrix{T}, res_arr::Vector{Float64}, algebra)
+#     res .= 0
+#     for (i,μ) in enumerate(res_arr)
+#         res .+= μ .* algebra.lie_basis[i]
+#     end 
+#     return nothing 
+# end 
+
+# more efficient?
+function Lie_to_Hilbert!(res::Matrix{T}, res_arr::Vector{Float64}, algebra) where T
+    fill!(res, zero(T))
+    for (i, μ) in enumerate(res_arr)
+        axpy!(μ, algebra.lie_basis[i], res)
+    end
+    return nothing
+end
 
 function build_structure_tensor(lie_basis::Vector{SparseMatrixCSC{T, Int}}; tol=1e-10)
     # Assumes an orthonormal basis
