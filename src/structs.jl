@@ -105,6 +105,7 @@ mutable struct Storage{T, R}
     U_buffer::Matrix{T}
     U_unitary_buffer_check::Matrix{T}
     tmp_3levels::Matrix{T}
+    U_adj_buffer::Matrix{T}
     
     # temporary matrices Hilbert logical, size 2^n x 2^n
     tmp_2levels::Matrix{T}
@@ -141,7 +142,7 @@ end
 Storage{T}(dim::Int, n_basis::Int) where T = Storage{T, real(T)}(
     zero(real(T)), # alpha
     Matrix{T}(I, dim, dim), # U0
-    (Matrix{T}(undef, dim, dim) for _ in 1:8)..., # temporary matrices Hilbert, size 3^n x 3^n
+    (Matrix{T}(undef, dim, dim) for _ in 1:9)..., # temporary matrices Hilbert, size 3^n x 3^n
     (Matrix{T}(undef, 4, 4) for _ in 1:2)..., # temporary matrices Hilbert logical, size 2^n x 2^n
     Matrix{real(T)}(undef, n_basis, n_basis), # temporary matrices Lie, size dim(g) x dim(g)
     (Vector{real(T)}(undef, n_basis) for _ in 1:4)..., # arrays Lie, size dim(g) x 1

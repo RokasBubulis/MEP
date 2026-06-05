@@ -9,13 +9,9 @@ dim = size(im_control, 1)
 # prepare Lie algebra struct 
 algebra = Algebra(im_control, im_drift)
 
-# prepare system struct 
-target = Matrix(SparseMatrixCSC{ComplexF64, Int}(I, dim, dim))
-target[5,5] = -1.0
-title="CZ"
 target_logic = SparseMatrixCSC{ComplexF64, Int}(I, 4, 4)
 target_logic[4,4] = -1.0
-system = System{ComplexF64}(im_control, im_drift, target, target_logic)
+tar = TargetContainer(target_logic)
 stor = Storage{ComplexF64}(dim, length(algebra.lie_basis))
 println("Setup finished")
 ##
@@ -28,12 +24,12 @@ dist_tol = 1e-8
 grad_tol = 1e-8
 unitary_tol = 1e-6
 solver = SolverParams(tmax, reltol, abstol, dist_tol, grad_tol, unitary_tol)
-n = size(system.im_control, 1)
+n = size(algebra.im_control, 1)
 ##
 method_baseline = Vern9()
 dt_baseline = 1e-4
 stor = Storage{ComplexF64}(dim, length(algebra.lie_basis))
-sol = propagate(m0, algebra, system, solver, stor, method_baseline, dt=dt_baseline, saveat=solver.tmax, return_sol=true)
+sol = propagate(m0, algebra, solver, stor, tar, method_baseline, dt=dt_baseline, saveat=solver.tmax, full_results=true)
 U_baseline = copy(stor.U)
 println("Baseline computed")
 ##
@@ -48,7 +44,7 @@ for (i,method) in enumerate(methods_lst)
     for j in ProgressBar(1:dt_number)
         dt = dts[j]
         stor = Storage{ComplexF64}(dim, length(algebra.lie_basis))
-        sol = propagate(m0, algebra, system, solver, stor, method, dt=dt, saveat=solver.tmax, return_sol=true)
+        sol = propagate(m0, algebra, solver, stor, tar, method, dt=dt, saveat=solver.tmax, full_results=true)
         Uts[i,j] = copy(stor.U)
     end 
 end 

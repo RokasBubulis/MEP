@@ -1,4 +1,4 @@
-using BenchmarkTools
+using BenchmarkTools, Profile, PProf 
 
 include("../src/structs.jl")
 include("../src/propagation.jl")
@@ -21,8 +21,6 @@ grad_tol = 1e-8
 unitary_tol = 1e-10
 adaptive=false
 solver = SolverParams(tmax, reltol, abstol, dist_tol, grad_tol, unitary_tol)
-println("Setup finished")
-
 
 # Build a mock integrator struct that mimics what DifferentialEquations passes in
 struct MockIntegrator
@@ -45,34 +43,14 @@ mock_integrator = MockIntegrator(
     0.0     # t = 0
 )
 
-# Define step_update standalone (copy exactly from propagate, no closure)
-function step_update_standalone(u, t, integrator)
-    tar, solver, stor, tracker = integrator.p[2], integrator.p[3], integrator.p[4], integrator.p[5]
 
-    optimal_adjoint_drift_lie!(stor.H_opt_lie, u, algebra, stor)
-    Lie_to_Hilbert!(stor.H_opt, stor.H_opt_lie, algebra)
-    copyto!(stor.dU, stor.H_opt)
-    lmul!(integrator.dt, stor.dU)
-    exponential!(stor.dU, stor.exp_method, stor.exp_cache)
-    mul!(stor.U_buffer, stor.dU, stor.U)
-    stor.U .= stor.U_buffer
-    check_unitarity(stor.U, stor.U_unitary_buffer_check, solver.unitary_tol)
+propagate_U_and_update_distance!(u, 0.0, mock_integrator)
+println("Setup finished")
 
-    dist = distance(stor.U, tar, algebra, stor)
-    if dist < 0.0
-        dist = abs(dist)
-    end
-    if dist < tracker.min_dist
-        tracker.min_dist = dist
-        tracker.tstar = t
-    end
-end
-
-using Profile, PProf  # or just use @allocated per line
-
+##
 # Isolate each line individually
-println("optimal_adjoint_drift_lie!: ", 
-    @allocated optimal_adjoint_drift_lie!(stor.H_opt_lie, u, algebra, stor))
+println("optimal_adjoint_drift_lie_analytic!: ", 
+    @allocated optimal_adjoint_drift_lie_analytic!(stor.H_opt_lie, u, algebra, stor))
 
 println("Lie_to_Hilbert!: ", 
     @allocated Lie_to_Hilbert!(stor.H_opt, stor.H_opt_lie, algebra))
@@ -93,13 +71,12 @@ println("stor.U .= stor.U_buffer: ",
     @allocated (stor.U .= stor.U_buffer))
 
 println("check_unitarity: ", 
-    @allocated check_unitarity(stor.U, stor.U_unitary_buffer_check, solver.unitary_tol))
+    @allocated check_unitarity(stor.U, stor.U_adj_buffer, stor.U_unitary_buffer_check, solver.unitary_tol))
 
 println("distance: ", 
     @allocated distance(stor.U, tar, algebra, stor))
     
 # Benchmark
-@benchmark step_update_standalone($u, 0.0, $mock_integrator)
+@benchmark propagate_U_and_update_distance!($u, 0.0, $mock_integrator)
 
-# For allocation count specifically:
-#@allocated step_update_standalone(u, 0.0, mock_integrator)
+@btime propagate_U_and_update_distance!(u, 0.0, $mock_integrator)

@@ -25,15 +25,14 @@ function adjoint_drift_new!(res_arr, α, x_lie, y_lie, f, stor)
     res_arr .= real.(expv(-α, stor.tmp_mat_lie, y_lie))
     return nothing 
 end 
-# TODO THIS NEW VERSION IS UNTESTED
-# function adjoint_drift_efficient!(res_arr, α, y_lie, adj_repr_map, stor)
-#     # e^X Y e^-X, X=-α*im_control, Y = -im_drift
-#     arnoldi!(stor.Ks, adj_repr_map, y_lie)                  # fills Krylov subspace in-place
-#     expv!(res_arr, -α, stor.Ks; cache=stor.expv_cache)       # uses preallocated cache
-#     return nothing 
-# end 
 
 function adjoint_drift_efficient!(res_arr, α, y_lie, adj_repr_map, stor)
+    arnoldi!(stor.Ks, adj_repr_map, y_lie)
+    expv!(res_arr, -α, stor.Ks; cache=stor.expv_cache)
+    return nothing
+end
+
+function adjoint_drift_inefficient!(res_arr, α, y_lie, adj_repr_map, stor)
     # e^X Y e^-X, X=-α*im_control, Y = -im_drift
     res_arr .= real.(expv(-α, adj_repr_map, y_lie))
     return nothing 
@@ -63,7 +62,16 @@ function adjoint_drift_obj_2nd_der(α::Float64, costate_arr::AbstractVector{S}, 
     return -dot(stor.tmp_adj_drift_second_der_arr, costate_arr)
 end 
 
-function optimal_adjoint_drift_lie!(res_arr::Vector{T}, costate_arr::AbstractVector{S}, algebra::Algebra, stor::Storage) where {T,S}
+function adjoint_drift_obj_derivatives(α::Float64, costate_arr::AbstractVector{S}, algebra::Algebra, stor::Storage) where S
+    # d^2/dα^2 tr(HM) = tr(H''M), H'' = [H', isum_j Z_j]
+    
+    adjoint_drift_efficient!(stor.tmp_adj_drift_arr, α, algebra.neg_im_drift_lie, algebra.adj_repr_map, stor)
+    lie_bracket_coeffs!(stor.tmp_adj_drift_first_der_arr, algebra.structure_tensor, stor.tmp_adj_drift_arr, algebra.im_control_lie)
+    lie_bracket_coeffs!(stor.tmp_adj_drift_second_der_arr, algebra.structure_tensor, stor.tmp_adj_drift_first_der_arr, algebra.im_control_lie)
+    return -dot(stor.tmp_adj_drift_first_der_arr, costate_arr), -dot(stor.tmp_adj_drift_second_der_arr, costate_arr)
+end 
+
+function optimal_adjoint_drift_lie_optimiser!(res_arr::Vector{T}, costate_arr::AbstractVector{S}, algebra::Algebra, stor::Storage) where {T,S}
     
     x0 = [stor.alpha]
     td = TwiceDifferentiable(
@@ -89,5 +97,56 @@ function optimal_adjoint_drift_lie_nondiff!(res_arr::Vector{T}, costate_arr::Abs
     stor.alpha = Optim.minimizer(res)[]
     adjoint_drift_efficient!(res_arr, stor.alpha, algebra.neg_im_drift_lie, algebra.adj_repr_map, stor)
 
+    return nothing 
+end 
+function update_alpha_newton!(
+    stor,
+    costate_arr,
+    algebra;
+    gtol::Float64 = 1e-8,
+    xtol::Float64 = 1e-8,
+    maxiter::Int = 30,
+    damping::Float64 = 1.0
+)
+
+    α = stor.alpha
+    for i in 1:maxiter
+
+        g, h = adjoint_drift_obj_derivatives(α, costate_arr, algebra, stor)
+
+        # convergence
+        if abs(g) < gtol
+            break
+        end
+
+        if abs(h) < 1e-12
+            break
+        end
+
+        step = g / h
+
+        if abs(step) < xtol
+            α -= damping * step
+            break
+        end
+        if h > 0 
+            α += damping * step 
+        else
+            α -= damping * step
+        end 
+    end
+
+    g_fin, h_fin = adjoint_drift_obj_derivatives(α, costate_arr, algebra, stor)
+    if h_fin > 0.0 
+        @warn("Positive final curvature for ADM. g: $g_fin, h: $h_fin")
+    end 
+    stor.alpha = α
+    return nothing
+end
+
+function optimal_adjoint_drift_lie_analytic!(res_arr::Vector{T}, costate_arr::AbstractVector{S}, algebra::Algebra, stor::Storage) where {T,S}
+    
+    update_alpha_newton!(stor, costate_arr, algebra)
+    adjoint_drift_efficient!(res_arr, stor.alpha, algebra.neg_im_drift_lie, algebra.adj_repr_map, stor)
     return nothing 
 end 

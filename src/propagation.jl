@@ -9,17 +9,44 @@ function check_anti_hermiticity(H)
     @assert isapprox(H, -adjoint(H), atol=1e-16, rtol=0) "Adjoint drift is not anti-hermitian"
 end
 
-function check_unitarity(U, tmp, tol)
+function check_unitarity(U, U_adj, tmp, tol)
     # U*adjoint(U) = I
-    mul!(tmp, U, adjoint(U))
+    adjoint!(U_adj, U)
+    mul!(tmp, U, U_adj)
     nrm = norm(tmp) - sqrt(size(U,1))
     @assert nrm < tol "Propagator is not unitary: norm(U*adjoint(U) - I) = $nrm"
 end
 
+# propagation of costate: dM/dt = [H_opt(t), M(t)]
 function f!(dx, x, p, t)
     algebra, stor, = p[1], p[4]
-    optimal_adjoint_drift_lie!(stor.H_opt_lie, x, algebra, stor)
+    optimal_adjoint_drift_lie_analytic!(stor.H_opt_lie, x, algebra, stor)
     lie_bracket_coeffs!(dx, algebra.structure_tensor, stor.H_opt_lie, x)
+end
+
+# Step-wise computation to update minimum distance to target coset
+function propagate_U_and_update_distance!(u, t, integrator)
+    tar, solver, stor, tracker = integrator.p[2], integrator.p[3], integrator.p[4], integrator.p[5]
+
+    optimal_adjoint_drift_lie_analytic!(stor.H_opt_lie, u, algebra, stor)
+    Lie_to_Hilbert!(stor.H_opt, stor.H_opt_lie, algebra)
+    #check_anti_hermiticity(stor.H_opt)
+    copyto!(stor.dU, stor.H_opt)
+    lmul!(integrator.dt, stor.dU)
+    exponential!(stor.dU, stor.exp_method, stor.exp_cache)
+    mul!(stor.U_buffer, stor.dU, stor.U)
+    stor.U .= stor.U_buffer
+    check_unitarity(stor.U, stor.U_adj_buffer, stor.U_unitary_buffer_check, solver.unitary_tol)
+
+    dist = distance(stor.U, tar, algebra, stor)
+    if dist < 0.0
+        @warn("Negative dist to target coset obtained: $dist, setting to positive")
+        dist = abs(dist)
+    end 
+    if dist < tracker.min_dist
+        tracker.min_dist = dist 
+        tracker.tstar = t 
+    end 
 end
 
 function propagate(m0::Vector{Float64}, algebra::Algebra, solver::SolverParams, stor::Storage, tar::TargetContainer, method; full_results = false, kwargs...)
@@ -35,32 +62,6 @@ function propagate(m0::Vector{Float64}, algebra::Algebra, solver::SolverParams, 
     prob = ODEProblem(f!, x0, (0.0, solver.tmax), params)
     stor.U .= stor.U0
 
-    # Step-wise computation to update minimum distance to target coset
-    function step_update(u, t, integrator)
-        tar, solver, stor, tracker = integrator.p[2], integrator.p[3], integrator.p[4], integrator.p[5]
-
-        optimal_adjoint_drift_lie!(stor.H_opt_lie, u, algebra, stor)
-        Lie_to_Hilbert!(stor.H_opt, stor.H_opt_lie, algebra)
-        #check_anti_hermiticity(stor.H_opt)
-        copyto!(stor.dU, stor.H_opt)
-        lmul!(integrator.dt, stor.dU)
-        exponential!(stor.dU, stor.exp_method, stor.exp_cache)
-        # stor.dU .= exp(stor.H_opt_dt)
-        mul!(stor.U_buffer, stor.dU, stor.U)
-        stor.U .= stor.U_buffer
-        check_unitarity(stor.U, stor.U_unitary_buffer_check, solver.unitary_tol)
-
-        dist = distance(stor.U, tar, algebra, stor)
-        if dist < 0.0
-            @warn("Negative dist to target coset obtained: $dist, setting to positive")
-            dist = abs(dist)
-        end 
-        if dist < tracker.min_dist
-            tracker.min_dist = dist 
-            tracker.tstar = t 
-        end 
-    end
-
     # Functions to check if solution can be terminated
     function condition(u, t, integrator)
         return integrator.p[5].min_dist < integrator.p[3].dist_tol
@@ -72,7 +73,7 @@ function propagate(m0::Vector{Float64}, algebra::Algebra, solver::SolverParams, 
     end
 
     # Build callbacks
-    step_cb = FunctionCallingCallback(step_update; func_everystep=true)
+    step_cb = FunctionCallingCallback(propagate_U_and_update_distance!; func_everystep=true)
     event_cb = DiscreteCallback(condition, affect!)
     cb = CallbackSet(step_cb, event_cb)
 
@@ -87,7 +88,7 @@ function propagate(m0::Vector{Float64}, algebra::Algebra, solver::SolverParams, 
 end 
 
 #############
-function find_best_initial_costate(tar::TargetContainer, algebra::Algebra, solver::SolverParams, stor::Storage, method=Midpoint(); m0=nothing, show_trace=true, kwargs...)
+function find_best_initial_costate(tar::TargetContainer, algebra::Algebra, solver::SolverParams, stor::Storage, method=Midpoint(); m0=nothing, show_trace=true, show_every=50, iterations=1000, kwargs...)
 
     # check target before propagation
     # check_unitarity(tar.target, tar.tmp_for_target, solver.unitary_tol)
@@ -113,8 +114,8 @@ function find_best_initial_costate(tar::TargetContainer, algebra::Algebra, solve
         callback = state -> state.f_lowest < solver.dist_tol,
         show_trace  = show_trace, 
         g_abstol = solver.grad_tol,
-        show_every = 20,
-        iterations=400
+        show_every = show_every,
+        iterations=iterations
     ))
     m_best = result.minimizer
 
