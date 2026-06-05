@@ -25,7 +25,7 @@ res_arr4 = zeros(Float64, length(algebra.lie_basis))
 
 ##
 
-for i in 1:100
+for i in 1:200
     m0 = rand(length(algebra.p_basis))
     m0 /= norm(m0)
     costate_arr = zeros(Float64, length(algebra.lie_basis))
@@ -41,10 +41,14 @@ for i in 1:100
         @warn "$i : norm= $nrm"
     end 
 end 
+
+costate_arr = zeros(Float64, length(algebra.lie_basis))
+costate_arr[2:end] = m0
+@btime g, h = adjoint_drift_obj_derivatives(α, costate_arr, algebra, stor)
 println("analytic")
 @btime begin 
     stor.alpha = 0
-    optimal_adjoint_drift_lie_analytic!(res_arr4, costate_arr, algebra, stor) # ~10 μs, 133 allocs
+    optimal_adjoint_drift_lie_analytic!(res_arr4, costate_arr, algebra, stor)
 end 
 println("optimiser")
 @btime begin 
@@ -52,12 +56,21 @@ println("optimiser")
     optimal_adjoint_drift_lie_optimiser!(res_arr3, costate_arr, algebra, stor)
 end 
 
-# example output: 
-# ┌ Warning: 55 : norm= 1.0689562827990031e-8
-# └ @ Main ~/workspaces/MScProject/dev/test_adm.jl:56
-# ┌ Warning: 68 : norm= 1.8561914723068352e-8
-# └ @ Main ~/workspaces/MScProject/dev/test_adm.jl:56
+# example output (note: worse than irl as no warm-start)
+# ┌ Warning: 3 : norm= 1.5347428753897965e-8
+# └ @ Main ~/workspaces/MScProject/dev/test_adm.jl:41
+# ┌ Warning: 29 : norm= 1.1318724787655718e-8
+# └ @ Main ~/workspaces/MScProject/dev/test_adm.jl:41
+# ┌ Warning: 43 : norm= 1.4164445704395158e-8
+# └ @ Main ~/workspaces/MScProject/dev/test_adm.jl:41
+# ┌ Warning: 44 : norm= 1.174096386074737e-8
+# └ @ Main ~/workspaces/MScProject/dev/test_adm.jl:41
+# ┌ Warning: 128 : norm= 1.55685958252071e-8
+# └ @ Main ~/workspaces/MScProject/dev/test_adm.jl:41
+# ┌ Warning: 137 : norm= 1.9435728747738652e-8
+# └ @ Main ~/workspaces/MScProject/dev/test_adm.jl:41
+#   1.780 μs (18 allocations: 1.12 KiB)
 # analytic
-#   16.211 μs (127 allocations: 8.14 KiB)
+#   15.500 μs (154 allocations: 10.03 KiB)
 # optimiser
-#   37.917 μs (370 allocations: 23.53 KiB)
+#   38.601 μs (466 allocations: 29.75 KiB)

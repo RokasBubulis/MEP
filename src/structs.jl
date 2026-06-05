@@ -34,6 +34,7 @@ struct Algebra{T}
     adj_ryd_to_logic_conv_mat::Matrix{T}
     im_control_vec_2levels::Vector{T}
     im_control_vec_3levels::Vector{T}
+    KrylovSubspace::KrylovSubspace{Float64, Float64, Float64, Matrix{Float64}, Matrix{Float64}}
 end
 
 function Algebra(im_control::SparseMatrixCSC{T, Int}, im_drift::SparseMatrixCSC{T, Int})
@@ -57,12 +58,14 @@ function Algebra(im_control::SparseMatrixCSC{T, Int}, im_drift::SparseMatrixCSC{
     im_control_vec_3levels = diag(im_control)
     im_control_2levels = adj_ryd_to_logic_conv_mat * im_control * ryd_to_logic_conv_mat
     im_control_vec_2levels = diag(im_control_2levels)
+
+    KrylovSubspace = arnoldi(adj_repr_map, neg_im_drift_lie; m=length(lie_basis))
     
     return Algebra{T}(
         n_particles, n_levels, im_control, im_drift,
         lie_basis, p_basis, structure_tensor, adj_repr_map, im_control_lie, neg_im_drift_lie,
         ryd_to_logic_conv_mat, adj_ryd_to_logic_conv_mat, 
-        im_control_vec_2levels, im_control_vec_3levels
+        im_control_vec_2levels, im_control_vec_3levels, KrylovSubspace
     )
 end
 
@@ -132,7 +135,6 @@ mutable struct Storage{T, R}
     # temporary matrix for conversion from 3 to 2 levels, size  3^n x 2^n
     tmp_logical1::Matrix{T}
 
-    Ks::KrylovSubspace{Float64, Float64, Float64, Matrix{Float64}, Matrix{Float64}}
     expv_cache::ExpvCache{Float64}
 
     exp_method::ExpMethodHigham2005
@@ -150,8 +152,7 @@ Storage{T}(dim::Int, n_basis::Int) where T = Storage{T, real(T)}(
     (Vector{T}(undef, 4) for _ in 1:2)..., # temporary arrays for distance 2 levels, size 2^n x 1
     (Vector{T}(undef, dim) for _ in 1:2)..., # temporary arrays for distance 3 levels, size 3^n x 1
     Matrix{T}(undef, dim, 4), # temporary matrix for conversion from 3 to 2 levels, size  3^n x 2^n
-    
-    KrylovSubspace{Float64, Float64}(n_basis, dim),  # m = Krylov dimension = dim, might need to be limited for larger systems
+
     ExpvCache{Float64}(dim), # m
     ExpMethodHigham2005(), 
     ExponentialUtilities.alloc_mem(Matrix{T}(undef, dim, dim), ExpMethodHigham2005()),

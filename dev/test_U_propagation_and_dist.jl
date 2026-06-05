@@ -43,11 +43,9 @@ mock_integrator = MockIntegrator(
     0.0     # t = 0
 )
 
-
 propagate_U_and_update_distance!(u, 0.0, mock_integrator)
 println("Setup finished")
 
-##
 # Isolate each line individually
 println("optimal_adjoint_drift_lie_analytic!: ", 
     @allocated optimal_adjoint_drift_lie_analytic!(stor.H_opt_lie, u, algebra, stor))
@@ -70,7 +68,7 @@ println("mul!: ",
 println("stor.U .= stor.U_buffer: ", 
     @allocated (stor.U .= stor.U_buffer))
 
-println("check_unitarity: ", 
+println("check_unitarity: ",
     @allocated check_unitarity(stor.U, stor.U_adj_buffer, stor.U_unitary_buffer_check, solver.unitary_tol))
 
 println("distance: ", 
@@ -78,5 +76,3 @@ println("distance: ",
     
 # Benchmark
 @benchmark propagate_U_and_update_distance!($u, 0.0, $mock_integrator)
-
-@btime propagate_U_and_update_distance!(u, 0.0, $mock_integrator)

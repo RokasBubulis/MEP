@@ -4,16 +4,21 @@ using DiffEqCallbacks
 include("adm.jl")
 include("distance.jl")
 
-function check_anti_hermiticity(H)
-    # H = -adjoint(H)
-    @assert isapprox(H, -adjoint(H), atol=1e-16, rtol=0) "Adjoint drift is not anti-hermitian"
-end
+# if used should be in place
+# function check_anti_hermiticity(H)
+#     # H = -adjoint(H)
+#     @assert isapprox(H, -adjoint(H), atol=1e-16, rtol=0) "Adjoint drift is not anti-hermitian"
+# end
 
 function check_unitarity(U, U_adj, tmp, tol)
     # U*adjoint(U) = I
     adjoint!(U_adj, U)
     mul!(tmp, U, U_adj)
-    nrm = norm(tmp) - sqrt(size(U,1))
+    @inbounds for i in 1:size(tmp, 1)
+        tmp[i, i] -= one(eltype(tmp))
+    end
+    
+    nrm = norm(tmp)
     @assert nrm < tol "Propagator is not unitary: norm(U*adjoint(U) - I) = $nrm"
 end
 

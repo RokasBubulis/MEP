@@ -1,6 +1,6 @@
 include("../src/structs.jl")
 include("../src/propagation.jl")
-using Kronecker, ProgressBars, Plots, ProgressMeter
+using Kronecker
 
 # generators
 im_control, im_drift = im .* construct_Ryd_generators(2)
@@ -29,5 +29,5 @@ println("Setup finished")
 ##
 
 @time begin 
-    m_warm_start = find_best_initial_costate(tar, algebra, solver, stor, Midpoint(), dt=1e-1, show_trace=true)
+    m_warm_start = find_best_initial_costate(tar, algebra, solver, stor, Midpoint(), dt=1e-2, show_trace=true)
 end 
