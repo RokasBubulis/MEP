@@ -141,19 +141,25 @@ mutable struct Storage{T, R}
     exp_cache::Tuple{Vector{Matrix{ComplexF64}}, Vector{Float64}}
 end
 
-Storage{T}(dim::Int, n_basis::Int) where T = Storage{T, real(T)}(
-    zero(real(T)), # alpha
-    Matrix{T}(I, dim, dim), # U0
-    (Matrix{T}(undef, dim, dim) for _ in 1:9)..., # temporary matrices Hilbert, size 3^n x 3^n
-    (Matrix{T}(undef, 4, 4) for _ in 1:2)..., # temporary matrices Hilbert logical, size 2^n x 2^n
-    Matrix{real(T)}(undef, n_basis, n_basis), # temporary matrices Lie, size dim(g) x dim(g)
-    (Vector{real(T)}(undef, n_basis) for _ in 1:4)..., # arrays Lie, size dim(g) x 1
-    Vector{T}(undef, n_basis), # tmp_expv
-    (Vector{T}(undef, 4) for _ in 1:2)..., # temporary arrays for distance 2 levels, size 2^n x 1
-    (Vector{T}(undef, dim) for _ in 1:2)..., # temporary arrays for distance 3 levels, size 3^n x 1
-    Matrix{T}(undef, dim, 4), # temporary matrix for conversion from 3 to 2 levels, size  3^n x 2^n
+function Storage(n_particles::Int, n_basis::Int)
+    T = ComplexF64
+    R = real(T)
+    ryd_dim = 3^n_particles
+    log_dim = 2^n_particles
 
-    ExpvCache{Float64}(dim), # m
-    ExpMethodHigham2005(), 
-    ExponentialUtilities.alloc_mem(Matrix{T}(undef, dim, dim), ExpMethodHigham2005()),
-)
+    return Storage{T, R}(
+        zero(R),                                      # alpha
+        Matrix{T}(I, ryd_dim, ryd_dim),               # U0
+        (Matrix{T}(undef, ryd_dim, ryd_dim) for _ in 1:9)...,  # tmp Hilbert 3^n x 3^n
+        (Matrix{T}(undef, log_dim, log_dim) for _ in 1:2)...,  # tmp Hilbert logical 2^n x 2^n
+        Matrix{R}(undef, n_basis, n_basis),           # tmp Lie dim(g) x dim(g)
+        (Vector{R}(undef, n_basis) for _ in 1:4)..., # arrays Lie dim(g) x 1
+        Vector{T}(undef, n_basis),                    # tmp_expv
+        (Vector{T}(undef, log_dim) for _ in 1:2)..., # tmp distance 2 levels 2^n x 1
+        (Vector{T}(undef, ryd_dim) for _ in 1:2)..., # tmp distance 3 levels 3^n x 1
+        Matrix{T}(undef, ryd_dim, log_dim),           # tmp conversion 3->2 levels 3^n x 2^n
+        ExpvCache{Float64}(ryd_dim),
+        ExpMethodHigham2005(),
+        ExponentialUtilities.alloc_mem(Matrix{T}(undef, ryd_dim, ryd_dim), ExpMethodHigham2005()),
+    )
+end
