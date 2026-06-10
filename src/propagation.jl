@@ -1,5 +1,6 @@
 using DifferentialEquations, OrdinaryDiffEqLowOrderRK
 using DiffEqCallbacks, FiniteDiff, ADTypes
+using CMAEvolutionStrategy
 
 include("adm.jl")
 include("distance.jl")
@@ -29,19 +30,21 @@ function f!(dx, x, p, t)
     lie_bracket_coeffs!(dx, algebra.structure_tensor, stor.H_opt_lie, x)
 end
 
-function propagate(m0::Vector{Float64}, algebra::Algebra, solver::SolverParams, stor::Storage, tar::TargetContainer, method=Midpoint(); save_ulist = false, kwargs...)
+function propagate(m0::AbstractVector, algebra::Algebra, solver::SolverParams, stor::Storage, tar::TargetContainer, method=Midpoint(); save_ulist = false, kwargs...)
 
     @assert haskey(kwargs, :dt) "Non-adaptive methods must be assigned a fixed time step"
     # Initial values
-    tracker = OutputTracker(1.0, solver.tmax)
     m0_arr = zeros(Float64, length(algebra.lie_basis))
     m0_arr[2:end] = m0
     x0 = m0_arr
 
     # set up problem
+    stor.U .= stor.U0
+    # d0 = distance(stor.U, tar, algebra, stor)
+    # tracker = OutputTracker(d0, 0.0)
+    tracker = OutputTracker(1.0, solver.tmax)
     params = algebra, tar, solver, stor, tracker
     prob = ODEProblem(f!, x0, (0.0, solver.tmax), params)
-    stor.U .= stor.U0
     if save_ulist
         n = size(algebra.im_control, 1)
         n_steps = round(Int, solver.tmax / kwargs[:dt])
@@ -73,7 +76,7 @@ function propagate(m0::Vector{Float64}, algebra::Algebra, solver::SolverParams, 
             @warn("Negative dist to target coset obtained: $dist, setting to positive")
             dist = abs(dist)
         end 
-        if dist < tracker.min_dist && t > 2.0
+        if dist < tracker.min_dist && t > solver.tstar_threshold
             tracker.min_dist = dist 
             tracker.tstar = t 
         end 
@@ -90,7 +93,7 @@ function propagate(m0::Vector{Float64}, algebra::Algebra, solver::SolverParams, 
     end
 
     # Build callbacks
-    step_cb = FunctionCallingCallback(func_everystep=true, func_start=false) do u, t, integrator
+    step_cb = FunctionCallingCallback(func_everystep=true) do u, t, integrator
         propagate_U_and_update_distance!(u, t, integrator; save_ulist=save_ulist, ulist=Ulist)
     end
     event_cb = DiscreteCallback(condition, affect!)
@@ -141,7 +144,44 @@ function find_best_initial_costate(tar::TargetContainer, algebra::Algebra, solve
     return m_best
 end
 
-function find_best_initial_costate_finite_diff(tar::TargetContainer, algebra::Algebra, solver::SolverParams, stor::Storage, method=Midpoint(); m0=nothing, show_trace=true, show_every=50, iterations=1000, kwargs...)
+function find_best_initial_costate_with_logging(tar::TargetContainer, algebra::Algebra, solver::SolverParams, stor::Storage, method=Midpoint(); m0=nothing, show_trace=true, show_every=50, iterations=1000, kwargs...)
+
+    # check target before propagation
+    # check_unitarity(tar.target, tar.tmp_for_target, solver.unitary_tol)
+    # targ_dist = distance(tar.target, tar, algebra, stor)
+    # @assert targ_dist < solver.dist_tol "Error in target overlap: $targ_dist"
+
+    if isnothing(m0)
+        n = length(algebra.p_basis)
+        m0 = zeros(n)
+        m0[1] = 1.0
+    end 
+
+    m_log = Vector{Vector{Float64}}()
+    objective = function(m) 
+        m ./= norm(m)
+        push!(m_log, copy(m))
+        propagate(m, algebra, solver, stor, tar, method; save_everystep = false,
+        save_start = false,
+        save_end = false,
+        dense = false, 
+        kwargs...)
+    end
+
+    result = Optim.optimize(objective, m0, NelderMead(), Optim.Options(
+        callback = state -> state.f_lowest < solver.dist_tol,
+        show_trace  = show_trace, 
+        g_abstol = solver.grad_tol,
+        show_every = show_every,
+        iterations=iterations
+    ))
+    m_best = result.minimizer
+
+    return m_best, m_log
+end
+
+
+function find_best_initial_costate_cma(tar::TargetContainer, algebra::Algebra, solver::SolverParams, stor::Storage, method=Midpoint(); m0=nothing, show_trace=true, show_every=50, iterations=1000, sigma=0.1, kwargs...)
 
     # check target before propagation
     # check_unitarity(tar.target, tar.tmp_for_target, solver.unitary_tol)
@@ -162,6 +202,41 @@ function find_best_initial_costate_finite_diff(tar::TargetContainer, algebra::Al
         dense = false, 
         kwargs...)
     end
+
+    result = minimize(
+        objective,
+        m0,
+        sigma;                  
+        maxfevals = iterations,
+        ftarget = solver.dist_tol,
+        verbosity = show_trace ? 1 : 0
+    )
+
+    m_best = xbest(result)
+
+    return m_best
+end
+
+function find_best_initial_costate_finite_diff(tar::TargetContainer, algebra::Algebra, solver::SolverParams, stor::Storage, method=Midpoint(); m0=nothing, show_trace=true, show_every=50, iterations=1000, kwargs...)
+
+    # check target before propagation
+    # check_unitarity(tar.target, tar.tmp_for_target, solver.unitary_tol)
+    # targ_dist = distance(tar.target, tar, algebra, stor)
+    # @assert targ_dist < solver.dist_tol "Error in target overlap: $targ_dist"
+    n = length(algebra.p_basis)
+    if isnothing(m0)
+        m0 = zeros(n)
+        m0[1] = 1.0
+    end 
+
+    objective = function(m) 
+        m ./= norm(m)
+        propagate(m, algebra, solver, stor, tar, method; save_everystep = false,
+        save_start = false,
+        save_end = false,
+        dense = false, 
+        kwargs...)
+    end 
 
     result = Optim.optimize(objective, m0, LBFGS(), Optim.Options(
         show_trace = show_trace,

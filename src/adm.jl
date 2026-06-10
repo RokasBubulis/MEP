@@ -98,7 +98,7 @@ function optimal_adjoint_drift_lie_nondiff!(res_arr::Vector{T}, costate_arr::Abs
 
     return nothing 
 end 
-function update_alpha_newton!(stor, costate_arr, algebra::Algebra; gtol::Float64 = 1e-8, xtol::Float64 = 1e-8, maxiter::Int = 20,damping::Float64 = 1.0)
+function update_alpha_newton!(stor, costate_arr, algebra::Algebra; gtol::Float64 = 1e-8, xtol::Float64 = 1e-8, maxiter::Int = 30, damping::Float64 = 1.0)
 
     α = stor.alpha
     for i in 1:maxiter
@@ -113,7 +113,6 @@ function update_alpha_newton!(stor, costate_arr, algebra::Algebra; gtol::Float64
 
         step = g / h
         if abs(step) < xtol
-            α -= damping * step
             break
         end
         if h > 0 

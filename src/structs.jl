@@ -26,6 +26,7 @@ struct Algebra{T}
     im_drift::SparseMatrixCSC{T, Int}
     lie_basis::Vector{SparseMatrixCSC{T, Int}}
     p_basis::Vector{SparseMatrixCSC{T, Int}}
+    depths::Vector{Int}
     structure_tensor::Array{Float64, 3}
     adj_repr_map::Array{Float64, 2}
     im_control_lie::Vector{Float64}
@@ -43,7 +44,7 @@ function Algebra(im_control::SparseMatrixCSC{T, Int}, im_drift::SparseMatrixCSC{
     @assert n_levels == 3
     n_particles = round(Int, log(n_levels, s))
 
-    lie_basis = construct_lie_basis_general([copy(im_control), copy(im_drift)])
+    lie_basis, depths = construct_lie_basis_general([copy(im_control), copy(im_drift)])
     p_basis = lie_basis[2:end]
     structure_tensor = build_structure_tensor(lie_basis)
     im_control_lie = project_algebra(im_control, lie_basis)
@@ -63,7 +64,7 @@ function Algebra(im_control::SparseMatrixCSC{T, Int}, im_drift::SparseMatrixCSC{
     
     return Algebra{T}(
         n_particles, n_levels, im_control, im_drift,
-        lie_basis, p_basis, structure_tensor, adj_repr_map, im_control_lie, neg_im_drift_lie,
+        lie_basis, p_basis, depths, structure_tensor, adj_repr_map, im_control_lie, neg_im_drift_lie,
         ryd_to_logic_conv_mat, adj_ryd_to_logic_conv_mat, 
         im_control_vec_2levels, im_control_vec_3levels, KrylovSubspace
     )
@@ -76,6 +77,7 @@ struct SolverParams
     dist_tol::Float64
     grad_tol::Float64
     unitary_tol::Float64
+    tstar_threshold::Float64
 end 
 
 mutable struct OutputTracker
