@@ -9,7 +9,7 @@ function tensor_basis(n_particles::Int, n_levels::Int)
                  for idx in Iterators.product(fill(1:2, n_particles)...)]...)
 end
 
-function project_from_3_to_2_levels_for_control(U, ryd_to_logic_conv_mat)
+function project_from_3_to_2_levels(U, ryd_to_logic_conv_mat)
     # U^(2) = Φ * Ψ' * U^(3) * Ψ * Φ' 
     # where Ψ is a matrix stacked with basis vectors obtained by n tensor products among {(1,0,0), (0,1,0)}
     # Φ is a matrix stacked with basis vectors obtained by n tensor products among {(1,0), (0,1)}
@@ -77,7 +77,8 @@ struct SolverParams
     dist_tol::Float64
     grad_tol::Float64
     unitary_tol::Float64
-    tstar_threshold::Float64
+    tstar_min::Float64
+    tstar_max::Float64
 end 
 
 mutable struct OutputTracker
@@ -165,3 +166,15 @@ function Storage(n_particles::Int, n_basis::Int)
         ExponentialUtilities.alloc_mem(Matrix{T}(undef, ryd_dim, ryd_dim), ExpMethodHigham2005()),
     )
 end
+
+function build_tar(type, phi, n, algebra)
+    if type == "k0"
+        ryd_target = gate_k0(n, phi)
+    elseif type == "k1"
+        ryd_target = gate_k1(n, phi)
+    else
+        throw("unknown gate type")
+    end 
+    target = project_from_3_to_2_levels(ryd_target, algebra.ryd_to_logic_conv_mat)
+    return TargetContainer(target)
+end 

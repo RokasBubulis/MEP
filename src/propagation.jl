@@ -1,6 +1,7 @@
 using DifferentialEquations, OrdinaryDiffEqLowOrderRK
 using DiffEqCallbacks, FiniteDiff, ADTypes
 using CMAEvolutionStrategy
+using BlackBoxOptim
 
 include("adm.jl")
 include("distance.jl")
@@ -30,8 +31,9 @@ function f!(dx, x, p, t)
     lie_bracket_coeffs!(dx, algebra.structure_tensor, stor.H_opt_lie, x)
 end
 
-function propagate(m0::AbstractVector, algebra::Algebra, solver::SolverParams, stor::Storage, tar::TargetContainer, method=Midpoint(); save_ulist = false, kwargs...)
+function propagate(m0::AbstractVector, algebra::Algebra, solver::SolverParams, tar::TargetContainer, method=Midpoint(); save = false, kwargs...)
 
+    stor = Storage(algebra.n_particles, length(algebra.lie_basis))
     @assert haskey(kwargs, :dt) "Non-adaptive methods must be assigned a fixed time step"
     # Initial values
     m0_arr = zeros(Float64, length(algebra.lie_basis))
@@ -45,17 +47,20 @@ function propagate(m0::AbstractVector, algebra::Algebra, solver::SolverParams, s
     tracker = OutputTracker(1.0, solver.tmax)
     params = algebra, tar, solver, stor, tracker
     prob = ODEProblem(f!, x0, (0.0, solver.tmax), params)
-    if save_ulist
+    if save
         n = size(algebra.im_control, 1)
         n_steps = round(Int, solver.tmax / kwargs[:dt])
         Ulist = [Matrix{ComplexF64}(undef, n, n) for _ in 1:n_steps+2]  # add extra step due to floating point precision 
+        αlist = zeros(Float64, n_steps+2)
         Ulist[1] = copy(stor.U)
+        αlist[1] = 0.0
     else
         Ulist = nothing 
+        αlist = nothing
     end 
     
     # Step-wise computation to update minimum distance to target coset
-    function propagate_U_and_update_distance!(u, t, integrator; save_ulist=false, ulist=Ulist)
+    function propagate_U_and_update_distance!(u, t, integrator; save=false, ulist=Ulist, alphalist=αlist)
         tar, solver, stor, tracker = integrator.p[2], integrator.p[3], integrator.p[4], integrator.p[5]
 
         optimal_adjoint_drift_lie_analytic!(stor.H_opt_lie, u, algebra, stor)
@@ -67,8 +72,9 @@ function propagate(m0::AbstractVector, algebra::Algebra, solver::SolverParams, s
         mul!(stor.U_buffer, stor.dU, stor.U)
         stor.U .= stor.U_buffer
         check_unitarity(stor.U, stor.U_adj_buffer, stor.U_unitary_buffer_check, solver.unitary_tol)
-        if save_ulist
+        if save
             ulist[integrator.iter+1] .= stor.U
+            alphalist[integrator.iter+1] = stor.alpha
         end 
 
         dist = distance(stor.U, tar, algebra, stor)
@@ -76,7 +82,7 @@ function propagate(m0::AbstractVector, algebra::Algebra, solver::SolverParams, s
             @warn("Negative dist to target coset obtained: $dist, setting to positive")
             dist = abs(dist)
         end 
-        if dist < tracker.min_dist && t > solver.tstar_threshold
+        if dist < tracker.min_dist && solver.tstar_min <= t <= solver.tstar_max
             tracker.min_dist = dist 
             tracker.tstar = t 
         end 
@@ -94,7 +100,7 @@ function propagate(m0::AbstractVector, algebra::Algebra, solver::SolverParams, s
 
     # Build callbacks
     step_cb = FunctionCallingCallback(func_everystep=true) do u, t, integrator
-        propagate_U_and_update_distance!(u, t, integrator; save_ulist=save_ulist, ulist=Ulist)
+        propagate_U_and_update_distance!(u, t, integrator; save=save, ulist=Ulist, alphalist=αlist)
     end
     event_cb = DiscreteCallback(condition, affect!)
     cb = CallbackSet(step_cb, event_cb)
@@ -102,20 +108,102 @@ function propagate(m0::AbstractVector, algebra::Algebra, solver::SolverParams, s
     # Solution 
     sol = solve(prob, method; callback=cb, reltol=solver.reltol, abstol=solver.abstol, adaptive=false, kwargs...)
 
-    if save_ulist 
-        return tracker.min_dist, tracker.tstar, Ulist
+    if save 
+        return tracker.min_dist, tracker.tstar, Ulist[1:end-1], αlist[1:end-1]
     else 
         return tracker.min_dist
     end 
 end 
 
-#############
-function find_best_initial_costate(tar::TargetContainer, algebra::Algebra, solver::SolverParams, stor::Storage, method=Midpoint(); m0=nothing, show_trace=true, show_every=50, iterations=1000, kwargs...)
+# #############
+# function find_best_initial_costate_bbo(tar::TargetContainer, algebra::Algebra, solver::SolverParams, method=Midpoint(); max_evals=10000, verbose=false, logging=false, kwargs...)
 
-    # check target before propagation
-    # check_unitarity(tar.target, tar.tmp_for_target, solver.unitary_tol)
-    # targ_dist = distance(tar.target, tar, algebra, stor)
-    # @assert targ_dist < solver.dist_tol "Error in target overlap: $targ_dist"
+#     m_log = Vector{Vector{Float64}}()
+#     if logging 
+#         objective = function(m) 
+#             push!(m_log, copy(m))
+#             propagate(m, algebra, solver, tar, method; save_everystep = false,
+#             save_start = false,
+#             save_end = false,
+#             dense = false, 
+#             kwargs...)
+#         end 
+#     else 
+#         objective = function(m) 
+#             # m ./= norm(m)
+#             propagate(m, algebra, solver, tar, method; save_everystep = false,
+#             save_start = false,
+#             save_end = false,
+#             dense = false, 
+#             kwargs...)
+#         end
+#     end 
+#     if verbose
+#         trace_flag = :compact 
+#     else 
+#         trace_flag = :silent 
+#     end 
+#     result = bboptimize(objective;
+#         #Method = :adaptive_de_rand_1_bin_radiuslimited, 
+#         SearchRange = (-1.0, 1.0),
+#         NumDimensions = length(algebra.p_basis),
+#         MaxFuncEvals = max_evals,
+#         TargetFitness = 0.0,
+#         FitnessTolerance = 1e-5,
+#         TraceMode = trace_flag,
+#         TraceInterval = 10.0)
+
+#     return best_candidate(result), best_fitness(result), m_log
+# end
+
+function find_best_initial_costate_bbo(tar::TargetContainer, algebra::Algebra, solver::SolverParams, method=Midpoint(); max_evals=10000, verbose=false, logging=false, kwargs...)
+
+    m_log = Vector{Vector{Float64}}()
+    best_fitness_so_far = Ref(Inf)
+
+    if logging
+        objective = function(m)
+            val = propagate(m, algebra, solver, tar, method; save_everystep = false,
+                save_start = false,
+                save_end = false,
+                dense = false,
+                kwargs...)
+            if val <= best_fitness_so_far[]
+                best_fitness_so_far[] = val
+                push!(m_log, copy(m))
+            end
+            return val
+        end
+    else
+        objective = function(m)
+            propagate(m, algebra, solver, tar, method; save_everystep = false,
+                save_start = false,
+                save_end = false,
+                dense = false,
+                kwargs...)
+        end
+    end
+
+    if verbose
+        trace_flag = :compact
+    else
+        trace_flag = :silent
+    end
+
+    result = bboptimize(objective;
+        PopulationSize = 100,
+        SearchRange = (-1.0, 1.0),
+        NumDimensions = length(algebra.p_basis),
+        MaxFuncEvals = max_evals,
+        TargetFitness = 0.0,
+        FitnessTolerance = 1e-5,
+        TraceMode = trace_flag,
+        TraceInterval = 30.0)
+
+    return best_candidate(result), best_fitness(result), m_log
+end
+
+function find_best_initial_costate(tar::TargetContainer, algebra::Algebra, solver::SolverParams, method=Midpoint(); m0=nothing, show_trace=true, show_every=50, iterations=1000, kwargs...)
 
     if isnothing(m0)
         n = length(algebra.p_basis)
@@ -124,8 +212,8 @@ function find_best_initial_costate(tar::TargetContainer, algebra::Algebra, solve
     end 
 
     objective = function(m) 
-        m ./= norm(m)
-        propagate(m, algebra, solver, stor, tar, method; save_everystep = false,
+        #m ./= norm(m)
+        propagate(m, algebra, solver, tar, method; save_everystep = false,
         save_start = false,
         save_end = false,
         dense = false, 
@@ -145,11 +233,6 @@ function find_best_initial_costate(tar::TargetContainer, algebra::Algebra, solve
 end
 
 function find_best_initial_costate_with_logging(tar::TargetContainer, algebra::Algebra, solver::SolverParams, stor::Storage, method=Midpoint(); m0=nothing, show_trace=true, show_every=50, iterations=1000, kwargs...)
-
-    # check target before propagation
-    # check_unitarity(tar.target, tar.tmp_for_target, solver.unitary_tol)
-    # targ_dist = distance(tar.target, tar, algebra, stor)
-    # @assert targ_dist < solver.dist_tol "Error in target overlap: $targ_dist"
 
     if isnothing(m0)
         n = length(algebra.p_basis)
@@ -181,12 +264,7 @@ function find_best_initial_costate_with_logging(tar::TargetContainer, algebra::A
 end
 
 
-function find_best_initial_costate_cma(tar::TargetContainer, algebra::Algebra, solver::SolverParams, stor::Storage, method=Midpoint(); m0=nothing, show_trace=true, show_every=50, iterations=1000, sigma=0.1, kwargs...)
-
-    # check target before propagation
-    # check_unitarity(tar.target, tar.tmp_for_target, solver.unitary_tol)
-    # targ_dist = distance(tar.target, tar, algebra, stor)
-    # @assert targ_dist < solver.dist_tol "Error in target overlap: $targ_dist"
+function find_best_initial_costate_cma(tar::TargetContainer, algebra::Algebra, solver::SolverParams, method=Midpoint(); m0=nothing, show_trace=true, show_every=50, iterations=1000, sigma=0.1, kwargs...)
 
     if isnothing(m0)
         n = length(algebra.p_basis)
@@ -195,7 +273,39 @@ function find_best_initial_costate_cma(tar::TargetContainer, algebra::Algebra, s
     end 
 
     objective = function(m) 
+        #m ./= norm(m)
+        propagate(m, algebra, solver, tar, method; save_everystep = false,
+        save_start = false,
+        save_end = false,
+        dense = false, 
+        kwargs...)
+    end
+
+    result = minimize(
+        objective,
+        m0,
+        sigma;                  
+        maxiter = iterations,
+        ftarget = solver.dist_tol,
+        verbosity = show_trace ? 1 : 0
+    )
+
+    return xbest(result), fbest(result)
+end
+
+
+function find_best_initial_costate_cma_with_logging(tar::TargetContainer, algebra::Algebra, solver::SolverParams, stor::Storage, method=Midpoint(); m0=nothing, show_trace=true, sigma=0.1, iterations=1000, kwargs...)
+
+    if isnothing(m0)
+        n = length(algebra.p_basis)
+        m0 = zeros(n)
+        m0[1] = 1.0
+    end 
+
+    m_log = Vector{Vector{Float64}}()
+    objective = function(m) 
         m ./= norm(m)
+        push!(m_log, copy(m))
         propagate(m, algebra, solver, stor, tar, method; save_everystep = false,
         save_start = false,
         save_end = false,
@@ -207,45 +317,12 @@ function find_best_initial_costate_cma(tar::TargetContainer, algebra::Algebra, s
         objective,
         m0,
         sigma;                  
-        maxfevals = iterations,
+        maxiter = iterations,
         ftarget = solver.dist_tol,
         verbosity = show_trace ? 1 : 0
     )
 
     m_best = xbest(result)
 
-    return m_best
-end
-
-function find_best_initial_costate_finite_diff(tar::TargetContainer, algebra::Algebra, solver::SolverParams, stor::Storage, method=Midpoint(); m0=nothing, show_trace=true, show_every=50, iterations=1000, kwargs...)
-
-    # check target before propagation
-    # check_unitarity(tar.target, tar.tmp_for_target, solver.unitary_tol)
-    # targ_dist = distance(tar.target, tar, algebra, stor)
-    # @assert targ_dist < solver.dist_tol "Error in target overlap: $targ_dist"
-    n = length(algebra.p_basis)
-    if isnothing(m0)
-        m0 = zeros(n)
-        m0[1] = 1.0
-    end 
-
-    objective = function(m) 
-        m ./= norm(m)
-        propagate(m, algebra, solver, stor, tar, method; save_everystep = false,
-        save_start = false,
-        save_end = false,
-        dense = false, 
-        kwargs...)
-    end 
-
-    result = Optim.optimize(objective, m0, LBFGS(), Optim.Options(
-        show_trace = show_trace,
-        f_abstol = solver.dist_tol,
-        g_abstol   = solver.grad_tol,
-        show_every = show_every,
-        iterations = iterations
-    ); autodiff = ADTypes.AutoFiniteDiff())
-
-    m_best = result.minimizer
-    return m_best
+    return m_best, m_log
 end

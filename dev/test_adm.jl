@@ -14,7 +14,7 @@ algebra = Algebra(im_control, im_drift)
 target_logic = SparseMatrixCSC{ComplexF64, Int}(I, 4, 4)
 target_logic[4,4] = -1.0
 tar = TargetContainer(target_logic)
-stor = Storage{ComplexF64}(dim, length(algebra.lie_basis))
+stor = Storage(algebra.n_particles, length(algebra.lie_basis))
 
 x_lie = algebra.im_control_lie
 y_lie = algebra.neg_im_drift_lie
@@ -22,6 +22,29 @@ y_lie = algebra.neg_im_drift_lie
 
 res_arr3 = zeros(Float64, length(algebra.lie_basis))
 res_arr4 = zeros(Float64, length(algebra.lie_basis))
+
+##
+vals = []
+m0 = rand(length(algebra.p_basis))
+m0 /= norm(m0)
+costate_arr = zeros(Float64, length(algebra.lie_basis))
+costate_arr[2:end] = m0
+αlist = range(-10, 10, 100)
+for α in αlist 
+    obj = adjoint_drift_obj(α, costate_arr, algebra, stor)
+    push!(vals, obj)
+end 
+
+vals_vec = Float64.(vals)
+troughs = findall(i -> vals_vec[i] < vals_vec[i-1] && vals_vec[i] < vals_vec[i+1], 
+                  2:length(vals_vec)-1) .+ 1
+
+p = plot(αlist, vals_vec)
+scatter!(p, αlist[troughs], vals_vec[troughs], 
+         series_annotations=text.(round.(αlist[troughs], digits=3), :top, 8),
+         label="troughs", markershape=:dtriangle)
+
+display(p)
 
 ##
 

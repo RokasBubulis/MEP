@@ -3,17 +3,8 @@ include("../src/propagation.jl")
 include("make_plot.jl")
 using Kronecker, ProgressMeter, JLD2
 
-# generators
 im_control, im_drift = im .* construct_Ryd_generators(2)
-dim = size(im_control, 1)
-
-# prepare Lie algebra struct 
 algebra = Algebra(im_control, im_drift)
-
-# gate
-k1 = ComplexF64[0.0; 1.0; 0.0]
-si = ComplexF64[1.0 0.0 0.0;0.0 1.0 0.0;0.0 0.0 1.0]
-gate_k1(n, phi) = (⊗([si for _ ∈ 1:n]...) * exp(-1im*phi) + ⊗([k1*k1' for _ ∈ 1:n]...) * (1 - exp(-1im*phi))) |> sparse
 
 # params
 tmax = 10
@@ -22,7 +13,9 @@ abstol = 1e-8
 dist_tol = 1e-8
 grad_tol = 1e-9
 unitary_tol = 1e-10
-solver = SolverParams(tmax, reltol, abstol, dist_tol, grad_tol, unitary_tol)
+tstar_threshold = 0
+solver = SolverParams(tmax, reltol, abstol, dist_tol, grad_tol, unitary_tol, tstar_threshold)
+
 function obtain_optimal_time_dist(phase, algebra, solver; m0=nothing, dt_warmstart=1e-1, dt_main=1e-2, show_trace=false)
     stor = Storage(2, length(algebra.lie_basis))
     ryd_target = gate_k1(2, phase)
@@ -35,6 +28,7 @@ function obtain_optimal_time_dist(phase, algebra, solver; m0=nothing, dt_warmsta
     return min_dist, tstar
 end 
 println("Setup finished")
+
 ##
 dt = 1e-2
 optimise_for_phi = pi
