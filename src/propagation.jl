@@ -1,7 +1,6 @@
 using DifferentialEquations, OrdinaryDiffEqLowOrderRK
 using DiffEqCallbacks, FiniteDiff, ADTypes
 using CMAEvolutionStrategy
-using BlackBoxOptim
 
 include("adm.jl")
 include("distance.jl")
@@ -156,52 +155,52 @@ end
 #     return best_candidate(result), best_fitness(result), m_log
 # end
 
-function find_best_initial_costate_bbo(tar::TargetContainer, algebra::Algebra, solver::SolverParams, method=Midpoint(); max_evals=10000, verbose=false, logging=false, kwargs...)
+# function find_best_initial_costate_bbo(tar::TargetContainer, algebra::Algebra, solver::SolverParams, method=Midpoint(); max_evals=10000, verbose=false, logging=false, kwargs...)
 
-    m_log = Vector{Vector{Float64}}()
-    best_fitness_so_far = Ref(Inf)
+#     m_log = Vector{Vector{Float64}}()
+#     best_fitness_so_far = Ref(Inf)
 
-    if logging
-        objective = function(m)
-            val = propagate(m, algebra, solver, tar, method; save_everystep = false,
-                save_start = false,
-                save_end = false,
-                dense = false,
-                kwargs...)
-            if val <= best_fitness_so_far[]
-                best_fitness_so_far[] = val
-                push!(m_log, copy(m))
-            end
-            return val
-        end
-    else
-        objective = function(m)
-            propagate(m, algebra, solver, tar, method; save_everystep = false,
-                save_start = false,
-                save_end = false,
-                dense = false,
-                kwargs...)
-        end
-    end
+#     if logging
+#         objective = function(m)
+#             val = propagate(m, algebra, solver, tar, method; save_everystep = false,
+#                 save_start = false,
+#                 save_end = false,
+#                 dense = false,
+#                 kwargs...)
+#             if val <= best_fitness_so_far[]
+#                 best_fitness_so_far[] = val
+#                 push!(m_log, copy(m))
+#             end
+#             return val
+#         end
+#     else
+#         objective = function(m)
+#             propagate(m, algebra, solver, tar, method; save_everystep = false,
+#                 save_start = false,
+#                 save_end = false,
+#                 dense = false,
+#                 kwargs...)
+#         end
+#     end
 
-    if verbose
-        trace_flag = :compact
-    else
-        trace_flag = :silent
-    end
+#     if verbose
+#         trace_flag = :compact
+#     else
+#         trace_flag = :silent
+#     end
 
-    result = bboptimize(objective;
-        PopulationSize = 100,
-        SearchRange = (-1.0, 1.0),
-        NumDimensions = length(algebra.p_basis),
-        MaxFuncEvals = max_evals,
-        TargetFitness = 0.0,
-        FitnessTolerance = 1e-5,
-        TraceMode = trace_flag,
-        TraceInterval = 30.0)
+#     result = bboptimize(objective;
+#         PopulationSize = 100,
+#         SearchRange = (-1.0, 1.0),
+#         NumDimensions = length(algebra.p_basis),
+#         MaxFuncEvals = max_evals,
+#         TargetFitness = 0.0,
+#         FitnessTolerance = 1e-5,
+#         TraceMode = trace_flag,
+#         TraceInterval = 30.0)
 
-    return best_candidate(result), best_fitness(result), m_log
-end
+#     return best_candidate(result), best_fitness(result), m_log
+# end
 
 function find_best_initial_costate(tar::TargetContainer, algebra::Algebra, solver::SolverParams, method=Midpoint(); m0=nothing, show_trace=true, show_every=50, iterations=1000, kwargs...)
 

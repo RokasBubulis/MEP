@@ -27,12 +27,6 @@ title_str = latexstring("\\operatorname{Target:}\\;C_$(n_qubits-1)Phase(ϕ/π=$(
 println("Setup finished")
 
 ##
-m_warm, dist, m_log = find_best_initial_costate_bbo(tar, algebra, solver, dt=dt, verbose=verbose, max_evals=50000, logging=true)
-dt=1e-2
-m_best = find_best_initial_costate(tar, algebra, solver, m0=m_warm, dt=dt, show_trace=verbose)
-min_dist, tstarbest, Ulistbest, αlistbest = propagate(m_best, algebra, solver, tar, dt=dt, save=true, show_trace=verbose)
-println("dt: $dt, dmin=$min_dist, t*=$tstarbest")
-##
 m0 = rand(Float64, length(algebra.p_basis))
 m0 /= norm(m0)
 m_warm, d_best = find_best_initial_costate_cma(tar, algebra, solver, dt=dt, sigma=1.0, iterations=200)

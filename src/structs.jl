@@ -95,7 +95,7 @@ function TargetContainer(target::AbstractMatrix)
     return TargetContainer(target, adjoint(target), Matrix{ComplexF64}(undef, size(target, 1), size(target, 1)))
 end 
 
-mutable struct Storage{T, R}
+mutable struct Storage{T, R, C}
     # state control
     alpha::R
 
@@ -141,7 +141,7 @@ mutable struct Storage{T, R}
     expv_cache::ExpvCache{Float64}
 
     exp_method::ExpMethodHigham2005
-    exp_cache::Tuple{Vector{Matrix{ComplexF64}}, Vector{Float64}}
+    exp_cache::C
 end
 
 function Storage(n_particles::Int, n_basis::Int)
@@ -150,7 +150,10 @@ function Storage(n_particles::Int, n_basis::Int)
     ryd_dim = 3^n_particles
     log_dim = 2^n_particles
 
-    return Storage{T, R}(
+    exp_cache = ExponentialUtilities.alloc_mem(
+        Matrix{T}(undef, ryd_dim, ryd_dim), ExpMethodHigham2005())
+
+    return Storage{T, R, typeof(exp_cache)}(
         zero(R),                                      # alpha
         Matrix{T}(I, ryd_dim, ryd_dim),               # U0
         (Matrix{T}(undef, ryd_dim, ryd_dim) for _ in 1:9)...,  # tmp Hilbert 3^n x 3^n
@@ -163,7 +166,7 @@ function Storage(n_particles::Int, n_basis::Int)
         Matrix{T}(undef, ryd_dim, log_dim),           # tmp conversion 3->2 levels 3^n x 2^n
         ExpvCache{Float64}(ryd_dim),
         ExpMethodHigham2005(),
-        ExponentialUtilities.alloc_mem(Matrix{T}(undef, ryd_dim, ryd_dim), ExpMethodHigham2005()),
+        exp_cache
     )
 end
 

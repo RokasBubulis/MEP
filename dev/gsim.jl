@@ -1,6 +1,6 @@
 using BenchmarkTools
-include("generators.jl")
-include("lie_algebra.jl")
+include("../src/generators.jl")
+include("../src/lie_algebra.jl")
 
 "Checks the distance of the observable to a Lie-algebra basis"
 function check_observable(observable::SparseMatrixCSC{ComplexF64, Int}, lie_basis::Vector{SparseMatrixCSC{ComplexF64, Int}})

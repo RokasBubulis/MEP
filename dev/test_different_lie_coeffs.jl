@@ -1,5 +1,5 @@
-include("structs.jl")
-include("optimisation.jl")
+include("../src/structs.jl")
+include("../src/propagation.jl")
 
 using Plots
 
