@@ -98,7 +98,7 @@ function optimal_adjoint_drift_lie_nondiff!(res_arr::Vector{T}, costate_arr::Abs
 
     return nothing 
 end 
-function update_alpha_newton!(stor, costate_arr, algebra::Algebra; gtol::Float64 = 1e-8, xtol::Float64 = 1e-8, maxiter::Int = 30, damping::Float64 = 1.0)
+function update_alpha_newton!(stor, costate_arr, algebra::Algebra; gtol::Float64 = 1e-8, xtol::Float64 = 1e-8, maxiter::Int = 30, damping::Float64 = 1.0, curvature_tol::Float64 = 1e-12)
 
     α = stor.alpha
     for i in 1:maxiter
@@ -107,7 +107,7 @@ function update_alpha_newton!(stor, costate_arr, algebra::Algebra; gtol::Float64
         if abs(g) < gtol
             break
         end
-        if abs(h) < 1e-12
+        if abs(h) < curvature_tol
             break
         end
 
@@ -123,7 +123,7 @@ function update_alpha_newton!(stor, costate_arr, algebra::Algebra; gtol::Float64
     end
 
     g_fin, h_fin = adjoint_drift_obj_derivatives(α, costate_arr, algebra, stor)
-    if h_fin > 0.0 
+    if h_fin > curvature_tol 
         @warn("Positive final curvature for ADM. g: $g_fin, h: $h_fin")
     end 
     stor.alpha = α

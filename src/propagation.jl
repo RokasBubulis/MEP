@@ -1,6 +1,7 @@
 using DifferentialEquations, OrdinaryDiffEqLowOrderRK
 using DiffEqCallbacks, FiniteDiff, ADTypes
 using CMAEvolutionStrategy
+using Printf
 
 include("adm.jl")
 include("distance.jl")
@@ -202,7 +203,7 @@ end
 #     return best_candidate(result), best_fitness(result), m_log
 # end
 
-function find_best_initial_costate(tar::TargetContainer, algebra::Algebra, solver::SolverParams, method=Midpoint(); m0=nothing, show_trace=true, show_every=50, iterations=1000, kwargs...)
+function find_best_initial_costate(tar::TargetContainer, algebra::Algebra, solver::SolverParams, method=Midpoint(); m0=nothing, show_every=50, iterations=1000, kwargs...)
 
     if isnothing(m0)
         n = length(algebra.p_basis)
@@ -210,23 +211,35 @@ function find_best_initial_costate(tar::TargetContainer, algebra::Algebra, solve
         m0[1] = 1.0
     end 
 
+    iter = Ref(0)
     objective = function(m) 
-        #m ./= norm(m)
-        propagate(m, algebra, solver, tar, method; save_everystep = false,
+        iter[] += 1
+        cost, tstar, _, _ = propagate(m, algebra, solver, tar, method; save = true,
+        save_everystep = false,
         save_start = false,
         save_end = false,
         dense = false, 
         kwargs...)
+        @printf("iter = %4d  ->  cost = %.8f  at t* = %.6f\n", iter[], cost, tstar)
+        return cost
     end
 
     result = Optim.optimize(objective, m0, NelderMead(), Optim.Options(
         callback = state -> state.f_lowest < solver.dist_tol,
-        show_trace  = show_trace, 
         g_abstol = solver.grad_tol,
         show_every = show_every,
         iterations=iterations
     ))
     m_best = result.minimizer
+
+    dmin, tstar, _, _ = propagate(m_best, algebra, solver, tar, method; save = true,
+    save_everystep = false,
+    save_start = false,
+    save_end = false,
+    dense = false, 
+    kwargs...)
+    @printf("Final: cost = %.8f  at t* = %.6f  after %d iterations\n",
+        dmin, tstar, iter[])
 
     return m_best
 end

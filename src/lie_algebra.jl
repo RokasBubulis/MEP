@@ -61,7 +61,7 @@ function project_algebra(mat, lie_basis; tol = 1e-8)
         coeffs[i] = real(dot(el, remainder) / dot(el, el))
         remainder .-= coeffs[i] .* el
     end 
-    @assert norm(remainder) < tol "element outside algebra, norm(remainder) = $(norm(remainder))"
+    @assert norm(remainder) < tol "element outside algebra, norm(remainder) = $(norm(remainder)), coeffs = $coeffs"
     return coeffs
 end
 
