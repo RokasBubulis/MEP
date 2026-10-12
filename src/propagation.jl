@@ -1,16 +1,9 @@
 using DifferentialEquations, OrdinaryDiffEqLowOrderRK
 using DiffEqCallbacks, FiniteDiff, ADTypes
-using CMAEvolutionStrategy
 using Printf
 
 include("adm.jl")
 include("distance.jl")
-
-# if used should be in place
-# function check_anti_hermiticity(H)
-#     # H = -adjoint(H)
-#     @assert isapprox(H, -adjoint(H), atol=1e-16, rtol=0) "Adjoint drift is not anti-hermitian"
-# end
 
 function check_unitarity(U, U_adj, tmp, tol)
     # U*adjoint(U) = I
@@ -115,94 +108,6 @@ function propagate(m0::AbstractVector, algebra::Algebra, solver::SolverParams, t
     end 
 end 
 
-# #############
-# function find_best_initial_costate_bbo(tar::TargetContainer, algebra::Algebra, solver::SolverParams, method=Midpoint(); max_evals=10000, verbose=false, logging=false, kwargs...)
-
-#     m_log = Vector{Vector{Float64}}()
-#     if logging 
-#         objective = function(m) 
-#             push!(m_log, copy(m))
-#             propagate(m, algebra, solver, tar, method; save_everystep = false,
-#             save_start = false,
-#             save_end = false,
-#             dense = false, 
-#             kwargs...)
-#         end 
-#     else 
-#         objective = function(m) 
-#             # m ./= norm(m)
-#             propagate(m, algebra, solver, tar, method; save_everystep = false,
-#             save_start = false,
-#             save_end = false,
-#             dense = false, 
-#             kwargs...)
-#         end
-#     end 
-#     if verbose
-#         trace_flag = :compact 
-#     else 
-#         trace_flag = :silent 
-#     end 
-#     result = bboptimize(objective;
-#         #Method = :adaptive_de_rand_1_bin_radiuslimited, 
-#         SearchRange = (-1.0, 1.0),
-#         NumDimensions = length(algebra.p_basis),
-#         MaxFuncEvals = max_evals,
-#         TargetFitness = 0.0,
-#         FitnessTolerance = 1e-5,
-#         TraceMode = trace_flag,
-#         TraceInterval = 10.0)
-
-#     return best_candidate(result), best_fitness(result), m_log
-# end
-
-# function find_best_initial_costate_bbo(tar::TargetContainer, algebra::Algebra, solver::SolverParams, method=Midpoint(); max_evals=10000, verbose=false, logging=false, kwargs...)
-
-#     m_log = Vector{Vector{Float64}}()
-#     best_fitness_so_far = Ref(Inf)
-
-#     if logging
-#         objective = function(m)
-#             val = propagate(m, algebra, solver, tar, method; save_everystep = false,
-#                 save_start = false,
-#                 save_end = false,
-#                 dense = false,
-#                 kwargs...)
-#             if val <= best_fitness_so_far[]
-#                 best_fitness_so_far[] = val
-#                 push!(m_log, copy(m))
-#             end
-#             return val
-#         end
-#     else
-#         objective = function(m)
-#             propagate(m, algebra, solver, tar, method; save_everystep = false,
-#                 save_start = false,
-#                 save_end = false,
-#                 dense = false,
-#                 kwargs...)
-#         end
-#     end
-
-#     if verbose
-#         trace_flag = :compact
-#     else
-#         trace_flag = :silent
-#     end
-
-#     result = bboptimize(objective;
-#         PopulationSize = 100,
-#         SearchRange = (-1.0, 1.0),
-#         NumDimensions = length(algebra.p_basis),
-#         MaxFuncEvals = max_evals,
-#         TargetFitness = 0.0,
-#         FitnessTolerance = 1e-5,
-#         TraceMode = trace_flag,
-#         TraceInterval = 30.0)
-
-#     return best_candidate(result), best_fitness(result), m_log
-# end
-
 function find_best_initial_costate(tar::TargetContainer, algebra::Algebra, solver::SolverParams, method=Midpoint(); m0=nothing, show_every=50, iterations=1000, kwargs...)
 
     if isnothing(m0)
@@ -242,99 +147,4 @@ function find_best_initial_costate(tar::TargetContainer, algebra::Algebra, solve
         dmin, tstar, iter[])
 
     return m_best
-end
-
-function find_best_initial_costate_with_logging(tar::TargetContainer, algebra::Algebra, solver::SolverParams, stor::Storage, method=Midpoint(); m0=nothing, show_trace=true, show_every=50, iterations=1000, kwargs...)
-
-    if isnothing(m0)
-        n = length(algebra.p_basis)
-        m0 = zeros(n)
-        m0[1] = 1.0
-    end 
-
-    m_log = Vector{Vector{Float64}}()
-    objective = function(m) 
-        m ./= norm(m)
-        push!(m_log, copy(m))
-        propagate(m, algebra, solver, stor, tar, method; save_everystep = false,
-        save_start = false,
-        save_end = false,
-        dense = false, 
-        kwargs...)
-    end
-
-    result = Optim.optimize(objective, m0, NelderMead(), Optim.Options(
-        callback = state -> state.f_lowest < solver.dist_tol,
-        show_trace  = show_trace, 
-        g_abstol = solver.grad_tol,
-        show_every = show_every,
-        iterations=iterations
-    ))
-    m_best = result.minimizer
-
-    return m_best, m_log
-end
-
-
-function find_best_initial_costate_cma(tar::TargetContainer, algebra::Algebra, solver::SolverParams, method=Midpoint(); m0=nothing, show_trace=true, show_every=50, iterations=1000, sigma=0.1, kwargs...)
-
-    if isnothing(m0)
-        n = length(algebra.p_basis)
-        m0 = zeros(n)
-        m0[1] = 1.0
-    end 
-
-    objective = function(m) 
-        #m ./= norm(m)
-        propagate(m, algebra, solver, tar, method; save_everystep = false,
-        save_start = false,
-        save_end = false,
-        dense = false, 
-        kwargs...)
-    end
-
-    result = minimize(
-        objective,
-        m0,
-        sigma;                  
-        maxiter = iterations,
-        ftarget = solver.dist_tol,
-        verbosity = show_trace ? 1 : 0
-    )
-
-    return xbest(result), fbest(result)
-end
-
-
-function find_best_initial_costate_cma_with_logging(tar::TargetContainer, algebra::Algebra, solver::SolverParams, stor::Storage, method=Midpoint(); m0=nothing, show_trace=true, sigma=0.1, iterations=1000, kwargs...)
-
-    if isnothing(m0)
-        n = length(algebra.p_basis)
-        m0 = zeros(n)
-        m0[1] = 1.0
-    end 
-
-    m_log = Vector{Vector{Float64}}()
-    objective = function(m) 
-        m ./= norm(m)
-        push!(m_log, copy(m))
-        propagate(m, algebra, solver, stor, tar, method; save_everystep = false,
-        save_start = false,
-        save_end = false,
-        dense = false, 
-        kwargs...)
-    end
-
-    result = minimize(
-        objective,
-        m0,
-        sigma;                  
-        maxiter = iterations,
-        ftarget = solver.dist_tol,
-        verbosity = show_trace ? 1 : 0
-    )
-
-    m_best = xbest(result)
-
-    return m_best, m_log
 end

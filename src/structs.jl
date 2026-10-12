@@ -95,7 +95,7 @@ function TargetContainer(target::AbstractMatrix)
     return TargetContainer(target, adjoint(target), Matrix{ComplexF64}(undef, size(target, 1), size(target, 1)))
 end 
 
-mutable struct Storage{T, R, C}
+Base.@kwdef mutable struct Storage{T, R, C}
     # state control
     alpha::R
 
@@ -153,20 +153,41 @@ function Storage(n_particles::Int, n_basis::Int)
     exp_cache = ExponentialUtilities.alloc_mem(
         Matrix{T}(undef, ryd_dim, ryd_dim), ExpMethodHigham2005())
 
-    return Storage{T, R, typeof(exp_cache)}(
-        zero(R),                                      # alpha
-        Matrix{T}(I, ryd_dim, ryd_dim),               # U0
-        (Matrix{T}(undef, ryd_dim, ryd_dim) for _ in 1:9)...,  # tmp Hilbert 3^n x 3^n
-        (Matrix{T}(undef, log_dim, log_dim) for _ in 1:2)...,  # tmp Hilbert logical 2^n x 2^n
-        Matrix{R}(undef, n_basis, n_basis),           # tmp Lie dim(g) x dim(g)
-        (Vector{R}(undef, n_basis) for _ in 1:4)..., # arrays Lie dim(g) x 1
-        Vector{T}(undef, n_basis),                    # tmp_expv
-        (Vector{T}(undef, log_dim) for _ in 1:2)..., # tmp distance 2 levels 2^n x 1
-        (Vector{T}(undef, ryd_dim) for _ in 1:2)..., # tmp distance 3 levels 3^n x 1
-        Matrix{T}(undef, ryd_dim, log_dim),           # tmp conversion 3->2 levels 3^n x 2^n
-        ExpvCache{Float64}(ryd_dim),
-        ExpMethodHigham2005(),
-        exp_cache
+    return Storage(
+        alpha         = zero(R),
+        U0            = Matrix{T}(I, ryd_dim, ryd_dim),
+        U             = Matrix{T}(undef, ryd_dim, ryd_dim),
+        dU            = Matrix{T}(undef, ryd_dim, ryd_dim),
+        H_opt         = Matrix{T}(undef, ryd_dim, ryd_dim),
+        tmp           = Matrix{T}(undef, ryd_dim, ryd_dim),
+        H_opt_dt      = Matrix{T}(undef, ryd_dim, ryd_dim),
+        U_buffer      = Matrix{T}(undef, ryd_dim, ryd_dim),
+        U_unitary_buffer_check = Matrix{T}(undef, ryd_dim, ryd_dim),
+        tmp_3levels   = Matrix{T}(undef, ryd_dim, ryd_dim),
+        U_adj_buffer  = Matrix{T}(undef, ryd_dim, ryd_dim),
+
+        tmp_2levels   = Matrix{T}(undef, log_dim, log_dim),
+        U_2levels     = Matrix{T}(undef, log_dim, log_dim),
+
+        tmp_mat_lie   = Matrix{R}(undef, n_basis, n_basis),
+
+        tmp_adj_drift_arr            = Vector{R}(undef, n_basis),
+        tmp_adj_drift_first_der_arr  = Vector{R}(undef, n_basis),
+        tmp_adj_drift_second_der_arr = Vector{R}(undef, n_basis),
+        H_opt_lie                    = Vector{R}(undef, n_basis),
+        tmp_expv                     = Vector{T}(undef, n_basis),
+
+        tmp_diag_2levels        = Vector{T}(undef, log_dim),
+        exp_buffer_dist_2levels = Vector{T}(undef, log_dim),
+
+        tmp_diag_3levels        = Vector{T}(undef, ryd_dim),
+        exp_buffer_dist_3levels = Vector{T}(undef, ryd_dim),
+
+        tmp_logical1  = Matrix{T}(undef, ryd_dim, log_dim),
+
+        expv_cache    = ExpvCache{Float64}(ryd_dim),
+        exp_method    = ExpMethodHigham2005(),
+        exp_cache     = exp_cache
     )
 end
 
