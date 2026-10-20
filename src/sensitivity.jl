@@ -33,26 +33,17 @@
 # end 
 
 
-function b_dot_elementwise!(algebra::Algebra, stor::Storage)
+function chi_dot!(algebra::Algebra, stor::Storage, M_lie::Vector{Float64})
+    d = size(algebra.lie_basis, 1)    
+    f_contract_H = reshape(transpose(stor.H_opt_prime_lie) * reshape(algebra.structure_tensor, d, :), d,d)
+    f_contract_HM = 1/stor.overlap_Hdprime_M * reshape(transpose(M_lie) * f_contract_H, d, 1)
+    stor.dχ .= f_contract_HM * transpose(stor.H_opt_prime_lie)
+    stor.dχ .+= reshape(transpose(stor.H_opt_lie) * reshape(algebra.structure_tensor, d, :), d, d)
+end
+
+function b_dot!(algebra::Algebra, stor::Storage)
     d = size(algebra.lie_basis, 1)
-    for μ in 1:d, ν in 1:d
-        for α in 1:d, β in 1:d, γ in 1:d
-            stor.db[μ, ν] = 1/stor.overlap_Hdprime_M * stor.H_opt_prime_lie[α] * stor.χ[μ, α] * stor.H_opt_prime_lie[ν] + stor.H_opt_lie[β] * stor.b[μ, γ] * algebra.structure_tensor[β, γ, ν]
-        end 
-    end
+    stor.db .= 1/stor.overlap_Hdprime_M * stor.χ * stor.H_opt_prime_lie * transpose(stor.H_opt_prime_lie)
+    stor.db .+= reshape(transpose(stor.H_opt_lie) * reshape(algebra.structure_tensor, d, :), d, d) * stor.b
 end 
 
-function b_dot_elementwise_inverse_order!(algebra::Algebra, stor::Storage)
-    d = size(algebra.lie_basis, 1)
-    for μ in 1:d, ν in 1:d
-        for α in 1:d, β in 1:d, γ in 1:d
-            stor.db[μ, ν] = 1/stor.overlap_Hdprime_M * stor.H_opt_prime_lie[α] * stor.χ[μ, α] * stor.H_opt_prime_lie[ν] + stor.H_opt_lie[β] * stor.b[μ, γ] * algebra.structure_tensor[β, γ, ν]
-        end 
-    end
-end 
-hfdkjfhdfdskjfsiwebisik dgffuweuffffdfdsf
-function b_dot_matrix!(algebra::Algebra, stor::Storage)
-    d = size(algebra.lie_basis, 1)
-    mat = reshape(reshape(algebra.structure_tensor, d*d, d) * stor.H_opt_lie, d, d)
-    stor.db .= 1/stor.overlap_Hdprime_M * stor.χ * stor.H_opt_prime_lie * transpose(stor.H_opt_prime_lie) + stor.b * mat
-end

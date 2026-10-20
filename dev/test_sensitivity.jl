@@ -28,10 +28,7 @@ println("Setup finished")
 # construct H_opt 
 costate_arr = rand(8)
 optimal_adjoint_drift_lie_analytic!(stor.H_opt_lie, costate_arr, algebra, stor)
-b_dot_matrix!(algebra, stor)
-d = copy(stor.db)
-b_dot_elementwise!(algebra, stor)
-a = copy(stor.db)
 
-display(norm(a-d))
+chi_dot!(algebra, stor, costate_arr)
 
+b_dot!(algebra, stor)
