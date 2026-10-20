@@ -98,6 +98,8 @@ end
 Base.@kwdef mutable struct Storage{T, R, C}
     # state control
     alpha::R
+    a::R                        # -d²H_opt/dα² contracted with costate M at the optimal α,
+                                # i.e. H_opt''^{α M_α} = ⟨∂²H_opt/∂α², M⟩
 
     # initial states Hilbert, size 3^n x 3^n
     U0::Matrix{T}
@@ -107,12 +109,21 @@ Base.@kwdef mutable struct Storage{T, R, C}
     dU::Matrix{T}
     H_opt::Matrix{T}
     tmp::Matrix{T}
-    H_opt_dt::Matrix{T}
+    H_opt_prime::Matrix{T}      # ∂H_opt/∂α  (renamed from unused H_opt_dt)
     U_buffer::Matrix{T}
     U_unitary_buffer_check::Matrix{T}
     tmp_3levels::Matrix{T}
     U_adj_buffer::Matrix{T}
-    
+
+    # sensitivities
+    χ::Matrix{T}
+    b::Matrix{T}
+    ω::Array{T,3}
+    dχ::Matrix{T}
+    dω::Array{T,3}
+    db::Matrix{T}
+    Hchi::Vector{T}             # scratch: Σ_ν χ[μ, ν] * H_opt_prime_lie[ν]
+    Hprime_U::Matrix{T}         # scratch: H_opt_prime * U (independent of μ)
     # temporary matrices Hilbert logical, size 2^n x 2^n
     tmp_2levels::Matrix{T}
     U_2levels::Matrix{T}
@@ -125,6 +136,9 @@ Base.@kwdef mutable struct Storage{T, R, C}
     tmp_adj_drift_first_der_arr::Vector{R}
     tmp_adj_drift_second_der_arr::Vector{R}
     H_opt_lie::Vector{R}
+    H_opt_prime_lie::Vector{R}    # ∂H_opt/∂α  in Lie representation
+    H_opt_dprime_lie::Vector{R}   # ∂²H_opt/∂α² in Lie representation
+    overlap_Hdprime_M::R
     tmp_expv::Vector{T}
 
     # temporary arrays for distance 2 levels, size 2^n x 1
@@ -155,16 +169,25 @@ function Storage(n_particles::Int, n_basis::Int)
 
     return Storage(
         alpha         = zero(R),
+        a             = one(R),
         U0            = Matrix{T}(I, ryd_dim, ryd_dim),
         U             = Matrix{T}(undef, ryd_dim, ryd_dim),
         dU            = Matrix{T}(undef, ryd_dim, ryd_dim),
         H_opt         = Matrix{T}(undef, ryd_dim, ryd_dim),
         tmp           = Matrix{T}(undef, ryd_dim, ryd_dim),
-        H_opt_dt      = Matrix{T}(undef, ryd_dim, ryd_dim),
+        H_opt_prime   = Matrix{T}(undef, ryd_dim, ryd_dim),
         U_buffer      = Matrix{T}(undef, ryd_dim, ryd_dim),
         U_unitary_buffer_check = Matrix{T}(undef, ryd_dim, ryd_dim),
         tmp_3levels   = Matrix{T}(undef, ryd_dim, ryd_dim),
         U_adj_buffer  = Matrix{T}(undef, ryd_dim, ryd_dim),
+        χ = Matrix{T}(I, n_basis, n_basis),
+        b = Matrix{T}(undef, n_basis, n_basis),
+        ω = Array{T,3}(undef, ryd_dim, ryd_dim, n_basis), 
+        dχ = Matrix{T}(undef, n_basis, n_basis),
+        db = Matrix{T}(undef, n_basis, n_basis),
+        dω = Array{T,3}(undef, ryd_dim, ryd_dim, n_basis), 
+        Hchi        = Vector{T}(undef, n_basis),
+        Hprime_U    = Matrix{T}(undef, ryd_dim, ryd_dim),
 
         tmp_2levels   = Matrix{T}(undef, log_dim, log_dim),
         U_2levels     = Matrix{T}(undef, log_dim, log_dim),
@@ -175,6 +198,9 @@ function Storage(n_particles::Int, n_basis::Int)
         tmp_adj_drift_first_der_arr  = Vector{R}(undef, n_basis),
         tmp_adj_drift_second_der_arr = Vector{R}(undef, n_basis),
         H_opt_lie                    = Vector{R}(undef, n_basis),
+        H_opt_prime_lie              = Vector{R}(undef, n_basis),
+        H_opt_dprime_lie             = Vector{R}(undef, n_basis),
+        overlap_Hdprime_M = one(R), 
         tmp_expv                     = Vector{T}(undef, n_basis),
 
         tmp_diag_2levels        = Vector{T}(undef, log_dim),

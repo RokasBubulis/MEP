@@ -67,7 +67,7 @@ end
 
 costate_arr = zeros(Float64, length(algebra.lie_basis))
 costate_arr[2:end] = m0
-@btime g, h = adjoint_drift_obj_derivatives(α, costate_arr, algebra, stor)
+@btime g, h = pmp_hamiltonian_derivatives(α, costate_arr, algebra, stor)
 println("analytic")
 @btime begin 
     stor.alpha = 0

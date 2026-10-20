@@ -51,6 +51,9 @@ function update_alpha_newton!(stor, costate_arr, algebra::Algebra; gtol::Float64
         @warn("Positive final curvature for ADM. g: $g_fin, h: $h_fin")
     end 
     stor.alpha = α
+    stor.overlap_Hdprime_M = h_fin  # C = -H_opt''_α M^α
+    stor.H_opt_prime_lie .=  stor.tmp_adj_drift_first_der_arr
+    
     return nothing
 end
 
