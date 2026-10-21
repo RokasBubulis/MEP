@@ -29,6 +29,6 @@ println("Setup finished")
 costate_arr = rand(8)
 optimal_adjoint_drift_lie_analytic!(stor.H_opt_lie, costate_arr, algebra, stor)
 
-chi_dot!(algebra, stor, costate_arr)
+costate_sensitivity_drift!(algebra, stor, costate_arr)
 
-b_dot!(algebra, stor)
+state_sensitivity_differential!(algebra, stor)

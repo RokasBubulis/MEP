@@ -117,13 +117,9 @@ Base.@kwdef mutable struct Storage{T, R, C}
 
     # sensitivities
     χ::Matrix{T}
-    b::Matrix{T}
-    ω::Array{T,3}
+    B::Matrix{T}
     dχ::Matrix{T}
-    dω::Array{T,3}
-    db::Matrix{T}
-    Hchi::Vector{T}             # scratch: Σ_ν χ[μ, ν] * H_opt_prime_lie[ν]
-    Hprime_U::Matrix{T}         # scratch: H_opt_prime * U (independent of μ)
+    dB::Matrix{T}
     # temporary matrices Hilbert logical, size 2^n x 2^n
     tmp_2levels::Matrix{T}
     U_2levels::Matrix{T}
@@ -181,13 +177,9 @@ function Storage(n_particles::Int, n_basis::Int)
         tmp_3levels   = Matrix{T}(undef, ryd_dim, ryd_dim),
         U_adj_buffer  = Matrix{T}(undef, ryd_dim, ryd_dim),
         χ = Matrix{T}(I, n_basis, n_basis),
-        b = Matrix{T}(undef, n_basis, n_basis),
-        ω = Array{T,3}(undef, ryd_dim, ryd_dim, n_basis), 
+        B = Matrix{T}(undef, n_basis, n_basis),
         dχ = Matrix{T}(undef, n_basis, n_basis),
-        db = Matrix{T}(undef, n_basis, n_basis),
-        dω = Array{T,3}(undef, ryd_dim, ryd_dim, n_basis), 
-        Hchi        = Vector{T}(undef, n_basis),
-        Hprime_U    = Matrix{T}(undef, ryd_dim, ryd_dim),
+        dB = Matrix{T}(undef, n_basis, n_basis),
 
         tmp_2levels   = Matrix{T}(undef, log_dim, log_dim),
         U_2levels     = Matrix{T}(undef, log_dim, log_dim),
