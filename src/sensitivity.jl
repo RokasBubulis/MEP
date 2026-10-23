@@ -21,7 +21,7 @@ function state_sensitivity_drift!(res, algebra::Algebra, stor::Storage)
     return nothing
 end 
 
-function infidelity(U::AbstractMatrix, tar::TargetContainer, algebra::Algebra, stor::Storage)
+function infidelity(U::AbstractMatrix, algebra::Algebra, stor::Storage, tar::TargetContainer,)
     n = size(tar.adjoint_target, 1)
     mul!(stor.tmp_3levels, U, tar.adjoint_target)
 
@@ -30,7 +30,7 @@ function infidelity(U::AbstractMatrix, tar::TargetContainer, algebra::Algebra, s
     end
     tmp_diag       = stor.tmp_diag_3levels
     im_control_vec = algebra.im_control_vec_3levels
-    exp_buffer     = stor.exp_buffer_dist_3level
+    exp_buffer     = stor.exp_buffer_dist_3levels
     # d(β) = 1 - |⟨exp(iβΣZ), diag(U U_tar')⟩| / n, minimised over β
     dist = function (β)
         @. exp_buffer = exp(β * im_control_vec)
@@ -38,16 +38,27 @@ function infidelity(U::AbstractMatrix, tar::TargetContainer, algebra::Algebra, s
     end
 
     res = optimize(dist, -π, π, Brent())
-    stor.W = conjugate(exp(res.minimizer * algebra.lie_basis[1]) * tar.target)
-    
+    # instead of full W, store only optimal β and construct W as needed
+    #stor.W = conj(exp(res.minimizer * Matrix(algebra.lie_basis[1])) * tar.target)
+    stor.β_opt = res.minimizer
     return res.minimum
 end 
 
-function infidelity_gradient!(grad::Vector{Float64}, algebra::Algebra, stor::Storage)
+function grad_infidelity!(grad::Vector{Float64}, algebra::Algebra, tracker::CostOptimumTracker)
     d = size(algebra.lie_basis, 1)
     n = size(algebra.im_drift, 1)
     for μ in 1:d
-        U_deriv_m_mu = sum(stor.B[μ, ν] * algebra.lie_basis[ν] for ν in 1:d) * stor.U
-        grad[μ] .= real(dot(-1/n*transpose(stor.W), U_deriv_m_mu))
+        U_deriv_m_mu = sum(tracker.B_t_star[μ, ν] * algebra.lie_basis[ν] for ν in 1:d) * tracker.U_t_star
+        grad[μ] = real(dot(-1/n*transpose(tracker.W_t_star), U_deriv_m_mu))
     end 
 end 
+
+function fd_grad(phi, m; dm = 1e-6)
+    g = similar(m, Float64)
+    for i in eachindex(m)
+        mp = copy(m); mp[i] += dm
+        mm = copy(m); mm[i] -= dm
+        g[i] = (phi(mp) - phi(mm)) / (2dm)
+    end
+    return g
+end

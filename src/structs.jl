@@ -81,6 +81,14 @@ struct SolverParams
     tstar_max::Float64
 end 
 
+mutable struct CostOptimumTracker
+    min_cost::Float64
+    t_star::Float64
+    B_t_star::Matrix{Float64}
+    U_t_star::Matrix{ComplexF64}
+    W_t_star::Matrix{ComplexF64}
+end 
+
 mutable struct OutputTracker
     min_dist::Float64
     tstar::Float64
@@ -98,7 +106,8 @@ end
 Base.@kwdef mutable struct Storage{T, R, C}
     # state control
     alpha::R
-    a::R                        # -d²H_opt/dα² contracted with costate M at the optimal α,
+    a::R
+    β_opt::R                        # -d²H_opt/dα² contracted with costate M at the optimal α,
                                 # i.e. H_opt''^{α M_α} = ⟨∂²H_opt/∂α², M⟩
 
     # initial states Hilbert, size 3^n x 3^n
@@ -120,6 +129,9 @@ Base.@kwdef mutable struct Storage{T, R, C}
     B::Matrix{T}
     dχ::Matrix{T}
     dB::Matrix{T}
+    D::Matrix{T}
+    E::Matrix{T}
+    F::Matrix{T}
     # temporary matrices Hilbert logical, size 2^n x 2^n
     tmp_2levels::Matrix{T}
     U_2levels::Matrix{T}
@@ -166,6 +178,7 @@ function Storage(n_particles::Int, n_basis::Int)
     return Storage(
         alpha         = zero(R),
         a             = one(R),
+        β_opt         = zero(R),
         U0            = Matrix{T}(I, ryd_dim, ryd_dim),
         U             = Matrix{T}(undef, ryd_dim, ryd_dim),
         dU            = Matrix{T}(undef, ryd_dim, ryd_dim),
@@ -180,6 +193,9 @@ function Storage(n_particles::Int, n_basis::Int)
         B = Matrix{T}(undef, n_basis, n_basis),
         dχ = Matrix{T}(undef, n_basis, n_basis),
         dB = Matrix{T}(undef, n_basis, n_basis),
+        D = Matrix{T}(undef, n_basis, n_basis),
+        E = Matrix{T}(undef, n_basis, n_basis),
+        F = Matrix{T}(undef, n_basis, n_basis),
 
         tmp_2levels   = Matrix{T}(undef, log_dim, log_dim),
         U_2levels     = Matrix{T}(undef, log_dim, log_dim),

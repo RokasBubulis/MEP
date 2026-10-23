@@ -3,10 +3,10 @@ using NLSolversBase: only_fg!
 
 include("new_propagation.jl")
 
-function make_optimisation_problem(tar::TargetContainer, algebra::Algebra)
+function make_optimisation_problem(algebra::Algebra, solver::SolverParams, tar::TargetContainer)
     return function (F, G, x)
-        stor = propagate(x, ) # add missing fields
-        G === nothing || infidelity_gradient!(G, algebra, stor)
+        tracker = new_propagate(x, algebra, solver, tar)
+        G === nothing || grad_infidelity!(G, algebra, stor)
         F === nothing || return infidelity(stor.U, tar, algebra, stor)
         return nothing
     end 
