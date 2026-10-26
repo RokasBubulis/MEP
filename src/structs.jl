@@ -1,7 +1,7 @@
 include("generators.jl")
 include("lie_algebra.jl")
 
-using ExponentialUtilities
+using ExponentialUtilities, Kronecker
 
 function tensor_basis(n_particles::Int, n_levels::Int)
     e = [I(n_levels)[:, 1], I(n_levels)[:, 2]]

@@ -10,7 +10,7 @@ function costate_sensitivity_drift!(res, algebra::Algebra, stor::Storage, M_lie:
     return nothing
 end
 
-function state_sensitivity_source!(res, algebra::Algebra, stor::Storage)
+function state_sensitivity_source!(res, stor::Storage)
     res .= 1/stor.overlap_Hdprime_M * stor.H_opt_prime_lie * transpose(stor.H_opt_prime_lie)
     return nothing
 end 
