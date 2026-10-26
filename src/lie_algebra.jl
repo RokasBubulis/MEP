@@ -105,9 +105,9 @@ function build_structure_tensor(lie_basis::Vector{SparseMatrixCSC{T, Int}}; tol=
         comm = br(lie_basis[a], lie_basis[b])
         for c in 1:n
             val = tr(lie_basis[c]' * comm)
-            f[c,a,b] = real(val)
-            f[c,b,a] = -f[c,a,b]
-            @assert abs(imag(val)) < tol "structure constant [$c, $a, $b] has large imaginary part: $(imag(val))"
+            f[a,b,c] = real(val)
+            f[b,a,c] = -f[a,b,c]
+            @assert abs(imag(val)) < tol "structure constant [$a, $b, $c] has large imaginary part: $(imag(val))"
         end 
     end 
     return f
@@ -120,7 +120,7 @@ function lie_bracket_coeffs!(res::AbstractVector{T}, f::Array{Tf, 3}, x::Vector{
         xayb = x[a] * y[b] - x[b] * y[a]  # since f is antisymmetric
         iszero(xayb) && continue 
         for c in 1:n 
-            res[c] += f[c,a,b] * xayb
+            res[c] += f[a,b,c] * xayb
         end 
     end 
     return nothing 

@@ -87,6 +87,8 @@ mutable struct CostOptimumTracker
     B_t_star::Matrix{Float64}
     U_t_star::Matrix{ComplexF64}
     W_t_star::Matrix{ComplexF64}
+    M_t_star::Vector{Float64}
+    χ_t_star::Matrix{Float64}
 end 
 
 mutable struct OutputTracker

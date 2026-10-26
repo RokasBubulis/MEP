@@ -3,9 +3,9 @@
 function costate_sensitivity_drift!(res, algebra::Algebra, stor::Storage, M_lie::Vector{Float64})
     # TODO verify that res is cleanly overwritten
     d = size(algebra.lie_basis, 1)    
-    f_contract_H = reshape(transpose(stor.H_opt_prime_lie) * reshape(algebra.structure_tensor, d, :), d,d)
-    f_contract_HM = 1/stor.overlap_Hdprime_M * reshape(transpose(M_lie) * f_contract_H, d, 1)
-    res .= f_contract_HM * transpose(stor.H_opt_prime_lie)
+    f_contract_Hprime = reshape(transpose(stor.H_opt_prime_lie) * reshape(algebra.structure_tensor, d, :), d,d)
+    f_contract_Hprime_M = reshape(transpose(M_lie) * f_contract_Hprime, d, 1)
+    res .= 1/stor.overlap_Hdprime_M * stor.H_opt_prime_lie * transpose(f_contract_Hprime_M)
     res .+= reshape(transpose(stor.H_opt_lie) * reshape(algebra.structure_tensor, d, :), d, d)
     return nothing
 end
@@ -42,6 +42,12 @@ function infidelity(U::AbstractMatrix, algebra::Algebra, stor::Storage, tar::Tar
     #stor.W = conj(exp(res.minimizer * Matrix(algebra.lie_basis[1])) * tar.target)
     stor.β_opt = res.minimizer
     return res.minimum
+end 
+
+function dU_dm_mu(μ::Int, algebra::Algebra, tracker::CostOptimumTracker)
+    d = length(algebra.lie_basis)
+    grad = sum(tracker.B_t_star[μ, ν] * algebra.lie_basis[ν] for ν in 1:d) * tracker.U_t_star
+    return grad 
 end 
 
 function grad_infidelity!(grad::Vector{Float64}, algebra::Algebra, tracker::CostOptimumTracker)
