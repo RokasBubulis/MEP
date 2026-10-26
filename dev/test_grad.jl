@@ -47,3 +47,6 @@ display(analytic_grad)
 display(finite_diff_grad)
 
 # time threshold for cost optimum update pushes finite diff grad from zeros but the consequence is that the time at which cost is evaluated is not the same for + and - runs. Also worth investigating is whether the time matches with analytic run and why analytic grad produces a non zero first entry
+
+# perhaps for now it is better to evaluate cost after some run time t and not the minimum cost over the trajectory to reduce the variability 
+# plot how cost function varies with the (initial/final) beta detuning; it should be invariant
