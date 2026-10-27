@@ -119,6 +119,7 @@ Base.@kwdef mutable struct Storage{T, R, C}
     U::Matrix{T}
     dU::Matrix{T}
     H_opt::Matrix{T}
+    H_opt_t_minus_dt::Matrix{T}
     tmp::Matrix{T}
     H_opt_prime::Matrix{T}      # ∂H_opt/∂α  (renamed from unused H_opt_dt)
     U_buffer::Matrix{T}
@@ -185,6 +186,7 @@ function Storage(n_particles::Int, n_basis::Int)
         U             = Matrix{T}(undef, ryd_dim, ryd_dim),
         dU            = Matrix{T}(undef, ryd_dim, ryd_dim),
         H_opt         = Matrix{T}(undef, ryd_dim, ryd_dim),
+        H_opt_t_minus_dt = Matrix{T}(undef, ryd_dim, ryd_dim),
         tmp           = Matrix{T}(undef, ryd_dim, ryd_dim),
         H_opt_prime   = Matrix{T}(undef, ryd_dim, ryd_dim),
         U_buffer      = Matrix{T}(undef, ryd_dim, ryd_dim),
