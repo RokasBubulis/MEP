@@ -132,9 +132,9 @@ Base.@kwdef mutable struct Storage{T, R, C}
     B::Matrix{T}
     dχ::Matrix{T}
     dB::Matrix{T}
-    D::Matrix{T}
-    E::Matrix{T}
-    F::Matrix{T}
+    D::Matrix{R}
+    E::Matrix{R}
+    F::Matrix{R}
     # temporary matrices Hilbert logical, size 2^n x 2^n
     tmp_2levels::Matrix{T}
     U_2levels::Matrix{T}
@@ -197,9 +197,9 @@ function Storage(n_particles::Int, n_basis::Int)
         B = Matrix{T}(undef, n_basis, n_basis),
         dχ = Matrix{T}(undef, n_basis, n_basis),
         dB = Matrix{T}(undef, n_basis, n_basis),
-        D = Matrix{T}(undef, n_basis, n_basis),
-        E = Matrix{T}(undef, n_basis, n_basis),
-        F = Matrix{T}(undef, n_basis, n_basis),
+        D = Matrix{R}(undef, n_basis, n_basis),
+        E = Matrix{R}(undef, n_basis, n_basis),
+        F = Matrix{R}(undef, n_basis, n_basis),
 
         tmp_2levels   = Matrix{T}(undef, log_dim, log_dim),
         U_2levels     = Matrix{T}(undef, log_dim, log_dim),

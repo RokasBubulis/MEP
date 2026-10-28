@@ -67,7 +67,7 @@ function manual_optimum_update!(u, t, algebra::Algebra, stor::Storage, tar::Targ
         tracker.t_star = t
         tracker.B_t_star .= B
         tracker.U_t_star .= stor.U
-        tracker.W_t_star .= conj(exp(stor.β_opt * Matrix(algebra.lie_basis[1])) * tar.target)  # TODO add allocation-free implementation
+        tracker.W_t_star .= conj(exp(stor.β_opt * Matrix(algebra.im_control)) * tar.target)  # TODO add allocation-free implementation
     end
 end 
 
@@ -79,7 +79,7 @@ function unconditional_manual_optimum_update!(u, t, algebra::Algebra, stor::Stor
     tracker.t_star = t
     tracker.B_t_star .= B
     tracker.U_t_star .= stor.U
-    tracker.W_t_star .= conj(exp(stor.β_opt * Matrix(algebra.lie_basis[1])) * tar.target)  # 
+    tracker.W_t_star .= conj(exp(stor.β_opt * Matrix(algebra.im_control)) * tar.target)  # 
     tracker.M_t_star .= M
     tracker.χ_t_star .= χ
     # TODO add allocation-free implementation

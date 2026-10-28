@@ -37,26 +37,26 @@ errs_U_dt = zeros(length(dts), d)
 errs_U_dm = zeros(length(dms), d)
 
 for (i, dt) in enumerate(dts)
-    tracker = new_propagate(m0, algebra, solver, tar; dt, method)
+    tracker = new_propagate(m0, algebra, solver, tar; dt=dt, method=method)
     for μ in 1:d
         dU_analytic = sum(tracker.B_t_star[μ, ν] * algebra.lie_basis[ν]
                           for ν in 1:d) * tracker.U_t_star
         mp = copy(m0); mp[μ] += dm_fixed
         mm = copy(m0); mm[μ] -= dm_fixed
-        tracker_mp = new_propagate(mp, algebra, solver, tar; dt, method)
-        tracker_mm = new_propagate(mm, algebra, solver, tar; dt, method)
+        tracker_mp = new_propagate(mp, algebra, solver, tar; dt=dt, method=method)
+        tracker_mm = new_propagate(mm, algebra, solver, tar; dt=dt, method=method)
         errs_U_dt[i, μ] = norm(dU_analytic - (tracker_mp.U_t_star - tracker_mm.U_t_star) / (2dm_fixed))
     end
 end
 
-tracker = new_propagate(m0, algebra, solver, tar; dt=dt_fixed, method)
+tracker = new_propagate(m0, algebra, solver, tar; dt=dt_fixed, method=method)
 for (j, dm) in enumerate(dms), μ in 1:d
     dU_analytic = sum(tracker.B_t_star[μ, ν] * algebra.lie_basis[ν]
                       for ν in 1:d) * tracker.U_t_star
     mp = copy(m0); mp[μ] += dm
     mm = copy(m0); mm[μ] -= dm
-    tracker_mp = new_propagate(mp, algebra, solver, tar; dt=dt_fixed, method)
-    tracker_mm = new_propagate(mm, algebra, solver, tar; dt=dt_fixed, method)
+    tracker_mp = new_propagate(mp, algebra, solver, tar; dt=dt_fixed, method=method)
+    tracker_mm = new_propagate(mm, algebra, solver, tar; dt=dt_fixed, method=method)
     errs_U_dm[j, μ] = norm(dU_analytic - (tracker_mp.U_t_star - tracker_mm.U_t_star) / (2dm))
 end
 
@@ -65,24 +65,24 @@ errs_M_dt = zeros(length(dts), d)
 errs_M_dm = zeros(length(dms), d)
 
 for (i, dt) in enumerate(dts)
-    tracker = new_propagate(m0, algebra, solver, tar; dt, method)
+    tracker = new_propagate(m0, algebra, solver, tar; dt=dt, method=method)
     for μ in 1:d
         dM_analytic = tracker.χ_t_star[μ, :]
         mp = copy(m0); mp[μ] += dm_fixed
         mm = copy(m0); mm[μ] -= dm_fixed
-        tracker_mp = new_propagate(mp, algebra, solver, tar; dt, method)
-        tracker_mm = new_propagate(mm, algebra, solver, tar; dt, method)
+        tracker_mp = new_propagate(mp, algebra, solver, tar; dt=dt, method=method)
+        tracker_mm = new_propagate(mm, algebra, solver, tar; dt=dt, method=method)
         errs_M_dt[i, μ] = norm(dM_analytic - (tracker_mp.M_t_star - tracker_mm.M_t_star) / (2dm_fixed))
     end
 end
 
-tracker = new_propagate(m0, algebra, solver, tar; dt=dt_fixed, method)
+tracker = new_propagate(m0, algebra, solver, tar; dt=dt_fixed, method=method)
 for (j, dm) in enumerate(dms), μ in 1:d
     dM_analytic = tracker.χ_t_star[μ, :]
     mp = copy(m0); mp[μ] += dm
     mm = copy(m0); mm[μ] -= dm
-    tracker_mp = new_propagate(mp, algebra, solver, tar; dt=dt_fixed, method)
-    tracker_mm = new_propagate(mm, algebra, solver, tar; dt=dt_fixed, method)
+    tracker_mp = new_propagate(mp, algebra, solver, tar; dt=dt_fixed, method=method)
+    tracker_mm = new_propagate(mm, algebra, solver, tar; dt=dt_fixed, method=method)
     errs_M_dm[j, μ] = norm(dM_analytic - (tracker_mp.M_t_star - tracker_mm.M_t_star) / (2dm))
 end
 

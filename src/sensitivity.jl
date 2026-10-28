@@ -51,20 +51,15 @@ function dU_dm_mu(μ::Int, algebra::Algebra, tracker::CostOptimumTracker)
 end 
 
 function grad_infidelity!(grad::Vector{Float64}, algebra::Algebra, tracker::CostOptimumTracker)
-    d = size(algebra.lie_basis, 1)
-    n = size(algebra.im_drift, 1)
+    # φ = 1 - |z|/n,  z = <S', U> = tr(S'† U),  S' = exp(iβ_opt C) S  (β_opt fixed by envelope theorem)
+    # ∂φ/∂m_μ = -(1/n) Re( conj(z)/|z| · <S', ∂U/∂m_μ> )
+    d = length(algebra.lie_basis)
+    U = tracker.U_t_star
+    n = size(U, 1)
+    z = sum(tracker.W_t_star .* U)            # W_t_star = conj(S')  ⇒  z = <S', U>
+    c = conj(z)/abs(z)
     for μ in 1:d
-        U_deriv_m_mu = sum(tracker.B_t_star[μ, ν] * algebra.lie_basis[ν] for ν in 1:d) * tracker.U_t_star
-        grad[μ] = real(dot(-1/n*transpose(tracker.W_t_star), U_deriv_m_mu))
-    end 
-end 
-
-function fd_grad(phi, m; dm = 1e-6)
-    g = similar(m, Float64)
-    for i in eachindex(m)
-        mp = copy(m); mp[i] += dm
-        mm = copy(m); mm[i] -= dm
-        g[i] = (phi(mp) - phi(mm)) / (2dm)
+        grad[μ] = real(-c/n * sum(tracker.W_t_star .* dU_dm_mu(μ, algebra, tracker)))
     end
-    return g
+    return nothing
 end
