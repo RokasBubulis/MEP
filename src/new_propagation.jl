@@ -67,7 +67,7 @@ function manual_optimum_update!(u, t, algebra::Algebra, stor::Storage, tar::Targ
         tracker.t_star = t
         tracker.B_t_star .= B
         tracker.U_t_star .= stor.U
-        tracker.W_t_star .= conj(exp(stor.β_opt * Matrix(algebra.im_control)) * tar.target)  # TODO add allocation-free implementation
+        conj_rotated_target!(tracker.W_t_star, stor.β_opt, algebra, tar)
         tracker.M_t_star .= M
         tracker.χ_t_star .= χ
         tracker.H_t_star .= stor.H_opt
@@ -82,7 +82,7 @@ function unconditional_manual_optimum_update!(u, t, algebra::Algebra, stor::Stor
     tracker.t_star = t
     tracker.B_t_star .= B
     tracker.U_t_star .= stor.U
-    tracker.W_t_star .= conj(exp(stor.β_opt * Matrix(algebra.im_control)) * tar.target) 
+    conj_rotated_target!(tracker.W_t_star, stor.β_opt, algebra, tar)
     tracker.M_t_star .= M
     tracker.χ_t_star .= χ
     tracker.H_t_star .= stor.H_opt
@@ -93,7 +93,7 @@ end
 # track_min = false: tracker holds the cost at the final time T (smooth in m0 and T)
 # nsteps given     : dt = T/nsteps, so the step grid scales with T
 # cost_history     : if a Vector{Tuple{Float64,Float64}} is given, (t, φ(t)) is pushed at every step
-function new_propagate(m0::Vector{Float64}, algebra::Algebra, solver::SolverParams, tar::TargetContainer; dt=1e-2, method=Midpoint(), T=solver.tmax, nsteps=nothing, track_min=true, cost_history=nothing)
+function new_propagate(m0::Vector{Float64}, algebra::Algebra, solver::SolverParams, tar::TargetContainer; dt=1e-2, method=Midpoint(), T=solver.tmax, nsteps=nothing, track_min=false, cost_history=nothing)
 
     dt = nsteps === nothing ? dt : T/nsteps
 
@@ -107,7 +107,8 @@ function new_propagate(m0::Vector{Float64}, algebra::Algebra, solver::SolverPara
     x0 = ArrayPartition(m0, Matrix{Float64}(I, d, d), zeros(Float64, d, d))
 
     # setup optimal point tracker
-    tracker = CostOptimumTracker(1.0, 0.0, zeros(Float64, d, d), Matrix{ComplexF64}(I, n, n), Matrix{ComplexF64}(undef, n, n), copy(m0), Matrix{Float64}(I, d, d), zeros(ComplexF64, n, n))
+    # W_t_star lives in the space of the target (logical 2^N x 2^N or full 3^N x 3^N)
+    tracker = CostOptimumTracker(1.0, 0.0, zeros(Float64, d, d), Matrix{ComplexF64}(I, n, n), Matrix{ComplexF64}(undef, size(tar.target)...), copy(m0), Matrix{Float64}(I, d, d), zeros(ComplexF64, n, n))
 
     # setup ODE problem
     params = algebra, stor, tracker, tar, solver

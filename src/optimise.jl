@@ -21,7 +21,7 @@ function make_optimisation_problem(algebra::Algebra, solver::SolverParams, tar::
             grad_m .-= dot(grad_m, m) .* m      # φ is invariant under m → λm: keep the tangent part
             G[1:d] .= grad_m ./ r
             tmin, tmax = solver.tstar_min, solver.tstar_max
-            G[end] = (dphi_dT(tracker) + time_weight) * (T - tmin) * (tmax - T) / (tmax - tmin)   # dT/dτ
+            G[end] = (dphi_dT(algebra, tracker) + time_weight) * (T - tmin) * (tmax - T) / (tmax - tmin)   # dT/dτ
         end
         F === nothing || return tracker.min_cost + time_weight * T
         return nothing
@@ -44,7 +44,7 @@ function run_bfgs(m0::Vector{Float64}, T0::Float64, algebra::Algebra, solver::So
     d = length(algebra.lie_basis)
     x0 = [normalize(m0); τ_of_T(T0, solver.tstar_min, solver.tstar_max)]
 
-    opts = Optim.Options(; iterations = iterations, g_tol = g_tol, f_reltol = f_reltol, show_trace = true)
+    opts = Optim.Options(; iterations = iterations, g_tol = g_tol, f_reltol = f_reltol, show_trace = false)
     res = optimize(only_fg!(cg!), x0, BFGS(), opts)
 
     return res
