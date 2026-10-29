@@ -1,80 +1,65 @@
 using Optim
 using NLSolversBase: only_fg!
 
-include("new_propagation.jl")
+# T = tmin + (tmax - tmin) σ(τ) keeps tmin < T < tmax while the optimiser works unconstrained in τ
+# (tmin = solver.tstar_min, tmax = solver.tstar_max; tmin > 0 excludes the trivial T → 0, U = I minimum)
+T_of_τ(τ, tmin, tmax) = tmin + (tmax - tmin) / (1 + exp(-τ))
+τ_of_T(T, tmin, tmax) = log((T - tmin) / (tmax - T))
 
-function make_optimisation_problem(algebra::Algebra, solver::SolverParams, tar::TargetContainer)
+# x = [m; τ]: m is the initial costate direction (only m/|m| matters), T = T_of_τ(τ) the final time
+# J(m, T) = φ(U(T; m)) + time_weight * T  is smooth in both m and T
+function make_optimisation_problem(algebra::Algebra, solver::SolverParams, tar::TargetContainer; time_weight=1e-3, nsteps=1000)
+    d = length(algebra.lie_basis)
+    grad_m = zeros(Float64, d)
     return function (F, G, x)
-        tracker = new_propagate(x, algebra, solver, tar)
-        G === nothing || grad_infidelity!(G, algebra, stor)
-        F === nothing || return infidelity(stor.U, tar, algebra, stor)
+        r = norm(view(x, 1:d))
+        m = x[1:d] ./ r
+        T = T_of_τ(x[end], solver.tstar_min, solver.tstar_max)
+        tracker = new_propagate(m, algebra, solver, tar; T=T, nsteps=nsteps, track_min=false)
+        if G !== nothing
+            grad_infidelity!(grad_m, algebra, tracker)
+            grad_m .-= dot(grad_m, m) .* m      # φ is invariant under m → λm: keep the tangent part
+            G[1:d] .= grad_m ./ r
+            tmin, tmax = solver.tstar_min, solver.tstar_max
+            G[end] = (dphi_dT(tracker) + time_weight) * (T - tmin) * (tmax - T) / (tmax - tmin)   # dT/dτ
+        end
+        F === nothing || return tracker.min_cost + time_weight * T
         return nothing
-    end 
-end 
+    end
+end
 
-function run_optimiser(tar::TargetContainer, algebra::Algebra, x0::Vector{Float64})
+# (m, T) from an optimiser result on x = [m; τ]
+function minimizer_mT(res, solver::SolverParams)
+    x = Optim.minimizer(res)
+    return normalize(x[1:end-1]), T_of_τ(x[end], solver.tstar_min, solver.tstar_max)
+end
+
+# g_tol: the analytic gradient matches the discretised cost only to O(dt²) (≈1e-4 at dt = 1e-2),
+# so smaller gradient tolerances cannot be met and BFGS would run to the iteration limit
+function run_bfgs(m0::Vector{Float64}, T0::Float64, algebra::Algebra, solver::SolverParams, tar::TargetContainer; time_weight=1e-3, nsteps=1000, iterations=100, g_tol=1e-4, f_reltol=1e-8)
 
     # wrap cost and gradient functions
-    cg! = make_optimisation_problem(tar, algebra)
+    cg! = make_optimisation_problem(algebra, solver, tar; time_weight=time_weight, nsteps=nsteps)
 
-    opts = Optim.Options(; iterations = 1000, g_tol = 1e-8, show_trace = false)
-    res = optimize(only_fg!(cg!), x0, LBFGS(), opts)
+    d = length(algebra.lie_basis)
+    x0 = [normalize(m0); τ_of_T(T0, solver.tstar_min, solver.tstar_max)]
 
-    return Optim.minimizer(res), Optim.minimum(res), res
-end 
+    opts = Optim.Options(; iterations = iterations, g_tol = g_tol, f_reltol = f_reltol, show_trace = true)
+    res = optimize(only_fg!(cg!), x0, BFGS(), opts)
 
-
-
-##
-# EXAMPLE 
-"""
-    optimise(cost, grad!, x0; method=LBFGS(), iterations=1000, g_tol=1e-8, show_trace=false)
-
-Minimise `cost(x)` given its analytic gradient `grad!(G, x)`, which must fill `G` in place.
-Returns `(minimiser, minimum, result)`.
-"""
-function optimise(cost, grad!, x0::AbstractArray;
-                  method = LBFGS(), iterations = 1000, g_tol = 1e-8,
-                  show_trace = false)
-    function fg!(F, G, x)
-        G === nothing || grad!(G, x)
-        F === nothing || return cost(x)
-        return nothing
-    end
-    opts = Optim.Options(; iterations = iterations, g_tol = g_tol,
-                           show_trace = show_trace)
-    res = optimize(only_fg!(fg!), float.(x0), method, opts)
-    return Optim.minimizer(res), Optim.minimum(res), res
+    return res
 end
 
-"""
-    check_gradient(cost, grad!, x; h=1e-6)
+function run_nelder_mead(m0::Vector{Float64}, T0::Float64, algebra::Algebra, solver::SolverParams, tar::TargetContainer; time_weight=1e-3, nsteps=1000, iterations=1000)
 
-Max absolute difference between `grad!` and a central finite difference.
-Expect roughly 1e-6 or smaller if the gradient is correct.
-"""
-function check_gradient(cost, grad!, x::AbstractArray; h = 1e-6)
-    x = float.(x)
-    g = similar(x); grad!(g, x)
-    gfd = similar(x)
-    for i in eachindex(x)
-        xp = copy(x); xm = copy(x)
-        xp[i] += h;   xm[i] -= h
-        gfd[i] = (cost(xp) - cost(xm)) / (2h)
-    end
-    return maximum(abs.(g .- gfd))
+    # value-only call of the cost used by run_bfgs
+    cg! = make_optimisation_problem(algebra, solver, tar; time_weight=time_weight, nsteps=nsteps)
+    J(x) = cg!(true, nothing, x)
+
+    x0 = [normalize(m0); τ_of_T(T0, solver.tstar_min, solver.tstar_max)]
+
+    opts = Optim.Options(; iterations = iterations, g_tol = 1e-8, show_trace = true)
+    res = optimize(J, x0, NelderMead(), opts)
+
+    return res
 end
-##
-
-rosen(x) = (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
-function rosen_grad!(G, x)
-    G[1] = -2 * (1 - x[1]) - 400 * x[1] * (x[2] - x[1]^2)
-    G[2] = 200 * (x[2] - x[1]^2)
-end
-
-x0 = [-1.2, 1.0]
-println("gradient check: ", check_gradient(rosen, rosen_grad!, x0))
-xopt, fmin, res = optimise(rosen, rosen_grad!, x0)
-println("minimiser: ", xopt, "  minimum: ", fmin)
-println("converged: ", Optim.converged(res),
-        "  iterations: ", Optim.iterations(res))

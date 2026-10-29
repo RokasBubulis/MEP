@@ -1,7 +1,6 @@
 # include("structs.jl")
 
 function costate_sensitivity_drift!(res, algebra::Algebra, stor::Storage, M_lie::Vector{Float64})
-    # TODO verify that res is cleanly overwritten
     d = size(algebra.lie_basis, 1)    
     f_contract_Hprime = reshape(transpose(stor.H_opt_prime_lie) * reshape(algebra.structure_tensor, d, :), d,d)
     f_contract_Hprime_M = reshape(transpose(M_lie) * f_contract_Hprime, d, 1)
@@ -39,7 +38,6 @@ function infidelity(U::AbstractMatrix, algebra::Algebra, stor::Storage, tar::Tar
 
     res = optimize(dist, -π, π, Brent())
     # instead of full W, store only optimal β and construct W as needed
-    #stor.W = conj(exp(res.minimizer * Matrix(algebra.lie_basis[1])) * tar.target)
     stor.β_opt = res.minimizer
     return res.minimum
 end 
@@ -62,4 +60,13 @@ function grad_infidelity!(grad::Vector{Float64}, algebra::Algebra, tracker::Cost
         grad[μ] = real(-c/n * sum(tracker.W_t_star .* dU_dm_mu(μ, algebra, tracker)))
     end
     return nothing
+end
+
+function dphi_dT(tracker::CostOptimumTracker)
+    # dU/dT = H_opt(T) U  ⇒  ∂φ/∂T = -(1/n) Re( conj(z)/|z| · <S', H_opt(T) U> )
+    U = tracker.U_t_star
+    n = size(U, 1)
+    z = sum(tracker.W_t_star .* U)            # W_t_star = conj(S')  ⇒  z = <S', U>
+    c = conj(z)/abs(z)
+    return real(-c/n * sum(tracker.W_t_star .* (tracker.H_t_star * U)))
 end

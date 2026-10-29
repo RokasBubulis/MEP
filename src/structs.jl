@@ -89,7 +89,8 @@ mutable struct CostOptimumTracker
     W_t_star::Matrix{ComplexF64}
     M_t_star::Vector{Float64}
     χ_t_star::Matrix{Float64}
-end 
+    H_t_star::Matrix{ComplexF64}    # H_opt at t_star in Hilbert space, dU/dt = H U  (needed for dφ/dT)
+end
 
 mutable struct OutputTracker
     min_dist::Float64

@@ -61,15 +61,18 @@ end
 function manual_optimum_update!(u, t, algebra::Algebra, stor::Storage, tar::TargetContainer, tracker::CostOptimumTracker)
     cost = infidelity(stor.U, algebra, stor, tar)
     # TODO investigate whether the cost should include the running time
-    if cost < tracker.min_cost && t > 5
-        _, _, B = u.x
+    if cost < tracker.min_cost
+        M, χ, B = u.x
         tracker.min_cost = cost 
         tracker.t_star = t
         tracker.B_t_star .= B
         tracker.U_t_star .= stor.U
         tracker.W_t_star .= conj(exp(stor.β_opt * Matrix(algebra.im_control)) * tar.target)  # TODO add allocation-free implementation
+        tracker.M_t_star .= M
+        tracker.χ_t_star .= χ
+        tracker.H_t_star .= stor.H_opt
     end
-end 
+end
 
 function unconditional_manual_optimum_update!(u, t, algebra::Algebra, stor::Storage, tar::TargetContainer, tracker::CostOptimumTracker)
     cost = infidelity(stor.U, algebra, stor, tar)
@@ -79,13 +82,20 @@ function unconditional_manual_optimum_update!(u, t, algebra::Algebra, stor::Stor
     tracker.t_star = t
     tracker.B_t_star .= B
     tracker.U_t_star .= stor.U
-    tracker.W_t_star .= conj(exp(stor.β_opt * Matrix(algebra.im_control)) * tar.target)  # 
+    tracker.W_t_star .= conj(exp(stor.β_opt * Matrix(algebra.im_control)) * tar.target) 
     tracker.M_t_star .= M
     tracker.χ_t_star .= χ
+    tracker.H_t_star .= stor.H_opt
     # TODO add allocation-free implementation
-end 
+end
 
-function new_propagate(m0::Vector{Float64}, algebra::Algebra, solver::SolverParams, tar::TargetContainer; dt=1e-2, method=Midpoint())
+# track_min = true : tracker holds the minimum cost over the trajectory on [0, T]
+# track_min = false: tracker holds the cost at the final time T (smooth in m0 and T)
+# nsteps given     : dt = T/nsteps, so the step grid scales with T
+# cost_history     : if a Vector{Tuple{Float64,Float64}} is given, (t, φ(t)) is pushed at every step
+function new_propagate(m0::Vector{Float64}, algebra::Algebra, solver::SolverParams, tar::TargetContainer; dt=1e-2, method=Midpoint(), T=solver.tmax, nsteps=nothing, track_min=true, cost_history=nothing)
+
+    dt = nsteps === nothing ? dt : T/nsteps
 
     # initialisation
     d = length(algebra.lie_basis)
@@ -97,27 +107,28 @@ function new_propagate(m0::Vector{Float64}, algebra::Algebra, solver::SolverPara
     x0 = ArrayPartition(m0, Matrix{Float64}(I, d, d), zeros(Float64, d, d))
 
     # setup optimal point tracker
-    tracker = CostOptimumTracker(1.0, 0.0, Matrix{Float64}(undef, d, d), Matrix{ComplexF64}(undef, n, n), Matrix{ComplexF64}(undef, n, n), Vector{Float64}(undef, d), Matrix{Float64}( undef, d, d))
+    tracker = CostOptimumTracker(1.0, 0.0, zeros(Float64, d, d), Matrix{ComplexF64}(I, n, n), Matrix{ComplexF64}(undef, n, n), copy(m0), Matrix{Float64}(I, d, d), zeros(ComplexF64, n, n))
 
     # setup ODE problem
     params = algebra, stor, tracker, tar, solver
-    prob = ODEProblem(ode_problem!, x0, (0.0, solver.tmax), params)
+    prob = ODEProblem(ode_problem!, x0, (0.0, T), params)
 
     # The callback fires once per accepted step *and* once at t = 0 (func_start),
-    # i.e. tmax/dt + 1 times. manual_unitary_propagation! consumes first_step
-    # itself so that U is advanced over exactly the tmax/dt intervals the solver
-    # traverses, leaving U, M, χ and B all evaluated at t = tmax.
+    # i.e. T/dt + 1 times. manual_unitary_propagation! consumes first_step
+    # itself so that U is advanced over exactly the T/dt intervals the solver
+    # traverses, leaving U, M, χ and B all evaluated at t = T.
     first_step = Ref(true)
     step_cb = FunctionCallingCallback(func_everystep=true) do u, t, integrator
         M, _, _ = u.x
         manual_unitary_propagation!(M, integrator, algebra, stor; first_step=first_step)
-        #manual_optimum_update!(u, t, algebra, stor, tar, tracker)
-    end 
+        track_min && manual_optimum_update!(u, t, algebra, stor, tar, tracker)
+        cost_history === nothing || push!(cost_history, (t, infidelity(stor.U, algebra, stor, tar)))
+    end
 
-    # solve 
+    # solve
     sol = solve(prob, method; callback=step_cb, reltol=solver.reltol, abstol=solver.abstol, adaptive=false, dt=dt, save_everystep=false, dense=false)
 
-    unconditional_manual_optimum_update!(sol.u[end], sol.t[end], algebra, stor, tar, tracker)
+    track_min || unconditional_manual_optimum_update!(sol.u[end], sol.t[end], algebra, stor, tar, tracker)
 
     return tracker
 end 
