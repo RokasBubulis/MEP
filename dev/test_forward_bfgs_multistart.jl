@@ -10,7 +10,7 @@ tmax = 10.0
 tstar_min = 3.0      # T is optimised in (tstar_min, tstar_max)
 T0 = 5.0
 tstar_max = tmax
-phase = 0.8*pi
+phase = pi
 gate_type = "k1"
 dt=1e-2
 

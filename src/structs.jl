@@ -90,6 +90,10 @@ mutable struct CostOptimumTracker
     M_t_star::Vector{Float64}
     χ_t_star::Matrix{Float64}
     H_t_star::Matrix{ComplexF64}    # H_opt at t_star in Hilbert space, dU/dt = H U  (needed for dφ/dT)
+    # preallocated memory for grad_infidelity! and dphi_dT
+    W_pad::Matrix{ComplexF64}       # W_t_star placed in the full 3^N x 3^N space (zero outside the logical block)
+    P::Matrix{ComplexF64}           # U_t_star W_padᵀ
+    g_lie::Vector{Float64}          # one overlap per Lie basis element
 end
 
 mutable struct OutputTracker
@@ -151,6 +155,7 @@ Base.@kwdef mutable struct Storage{T, R, C}
     H_opt_prime_lie::Vector{R}    # ∂H_opt/∂α  in Lie representation
     H_opt_dprime_lie::Vector{R}   # ∂²H_opt/∂α² in Lie representation
     overlap_Hdprime_M::R
+    bracket_lie::Vector{R}        # [H_opt', M] in Lie representation (used in costate_sensitivity_drift!)
     tmp_expv::Vector{T}
 
     # temporary arrays for distance 2 levels, size 2^n x 1
@@ -214,6 +219,7 @@ function Storage(n_particles::Int, n_basis::Int)
         H_opt_prime_lie              = Vector{R}(undef, n_basis),
         H_opt_dprime_lie             = Vector{R}(undef, n_basis),
         overlap_Hdprime_M = one(R), 
+        bracket_lie                  = Vector{R}(undef, n_basis),
         tmp_expv                     = Vector{T}(undef, n_basis),
 
         tmp_diag_2levels        = Vector{T}(undef, log_dim),

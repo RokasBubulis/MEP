@@ -14,6 +14,9 @@ function ode_problem!(du, u, p, t)
     # dM/dt = [H_opt, M] in Lie space; dim = dx1
     lie_bracket_coeffs!(dM, algebra.structure_tensor, stor.H_opt_lie, M)
 
+    # obtain F (computed first: it is also the second term of D)
+    state_sensitivity_drift!(stor.F, algebra, stor)
+
     # costate sensitivity propagation
     # dχ/dt = χD in Lie space; dim = dxd
     costate_sensitivity_drift!(stor.D, algebra, stor, M)
@@ -22,8 +25,6 @@ function ode_problem!(du, u, p, t)
     # state sensitivity propagation
     # obtain E 
     state_sensitivity_source!(stor.E, stor)
-    # obtain F 
-    state_sensitivity_drift!(stor.F, algebra, stor)
     # dB/dt = χE + BF 
     mul!(dB, χ, stor.E)
     mul!(dB, B, stor.F, 1, 1)  # mul!(A,B,C,a,b) = A -> a*B*C + b*A
@@ -41,10 +42,7 @@ function manual_unitary_propagation!(M_lie::Vector{Float64}, integrator, algebra
         return nothing
     end
 
-    # midpoint rule over the step just taken, i.e. [t-dt, t]:
-    # A = (H(t-dt) + H(t))/2 is the value of H at the interval centre to O(dt^2).
-    # NOTE: (3/2)H(t) - (1/2)H(t-dt) is a *forward* extrapolation to t+dt/2 and is
-    # therefore a full step off-centre for this interval, which is only O(dt).
+    # midpoint propagation; H_opt(t+dt/2) = 1/2 (H_opt(t) + H_opt(t+dt))
     copyto!(stor.dU, stor.H_opt)
     axpy!(1.0, stor.H_opt_t_minus_dt, stor.dU)
     lmul!(1/2, stor.dU)
@@ -68,6 +66,7 @@ function manual_optimum_update!(u, t, algebra::Algebra, stor::Storage, tar::Targ
         tracker.B_t_star .= B
         tracker.U_t_star .= stor.U
         conj_rotated_target!(tracker.W_t_star, stor.β_opt, algebra, tar)
+        pad_to_full_space!(tracker.W_pad, tracker.W_t_star, algebra)
         tracker.M_t_star .= M
         tracker.χ_t_star .= χ
         tracker.H_t_star .= stor.H_opt
@@ -83,6 +82,7 @@ function unconditional_manual_optimum_update!(u, t, algebra::Algebra, stor::Stor
     tracker.B_t_star .= B
     tracker.U_t_star .= stor.U
     conj_rotated_target!(tracker.W_t_star, stor.β_opt, algebra, tar)
+    pad_to_full_space!(tracker.W_pad, tracker.W_t_star, algebra)
     tracker.M_t_star .= M
     tracker.χ_t_star .= χ
     tracker.H_t_star .= stor.H_opt
@@ -108,7 +108,8 @@ function new_propagate(m0::Vector{Float64}, algebra::Algebra, solver::SolverPara
 
     # setup optimal point tracker
     # W_t_star lives in the space of the target (logical 2^N x 2^N or full 3^N x 3^N)
-    tracker = CostOptimumTracker(1.0, 0.0, zeros(Float64, d, d), Matrix{ComplexF64}(I, n, n), Matrix{ComplexF64}(undef, size(tar.target)...), copy(m0), Matrix{Float64}(I, d, d), zeros(ComplexF64, n, n))
+    tracker = CostOptimumTracker(1.0, 0.0, zeros(Float64, d, d), Matrix{ComplexF64}(I, n, n), Matrix{ComplexF64}(undef, size(tar.target)...), copy(m0), Matrix{Float64}(I, d, d), zeros(ComplexF64, n, n),
+                                 zeros(ComplexF64, n, n), zeros(ComplexF64, n, n), zeros(Float64, d))
 
     # setup ODE problem
     params = algebra, stor, tracker, tar, solver
