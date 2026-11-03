@@ -65,7 +65,7 @@ function manual_optimum_update!(u, t, algebra::Algebra, stor::Storage, tar::Targ
         tracker.t_star = t
         tracker.B_t_star .= B
         tracker.U_t_star .= stor.U
-        conj_rotated_target!(tracker.W_t_star, stor.β_opt, algebra, tar)
+        conj_rotated_target!(tracker.W_t_star, stor.phase_opt, algebra, tar)
         pad_to_full_space!(tracker.W_pad, tracker.W_t_star, algebra)
         tracker.M_t_star .= M
         tracker.χ_t_star .= χ
@@ -81,7 +81,7 @@ function unconditional_manual_optimum_update!(u, t, algebra::Algebra, stor::Stor
     tracker.t_star = t
     tracker.B_t_star .= B
     tracker.U_t_star .= stor.U
-    conj_rotated_target!(tracker.W_t_star, stor.β_opt, algebra, tar)
+    conj_rotated_target!(tracker.W_t_star, stor.phase_opt, algebra, tar)
     pad_to_full_space!(tracker.W_pad, tracker.W_t_star, algebra)
     tracker.M_t_star .= M
     tracker.χ_t_star .= χ
@@ -108,7 +108,7 @@ function new_propagate(m0::Vector{Float64}, algebra::Algebra, solver::SolverPara
 
     # setup optimal point tracker
     # W_t_star lives in the space of the target (logical 2^N x 2^N or full 3^N x 3^N)
-    tracker = CostOptimumTracker(1.0, 0.0, zeros(Float64, d, d), Matrix{ComplexF64}(I, n, n), Matrix{ComplexF64}(undef, size(tar.target)...), copy(m0), Matrix{Float64}(I, d, d), zeros(ComplexF64, n, n),
+    tracker = CostOptimumTracker(infidelity(stor.U0, algebra, stor, tar), 0.0, zeros(Float64, d, d), Matrix{ComplexF64}(I, n, n), Matrix{ComplexF64}(undef, size(tar.target)...), copy(m0), Matrix{Float64}(I, d, d), zeros(ComplexF64, n, n),
                                  zeros(ComplexF64, n, n), zeros(ComplexF64, n, n), zeros(Float64, d))
 
     # setup ODE problem

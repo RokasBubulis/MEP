@@ -41,8 +41,15 @@ function state_sensitivity_drift!(res, algebra::Algebra, stor::Storage)
     return nothing
 end
 
+# diagonal phase generator used in the cost: single-qubit phases θ for a logical (2^N x 2^N) target,
+# the control generator (phase β) for a full (3^N x 3^N) target
+phase_generator_vec(algebra::Algebra, tar::TargetContainer) =
+    size(tar.target, 1) == length(algebra.im_control_vec_3levels) ? algebra.im_control_vec_3levels : algebra.im_single_qubit_phase_vec
+
 function infidelity(U::AbstractMatrix, algebra::Algebra, stor::Storage, tar::TargetContainer,)
-    # a logical (2^N x 2^N) target selects the cost on the logical subspace: U is projected first
+    # logical target:  φ = 1 - 1/n max_θ |tr(Z(θ)⊗…⊗Z(θ) P(U) U_T†)|,  Z(θ) = diag(1, e^{iθ}),  P(U) = Π† U Π
+    # full target:     φ = 1 - 1/n max_β |tr(exp(iβC) U U_T†)|
+    # (the global phase drops out through |·|; Z(θ)⊗…⊗Z(θ) and exp(iβC) are diagonal, so only diag(P(U) U_T†) is needed)
     n = size(tar.adjoint_target, 1)
 
     if size(U, 1) != n
@@ -52,7 +59,6 @@ function infidelity(U::AbstractMatrix, algebra::Algebra, stor::Storage, tar::Tar
             stor.tmp_diag_2levels[i] = stor.tmp_2levels[i, i]
         end
         tmp_diag       = stor.tmp_diag_2levels
-        im_control_vec = algebra.im_control_vec_2levels
         exp_buffer     = stor.exp_buffer_dist_2levels
     else
         mul!(stor.tmp_3levels, U, tar.adjoint_target)
@@ -60,25 +66,28 @@ function infidelity(U::AbstractMatrix, algebra::Algebra, stor::Storage, tar::Tar
             stor.tmp_diag_3levels[i] = stor.tmp_3levels[i, i]
         end
         tmp_diag       = stor.tmp_diag_3levels
-        im_control_vec = algebra.im_control_vec_3levels
         exp_buffer     = stor.exp_buffer_dist_3levels
     end
-    # d(β) = 1 - |⟨exp(iβΣZ), diag(U U_tar')⟩| / n, minimised over β
-    dist = function (β)
-        @. exp_buffer = exp(β * im_control_vec)
+    phase_vec = phase_generator_vec(algebra, tar)
+    # d(ϑ) = 1 - |⟨exp(ϑ phase_vec), diag(P(U) U_T†)⟩| / n, minimised over ϑ (θ or β)
+    dist = function (ϑ)
+        @. exp_buffer = exp(ϑ * phase_vec)
         return 1 - (1/n) * abs(dot(exp_buffer, tmp_diag))
     end
 
-    res = optimize(dist, -π, π, Brent())
-    # instead of full W, store only optimal β and construct W as needed
-    stor.β_opt = res.minimizer
+    # d(ϑ) is 2π-periodic and can have several local minima: coarse grid first, then Brent around the best point
+    ϑs = range(-π, π, length=65)
+    ϑ0 = ϑs[argmin(dist.(ϑs))]
+    res = optimize(dist, ϑ0 - 2π/64, ϑ0 + 2π/64, Brent())
+    # instead of full W, store only the optimal phase and construct W as needed
+    stor.phase_opt = res.minimizer
     return res.minimum
-end 
+end
 
-function conj_rotated_target!(W, β, algebra::Algebra, tar::TargetContainer)
-    # W = conj(exp(iβC) S) in the space of the target (C is diagonal; logical C if the target is logical)
-    im_control_vec = size(tar.target, 1) == length(algebra.im_control_vec_3levels) ? algebra.im_control_vec_3levels : algebra.im_control_vec_2levels
-    W .= conj.(exp.(β .* im_control_vec) .* tar.target)
+function conj_rotated_target!(W, ϑ, algebra::Algebra, tar::TargetContainer)
+    # W = conj(exp(ϑ phase_vec) U_T) in the space of the target, so that sum(W .* P(U)) = tr(exp(-ϑ phase_vec) P(U) U_T†)
+    # (logical target: exp(ϑ phase_vec) = Z(ϑ)⊗…⊗Z(ϑ); full target: exp(iϑC))
+    W .= conj.(exp.(ϑ .* phase_generator_vec(algebra, tar)) .* tar.target)
     return nothing
 end
 
@@ -115,7 +124,7 @@ function trace_of_product(L::SparseMatrixCSC, P::Matrix)
 end
 
 function grad_infidelity!(grad::Vector{Float64}, algebra::Algebra, tracker::CostOptimumTracker)
-    # φ = 1 - |z|/n,  z = <S', P(U)> = tr(S'† P(U)),  S' = exp(iβ_opt C) S  (β_opt fixed by envelope theorem)
+    # φ = 1 - |z|/n,  z = <S', P(U)> = tr(S'† P(U)),  S' = exp(ϑ_opt phase_vec) S  (θ or β; fixed by envelope theorem)
     # ∂φ/∂m_μ = -(1/n) Re( conj(z)/|z| · <S', P(∂U/∂m_μ)> )
     # P = projection onto the logical subspace if the target is logical (n = 2^N), identity otherwise (n = 3^N)
     #

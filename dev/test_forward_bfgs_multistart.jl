@@ -31,7 +31,7 @@ println("Setup finished")
 d = length(algebra.lie_basis)                      # initial guess for T
 n_starts = 20
 cost_tol = 1e-4                  # stop as soon as a start reaches the gate
-time_weight = 1e-3
+time_weight = 1e-2
 nsteps = round(Int, tmax/dt)     # dt = T/nsteps ≤ 1e-2 for every T in the window
 
 @time begin

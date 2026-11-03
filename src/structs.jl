@@ -35,6 +35,7 @@ struct Algebra{T}
     adj_ryd_to_logic_conv_mat::Matrix{T}
     im_control_vec_2levels::Vector{T}
     im_control_vec_3levels::Vector{T}
+    im_single_qubit_phase_vec::Vector{T}   # i·(number of qubits in |1⟩) per logical basis state: Z(θ)⊗…⊗Z(θ) = Diagonal(exp.(θ .* this))
     KrylovSubspace::KrylovSubspace{Float64, Float64, Float64, Matrix{Float64}, Matrix{Float64}}
 end
 
@@ -60,13 +61,20 @@ function Algebra(im_control::SparseMatrixCSC{T, Int}, im_drift::SparseMatrixCSC{
     im_control_2levels = adj_ryd_to_logic_conv_mat * im_control * ryd_to_logic_conv_mat
     im_control_vec_2levels = diag(im_control_2levels)
 
+    # single-qubit phase rotations on the logical subspace: Z(θ) = diag(1, e^{iθ}) on every qubit,
+    # Z(θ)⊗…⊗Z(θ) = exp(iθ Σ_j |1⟩⟨1|_j), so only the number of qubits in |1⟩ per basis state is needed
+    n1  = spdiagm(0 => T[0, 1, 0])
+    id_ = spdiagm(0 => ones(T, 3))
+    n_ones_ryd = sum(reduce(kron, [j == i ? n1 : id_ for j in 1:n_particles]) for i in 1:n_particles)
+    im_single_qubit_phase_vec = im .* diag(adj_ryd_to_logic_conv_mat * n_ones_ryd * ryd_to_logic_conv_mat)
+
     KrylovSubspace = arnoldi(adj_repr_map, neg_im_drift_lie; m=length(lie_basis))
     
     return Algebra{T}(
         n_particles, n_levels, im_control, im_drift,
         lie_basis, p_basis, depths, structure_tensor, adj_repr_map, im_control_lie, neg_im_drift_lie,
         ryd_to_logic_conv_mat, adj_ryd_to_logic_conv_mat, 
-        im_control_vec_2levels, im_control_vec_3levels, KrylovSubspace
+        im_control_vec_2levels, im_control_vec_3levels, im_single_qubit_phase_vec, KrylovSubspace
     )
 end
 
@@ -114,8 +122,7 @@ Base.@kwdef mutable struct Storage{T, R, C}
     # state control
     alpha::R
     a::R
-    β_opt::R                        # -d²H_opt/dα² contracted with costate M at the optimal α,
-                                # i.e. H_opt''^{α M_α} = ⟨∂²H_opt/∂α², M⟩
+    phase_opt::R                    # optimal phase in the cost: θ (single-qubit, logical target) or β (full target)
 
     # initial states Hilbert, size 3^n x 3^n
     U0::Matrix{T}
@@ -187,7 +194,7 @@ function Storage(n_particles::Int, n_basis::Int)
     return Storage(
         alpha         = zero(R),
         a             = one(R),
-        β_opt         = zero(R),
+        phase_opt     = zero(R),
         U0            = Matrix{T}(I, ryd_dim, ryd_dim),
         U             = Matrix{T}(undef, ryd_dim, ryd_dim),
         dU            = Matrix{T}(undef, ryd_dim, ryd_dim),
