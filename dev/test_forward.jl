@@ -23,4 +23,4 @@ solver = SolverParams(tmax, reltol, abstol, dist_tol, grad_tol, unitary_tol, tst
 tar = build_tar(gate_type, phase, n_qubits, algebra)
 println("Setup finished")
 ##
-find_best_initial_costate(tar, algebra, solver; dt=dt, show_trace=false)
+@time find_best_initial_costate(tar, algebra, solver; dt=dt, show_trace=false)
