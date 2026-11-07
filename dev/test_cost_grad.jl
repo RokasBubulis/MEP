@@ -1,5 +1,5 @@
 include("../src/structs.jl")
-include("../src/new_propagation.jl")
+include("../src/propagation.jl")
 
 using Plots, LaTeXStrings
 
@@ -11,7 +11,7 @@ tstar_max = tmax
 phase = pi
 gate_type = "k1"
 
-im_control, im_drift = im .* construct_Ryd_generators(n_qubits)
+im_control, im_drift = im .* construct_HJB_generators(n_qubits)
 algebra = Algebra(im_control, im_drift)
 reltol = 1e-8
 abstol = 1e-8

@@ -22,7 +22,7 @@ for n in n_qubits_list
     push!(num_basis_dense, l)
     println("Dense $n : $l")
 
-    generators_ryd = construct_Ryd_generators(n)
+    generators_ryd = construct_HJB_generators(n)
     lie_basis_ryd = construct_lie_basis_general(generators_ryd; depth=commutation_depth)
     l = length(lie_basis_ryd)
     push!(num_basis_ryd, l)

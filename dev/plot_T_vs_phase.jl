@@ -1,5 +1,5 @@
 include("../src/structs.jl")
-include("../src/new_propagation.jl")
+include("../src/propagation.jl")
 include("../src/optimise.jl")
 
 using Plots, LaTeXStrings, Random, Printf, JLD2
@@ -9,7 +9,7 @@ n_qubits = 2
 gate_type = "k1"
 dt=1e-2
 
-im_control, im_drift = im .* construct_Ryd_generators(n_qubits)
+im_control, im_drift = im .* construct_HJB_generators(n_qubits)
 algebra = Algebra(im_control, im_drift)
 reltol = 1e-8
 abstol = 1e-8

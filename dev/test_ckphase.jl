@@ -11,7 +11,7 @@ using Plots, LaTeXStrings, Random, Printf, JLD2
 # Same procedure as dev/plot_T_vs_controlled_phase.jl, for a single Φ.
 
 # ── settings ──────────────────────────────────────────────────────────────────
-phase       = 0.5π     # target controlled phase Φ
+phase       = π     # target controlled phase Φ
 n_random    = 16       # number of random starts
 success_tol = 1e-8     # a start is successful if its polished infidelity is below this
 descend_tol = 1e-8     # infidelity that still counts as a gate while T is lowered
@@ -27,7 +27,7 @@ seed        = 1
 # ── setup ─────────────────────────────────────────────────────────────────────
 n_qubits  = 2
 gate_type = "k1"
-im_control, im_drift = im .* construct_Ryd_generators(n_qubits)
+im_control, im_drift = im .* construct_HJB_generators(n_qubits)
 algebra = Algebra(im_control, im_drift)
 reltol = abstol = dist_tol = grad_tol = unitary_tol = 1e-8
 d   = length(algebra.lie_basis)
@@ -121,9 +121,9 @@ println("───────────────────────�
 
 p = plot(t_α, α .- α[1]; lw = 2, label = @sprintf("Φ = %.3gπ, T* = %.3f", phase/π, T_best),
          xlabel = L"t\,\Omega", ylabel = L"\alpha_{\mathrm{opt}}(t) - \alpha_{\mathrm{opt}}(0)", size = (600, 380))
-out = joinpath(@__DIR__, "..", "res", @sprintf("single_phase_%.4fpi", phase/π))
-savefig(p, out * "_alpha.png")
-jldsave(out * ".jld2"; phase, T = T_best, infidelity = φ_best, success, n_success, n_random, success_tol,
-        m = m_best, t = t_α, alpha = α, φ_starts = [p.φ for p in polished], T_starts = [p.T for p in polished])
-println("saved ", out, "_alpha.png and .jld2")
+# out = joinpath(@__DIR__, "..", "res", @sprintf("single_phase_%.4fpi", phase/π))
+# savefig(p, out * "_alpha.png")
+# jldsave(out * ".jld2"; phase, T = T_best, infidelity = φ_best, success, n_success, n_random, success_tol,
+#         m = m_best, t = t_α, alpha = α, φ_starts = [p.φ for p in polished], T_starts = [p.T for p in polished])
+# println("saved ", out, "_alpha.png and .jld2")
 p

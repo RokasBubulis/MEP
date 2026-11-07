@@ -4,7 +4,7 @@ include("../src/adm.jl")
 using BenchmarkTools
 
 # generators
-im_control, im_drift = im .* construct_Ryd_generators(2)
+im_control, im_drift = im .* construct_HJB_generators(2)
 dim = size(im_control, 1)
 
 # prepare Lie algebra struct 

@@ -85,7 +85,7 @@ commutation_depth = 10
 theta = [0.7, 0.6]
 n_qubits = 8
 
-generators = construct_Ryd_generators(n_qubits)
+generators = construct_HJB_generators(n_qubits)
 observable = generators[1]
 input_matrix = construct_input_matrix(n_qubits)
 
