@@ -38,11 +38,15 @@ end
 struct RopRyd<: RydbergOp
     sites::Vector{Int}
 end
+struct XopPXP<: RydbergOp
+    sites::Vector{Int}
+end
 
 operator_matrix(::Xop) = sparse(T[0 1; 1 0])
 operator_matrix(::Zop) = sparse(T[1 0; 0 -1])
 operator_matrix(::Yop) = sparse(T[0 -im; im 0])
 operator_matrix(::Qop) = sparse(T[1 0; 0 0])
+operator_matrix(::XopPXP) = sparse(T[1 0 0; 0 0 1; 0 1 0])
 operator_matrix(::XopRyd) = sparse(T[0 0 0; 0 0 1; 0 1 0])
 operator_matrix(::ZopRyd) = sparse(T[1 0 0; 0 1 0; 0 0 -1])
 operator_matrix(::YopRyd) = sparse(T[0 0 0; 0 0 -im; 0 im 0])
@@ -90,7 +94,7 @@ function construct_dense_generators(n_qubits::Int)
     return [A, B]
 end
 
-function construct_Ryd_generators(n_qubits::Int)
+function construct_HJB_generators(n_qubits::Int)
     # returns control first and drift second
     A = spzeros(T, 3^n_qubits, 3^n_qubits)
     for i in 1:n_qubits
@@ -106,10 +110,9 @@ function construct_Ryd_generators(n_qubits::Int)
     return [B/2, A/2]
 end
 
-function construct_Ryd_generators_extra_drift_term(n_qubits::Int)
+function construct_PXP_generators(n_qubits::Int)
     # returns control first and drift second
     A = spzeros(T, 3^n_qubits, 3^n_qubits)
-    extra_term = spzeros(T, 3^n_qubits, 3^n_qubits)
     for i in 1:n_qubits
         Qnot = sparse(Matrix{T}(I, 3^n_qubits, 3^n_qubits))
         for j in 1:n_qubits
@@ -117,25 +120,10 @@ function construct_Ryd_generators_extra_drift_term(n_qubits::Int)
                 Qnot *= operator(QopRyd([j]), n_qubits)
             end
         end
-        A += operator(XopRyd([i]), n_qubits) * Qnot
+        A += operator(XopPXP([i]), n_qubits) * Qnot
     end
     B = sum(operator(ZopRyd([i]), n_qubits) for i in 1:n_qubits)
     return [B/2, A/2]
-end
-
-function construct_Ryd_generators_2levels(n_qubits::Int)
-    A = spzeros(T, 2^n_qubits, 2^n_qubits)
-    for i in 1:n_qubits
-        Qnot = sparse(Matrix{T}(I, 2^n_qubits, 2^n_qubits))
-        for j in 1:n_qubits
-            if j != i 
-                Qnot *= operator(Qop([j]), n_qubits)
-            end
-        end
-        A += operator(Xop([i]), n_qubits) * Qnot
-    end
-    B = sum(operator(Zop([i]), n_qubits) for i in 1:n_qubits)
-    return [A, B]
 end
 
 function construct_input_matrix(n_qubits::Int)
@@ -203,52 +191,7 @@ function construct_rydberg_drift(positions::AbstractMatrix{<:Real}, n_levels::In
     return H_drift
 end
 
-function construct_global_controls(n_qubits; n_levels = N_LEVELS)
-    dim = n_levels ^ n_qubits
-    X = spzeros(T, dim, dim)
-    Z = spzeros(T, dim, dim)
-    for i in 1:n_qubits
-        if n_levels == 2
-            X += operator(Xop([i]), n_qubits)
-            Z += operator(Zop([i]), n_qubits)
-        elseif n_levels == 3
-            X += operator(XopRyd([i]), n_qubits)
-            Z += operator(ZopRyd([i]), n_qubits)
-        end
-    end
-    return [X, Z]
-end
-
-function construct_local_controls(n_qubits; n_levels = N_LEVELS)
-    x_lst = SparseMatrixCSC{T, Int}[]
-    z_lst = SparseMatrixCSC{T, Int}[]
-    for i in 1:n_qubits
-        if n_levels == 2
-            push!(x_lst, operator(Xop([i]), n_qubits))
-            push!(z_lst, operator(Zop([i]), n_qubits))
-        elseif n_levels == 3
-            push!(x_lst, operator(XopRyd([i]), n_qubits))
-            push!(z_lst, operator(ZopRyd([i]), n_qubits))  
-        end
-    end
-    return vcat(x_lst, z_lst)
-end
-
-function construct_YQ_target(n_qubits::Int)
-    A = spzeros(T, 3^n_qubits, 3^n_qubits)
-    for i in 1:n_qubits
-        Qnot = sparse(Matrix{T}(I, 3^n_qubits, 3^n_qubits))
-        for j in 1:n_qubits
-            if j != i 
-                Qnot *= operator(QopRyd([j]), n_qubits)
-            end
-        end
-        A += operator(YopRyd([i]), n_qubits) * Qnot
-    end
-    return A
-end
-
-# gate
+# CkPhase gates
 k0 = ComplexF64[1.0; 0.0; 0.0]
 k1 = ComplexF64[0.0; 1.0; 0.0]
 si = ComplexF64[1.0 0.0 0.0;0.0 1.0 0.0;0.0 0.0 1.0]
