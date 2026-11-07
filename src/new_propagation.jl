@@ -93,7 +93,8 @@ end
 # track_min = false: tracker holds the cost at the final time T (smooth in m0 and T)
 # nsteps given     : dt = T/nsteps, so the step grid scales with T
 # cost_history     : if a Vector{Tuple{Float64,Float64}} is given, (t, φ(t)) is pushed at every step
-function new_propagate(m0::Vector{Float64}, algebra::Algebra, solver::SolverParams, tar::TargetContainer; dt=1e-2, method=Midpoint(), T=solver.tmax, nsteps=nothing, track_min=false, cost_history=nothing)
+# alpha_history    : if a Vector{Tuple{Float64,Float64}} is given, (t, α_opt(t)) is pushed at every step (incl. t = 0)
+function new_propagate(m0::Vector{Float64}, algebra::Algebra, solver::SolverParams, tar::TargetContainer; dt=1e-2, method=Midpoint(), T=solver.tmax, nsteps=nothing, track_min=false, cost_history=nothing, alpha_history=nothing)
 
     dt = nsteps === nothing ? dt : T/nsteps
 
@@ -125,6 +126,7 @@ function new_propagate(m0::Vector{Float64}, algebra::Algebra, solver::SolverPara
         manual_unitary_propagation!(M, integrator, algebra, stor; first_step=first_step)
         track_min && manual_optimum_update!(u, t, algebra, stor, tar, tracker)
         cost_history === nothing || push!(cost_history, (t, infidelity(stor.U, algebra, stor, tar)))
+        alpha_history === nothing || push!(alpha_history, (t, stor.alpha))   # α_opt(M(t)), set by manual_unitary_propagation!
     end
 
     # solve

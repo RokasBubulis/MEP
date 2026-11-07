@@ -36,7 +36,7 @@ end
 
 # g_tol: the analytic gradient matches the discretised cost only to O(dt²) (≈1e-4 at dt = 1e-2),
 # so smaller gradient tolerances cannot be met and BFGS would run to the iteration limit
-function run_bfgs(m0::Vector{Float64}, T0::Float64, algebra::Algebra, solver::SolverParams, tar::TargetContainer; time_weight=1e-3, nsteps=1000, iterations=100, g_tol=1e-4, f_reltol=1e-8)
+function run_bfgs(m0::Vector{Float64}, T0::Float64, algebra::Algebra, solver::SolverParams, tar::TargetContainer; time_weight=1e-3, nsteps=1000, iterations=100, g_tol=1e-6, f_reltol=1e-8)
 
     # wrap cost and gradient functions
     cg! = make_optimisation_problem(algebra, solver, tar; time_weight=time_weight, nsteps=nsteps)
