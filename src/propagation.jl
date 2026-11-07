@@ -1,171 +1,138 @@
-using DifferentialEquations, OrdinaryDiffEqLowOrderRK
-using DiffEqCallbacks, FiniteDiff, ADTypes
-using Printf
+using DifferentialEquations, DiffEqCallbacks, OrdinaryDiffEqLowOrderRK, StaticArrays, RecursiveArrayTools
 
 include("adm.jl")
-include("distance.jl")
+include("sensitivity.jl")
 
-function check_unitarity(U, U_adj, tmp, tol)
-    # U*adjoint(U) = I
-    adjoint!(U_adj, U)
-    mul!(tmp, U, U_adj)
-    @inbounds for i in 1:size(tmp, 1)
-        tmp[i, i] -= one(eltype(tmp))
-    end
-    
-    nrm = norm(tmp)
-    @assert nrm < tol "Propagator is not unitary: norm(U*adjoint(U) - I) = $nrm"
-end
+function ode_problem!(du, u, p, t)
+    M, χ, B = u.x
+    dM, dχ, dB = du.x
 
-# propagation of costate: dM/dt = [H_opt(t), M(t)]
-function f!(dx, x, p, t)
-    algebra, stor, = p[1], p[4]
-    optimal_adjoint_drift_lie_analytic!(stor.H_opt_lie, x, algebra, stor)
-    lie_bracket_coeffs!(dx, algebra.structure_tensor, stor.H_opt_lie, x)
-end
+    algebra, stor = p[1], p[2]
+    # costate propagation
+    # obtain H_opt 
+    optimal_adjoint_drift_lie_analytic!(stor.H_opt_lie, M, algebra, stor)
+    # dM/dt = [H_opt, M] in Lie space; dim = dx1
+    lie_bracket_coeffs!(dM, algebra.structure_tensor, stor.H_opt_lie, M)
 
-function propagate(m0::AbstractVector, algebra::Algebra, solver::SolverParams, tar::TargetContainer, method=Midpoint(); save = false, kwargs...)
+    # obtain F (computed first: it is also the second term of D)
+    state_sensitivity_drift!(stor.F, algebra, stor)
 
-    stor = Storage(algebra.n_particles, length(algebra.lie_basis))
-    @assert haskey(kwargs, :dt) "Non-adaptive methods must be assigned a fixed time step"
-    # Initial values
-    m0_arr = zeros(Float64, length(algebra.lie_basis))
-    m0_arr[2:end] = m0
-    x0 = m0_arr
+    # costate sensitivity propagation
+    # dχ/dt = χD in Lie space; dim = dxd
+    costate_sensitivity_drift!(stor.D, algebra, stor, M)
+    mul!(dχ, χ, stor.D)
 
-    # set up problem
-    stor.U .= stor.U0
-    # d0 = distance(stor.U, tar, algebra, stor)
-    # tracker = OutputTracker(d0, 0.0)
-    tracker = OutputTracker(1.0, solver.tmax)
-    params = algebra, tar, solver, stor, tracker
-    prob = ODEProblem(f!, x0, (0.0, solver.tmax), params)
-    if save
-        n = size(algebra.im_control, 1)
-        n_steps = round(Int, solver.tmax / kwargs[:dt])
-        # the solver may split the final step to land exactly on tmax, so allow
-        # one spare slot beyond the t = 0 state and the tmax/dt steps
-        Ulist = [Matrix{ComplexF64}(undef, n, n) for _ in 1:n_steps+2]
-        αlist = zeros(Float64, n_steps+2)
-    else
-        Ulist = nothing 
-        αlist = nothing
-    end 
-    # number of entries written to Ulist/αlist; the tail stays unset on early termination
-    saved = Ref(0)
-    
-    # Step-wise computation to update minimum distance to target coset
-    first_step = Ref(true)
-    function propagate_U_and_update_distance!(u, t, integrator; save=false, ulist=Ulist, alphalist=αlist)
-        tar, solver, stor, tracker = integrator.p[2], integrator.p[3], integrator.p[4], integrator.p[5]
-
-        optimal_adjoint_drift_lie_analytic!(stor.H_opt_lie, u, algebra, stor)
-        Lie_to_Hilbert!(stor.H_opt, stor.H_opt_lie, algebra)
-        #check_anti_hermiticity(stor.H_opt)
-
-        # The callback also fires at t = 0 (func_start), where no interval has been
-        # traversed yet. Advancing there would leave stor.U one step ahead of u, so
-        # the distance below — and every entry of ulist — would be mislabelled by dt.
-        if first_step[]
-            first_step[] = false
-            if save
-                saved[] += 1
-                ulist[saved[]] .= stor.U
-                alphalist[saved[]] = stor.alpha
-            end
-            return nothing
-        end
-
-        copyto!(stor.dU, stor.H_opt)
-        lmul!(integrator.dt, stor.dU)
-        exponential!(stor.dU, stor.exp_method, stor.exp_cache)
-        mul!(stor.U_buffer, stor.dU, stor.U)
-        stor.U .= stor.U_buffer
-        check_unitarity(stor.U, stor.U_adj_buffer, stor.U_unitary_buffer_check, solver.unitary_tol)
-
-        # stor.U now corresponds to time t, matching u
-        if save
-            saved[] += 1
-            ulist[saved[]] .= stor.U
-            alphalist[saved[]] = stor.alpha
-        end 
-
-        dist = distance(stor.U, tar, algebra, stor)
-        if dist < 0.0
-            @warn("Negative dist to target coset obtained: $dist, setting to positive")
-            dist = abs(dist)
-        end 
-        if dist < tracker.min_dist && solver.tstar_min <= t <= solver.tstar_max
-            tracker.min_dist = dist 
-            tracker.tstar = t 
-        end 
-    end
-
-    # Functions to check if solution can be terminated
-    function condition(u, t, integrator)
-        return integrator.p[5].min_dist < integrator.p[3].dist_tol
-    end
-
-    function affect!(integrator)
-        #println("Distance $(integrator.p[5].min_dist) below tolerance $(integrator.p[3].dist_tol) reached at t = $(integrator.t). Terminating solver")
-        terminate!(integrator)
-    end
-
-    # Build callbacks
-    step_cb = FunctionCallingCallback(func_everystep=true) do u, t, integrator
-        propagate_U_and_update_distance!(u, t, integrator; save=save, ulist=Ulist, alphalist=αlist)
-    end
-    event_cb = DiscreteCallback(condition, affect!)
-    cb = CallbackSet(step_cb, event_cb)
-
-    # Solution 
-    sol = solve(prob, method; callback=cb, reltol=solver.reltol, abstol=solver.abstol, adaptive=false, kwargs...)
-
-    if save 
-        # early termination leaves the tail unpopulated
-        return tracker.min_dist, tracker.tstar, Ulist[1:saved[]], αlist[1:saved[]]
-    else 
-        return tracker.min_dist
-    end 
+    # state sensitivity propagation
+    # obtain E 
+    state_sensitivity_source!(stor.E, stor)
+    # dB/dt = χE + BF 
+    mul!(dB, χ, stor.E)
+    mul!(dB, B, stor.F, 1, 1)  # mul!(A,B,C,a,b) = A -> a*B*C + b*A
 end 
 
-function find_best_initial_costate(tar::TargetContainer, algebra::Algebra, solver::SolverParams, method=Midpoint(); m0=nothing, show_every=50, iterations=1000, kwargs...)
+function manual_unitary_propagation!(M_lie::Vector{Float64}, integrator, algebra::Algebra, stor::Storage; first_step=false)
 
-    if isnothing(m0)
-        n = length(algebra.p_basis)
-        m0 = zeros(n)
-        m0[1] = 1.0
-    end 
-
-    iter = Ref(0)
-    objective = function(m) 
-        iter[] += 1
-        cost, tstar, _, _ = propagate(m, algebra, solver, tar, method; save = true,
-        save_everystep = false,
-        save_start = false,
-        save_end = false,
-        dense = false, 
-        kwargs...)
-        @printf("iter = %4d  ->  cost = %.8f  at t* = %.6f\n", iter[], cost, tstar)
-        return cost
+    optimal_adjoint_drift_lie_analytic!(stor.H_opt_lie, M_lie, algebra, stor)
+    Lie_to_Hilbert!(stor.H_opt, stor.H_opt_lie, algebra)
+    if first_step[]
+        # no interval has been traversed yet, so there is nothing to advance:
+        # just record H(t0) as the left endpoint of the first step
+        stor.H_opt_t_minus_dt .= stor.H_opt
+        first_step[] = false
+        return nothing
     end
 
-    result = Optim.optimize(objective, m0, NelderMead(), Optim.Options(
-        callback = state -> state.f_lowest < solver.dist_tol,
-        g_abstol = solver.grad_tol,
-        show_every = show_every,
-        iterations=iterations
-    ))
-    m_best = result.minimizer
+    # midpoint propagation; H_opt(t+dt/2) = 1/2 (H_opt(t) + H_opt(t+dt))
+    copyto!(stor.dU, stor.H_opt)
+    axpy!(1.0, stor.H_opt_t_minus_dt, stor.dU)
+    lmul!(1/2, stor.dU)
 
-    dmin, tstar, _, _ = propagate(m_best, algebra, solver, tar, method; save = true,
-    save_everystep = false,
-    save_start = false,
-    save_end = false,
-    dense = false, 
-    kwargs...)
-    @printf("Final: cost = %.8f  at t* = %.6f  after %d iterations\n",
-        dmin, tstar, iter[])
+    lmul!(integrator.dt, stor.dU)
+    exponential!(stor.dU, stor.exp_method, stor.exp_cache)
+    mul!(stor.U_buffer, stor.dU, stor.U)
+    stor.U .= stor.U_buffer
 
-    return m_best
+    stor.H_opt_t_minus_dt .= stor.H_opt
+    return nothing
+end 
+
+function manual_optimum_update!(u, t, algebra::Algebra, stor::Storage, tar::TargetContainer, tracker::CostOptimumTracker)
+    cost = infidelity(stor.U, algebra, stor, tar)
+    # TODO investigate whether the cost should include the running time
+    if cost < tracker.min_cost
+        M, χ, B = u.x
+        tracker.min_cost = cost 
+        tracker.t_star = t
+        tracker.B_t_star .= B
+        tracker.U_t_star .= stor.U
+        conj_rotated_target!(tracker.W_t_star, stor.phase_opt, algebra, tar)
+        pad_to_full_space!(tracker.W_pad, tracker.W_t_star, algebra)
+        tracker.M_t_star .= M
+        tracker.χ_t_star .= χ
+        tracker.H_t_star .= stor.H_opt
+    end
 end
+
+function unconditional_manual_optimum_update!(u, t, algebra::Algebra, stor::Storage, tar::TargetContainer, tracker::CostOptimumTracker)
+    cost = infidelity(stor.U, algebra, stor, tar)
+    # TODO investigate whether the cost should include the running time
+    M, χ, B = u.x
+    tracker.min_cost = cost 
+    tracker.t_star = t
+    tracker.B_t_star .= B
+    tracker.U_t_star .= stor.U
+    conj_rotated_target!(tracker.W_t_star, stor.phase_opt, algebra, tar)
+    pad_to_full_space!(tracker.W_pad, tracker.W_t_star, algebra)
+    tracker.M_t_star .= M
+    tracker.χ_t_star .= χ
+    tracker.H_t_star .= stor.H_opt
+    # TODO add allocation-free implementation
+end
+
+# track_min = true : tracker holds the minimum cost over the trajectory on [0, T]
+# track_min = false: tracker holds the cost at the final time T (smooth in m0 and T)
+# nsteps given     : dt = T/nsteps, so the step grid scales with T
+# cost_history     : if a Vector{Tuple{Float64,Float64}} is given, (t, φ(t)) is pushed at every step
+# alpha_history    : if a Vector{Tuple{Float64,Float64}} is given, (t, α_opt(t)) is pushed at every step (incl. t = 0)
+function new_propagate(m0::Vector{Float64}, algebra::Algebra, solver::SolverParams, tar::TargetContainer; dt=1e-2, method=Midpoint(), T=solver.tmax, nsteps=nothing, track_min=false, cost_history=nothing, alpha_history=nothing)
+
+    dt = nsteps === nothing ? dt : T/nsteps
+
+    # initialisation
+    d = length(algebra.lie_basis)
+    n = algebra.n_levels^algebra.n_particles
+    stor = Storage(algebra.n_particles, d)
+    # m0 = zeros(Float64, d)
+    # m0[2:end] = m
+    stor.U .= stor.U0 
+    x0 = ArrayPartition(m0, Matrix{Float64}(I, d, d), zeros(Float64, d, d))
+
+    # setup optimal point tracker
+    # W_t_star lives in the space of the target (logical 2^N x 2^N or full 3^N x 3^N)
+    tracker = CostOptimumTracker(infidelity(stor.U0, algebra, stor, tar), 0.0, zeros(Float64, d, d), Matrix{ComplexF64}(I, n, n), Matrix{ComplexF64}(undef, size(tar.target)...), copy(m0), Matrix{Float64}(I, d, d), zeros(ComplexF64, n, n),
+                                 zeros(ComplexF64, n, n), zeros(ComplexF64, n, n), zeros(Float64, d))
+
+    # setup ODE problem
+    params = algebra, stor, tracker, tar, solver
+    prob = ODEProblem(ode_problem!, x0, (0.0, T), params)
+
+    # The callback fires once per accepted step *and* once at t = 0 (func_start),
+    # i.e. T/dt + 1 times. manual_unitary_propagation! consumes first_step
+    # itself so that U is advanced over exactly the T/dt intervals the solver
+    # traverses, leaving U, M, χ and B all evaluated at t = T.
+    first_step = Ref(true)
+    step_cb = FunctionCallingCallback(func_everystep=true) do u, t, integrator
+        M, _, _ = u.x
+        manual_unitary_propagation!(M, integrator, algebra, stor; first_step=first_step)
+        track_min && manual_optimum_update!(u, t, algebra, stor, tar, tracker)
+        cost_history === nothing || push!(cost_history, (t, infidelity(stor.U, algebra, stor, tar)))
+        alpha_history === nothing || push!(alpha_history, (t, stor.alpha))   # α_opt(M(t)), set by manual_unitary_propagation!
+    end
+
+    # solve
+    sol = solve(prob, method; callback=step_cb, reltol=solver.reltol, abstol=solver.abstol, adaptive=false, dt=dt, save_everystep=false, dense=false)
+
+    track_min || unconditional_manual_optimum_update!(sol.u[end], sol.t[end], algebra, stor, tar, tracker)
+
+    return tracker
+end 
