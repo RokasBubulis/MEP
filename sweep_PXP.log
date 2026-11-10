@@ -1,0 +1,2686 @@
+Setup finished: Φ = 1.0π, 16 threads
+start  55: φ = 2.43e-01 at T = 3.9103
+start  25: φ = 2.43e-01 at T = 3.9063
+start  19: φ = 2.43e-01 at T = 3.9118
+start  56: φ = 1.97e-01 at T = 7.8220
+start  49: φ = -2.61e-12 at T = 6.8954
+start  31: φ = -8.09e-12 at T = 6.8959
+start  50: φ = 2.43e-01 at T = 3.9063
+start  37: φ = -2.35e-12 at T = 6.8954
+start  13: φ = -3.64e-12 at T = 6.9282
+start  91: φ = -4.00e-12 at T = 6.9282
+start  14: φ = 2.43e-01 at T = 3.9088
+start  85: φ = 1.53e-01 at T = 10.0000
+start  26: φ = -2.90e-12 at T = 6.8954
+start   7: φ = -1.66e-12 at T = 6.8954
+start  73: φ = -2.52e-12 at T = 6.8954
+start  32: φ = -2.48e-12 at T = 6.8954
+start   1: φ = -4.01e-13 at T = 6.8954
+start  43: φ = -1.26e-12 at T = 6.8954
+start  79: φ = 1.82e-01 at T = 10.0000
+start  74: φ = 1.97e-01 at T = 7.8187
+start  33: φ = 2.43e-01 at T = 3.9074
+start  15: φ = -1.32e-12 at T = 6.8954
+start  67: φ = 8.90e-03 at T = 10.0000
+start  44: φ = 5.38e-13 at T = 6.8954
+start   2: φ = 1.83e-01 at T = 10.0000
+start  38: φ = -1.19e-12 at T = 6.8954
+start  92: φ = -2.60e-12 at T = 6.8954
+start  75: φ = -1.33e-12 at T = 6.8954
+start  16: φ = 1.97e-01 at T = 7.8206
+start  57: φ = -2.70e-12 at T = 6.9282
+start  80: φ = -1.40e-12 at T = 6.8954
+start  34: φ = -1.35e-12 at T = 6.8954
+start  93: φ = 1.97e-01 at T = 7.8286
+start  20: φ = 1.02e-11 at T = 9.9972
+start   8: φ = -1.16e-12 at T = 6.8954
+start  51: φ = 2.99e-02 at T = 10.0000
+start  68: φ = -3.01e-12 at T = 6.9282
+start  27: φ = -2.04e-12 at T = 6.8954
+start  45: φ = -1.75e-12 at T = 6.8954
+start  86: φ = 2.71e-01 at T = 10.0000
+start  61: φ = 5.56e-13 at T = 6.8954
+start  87: φ = 1.97e-01 at T = 7.8212
+start  28: φ = 1.97e-01 at T = 7.8195
+start  39: φ = -2.15e-12 at T = 6.8954
+start  58: φ = -1.60e-12 at T = 6.8954
+start  76: φ = 5.88e-13 at T = 6.8954
+start  17: φ = -2.03e-12 at T = 6.8954
+start  94: φ = -2.07e-12 at T = 6.8954
+start  59: φ = 1.97e-01 at T = 7.8204
+start  77: φ = 1.97e-01 at T = 7.8281
+start   9: φ = -1.92e-12 at T = 6.8954
+start  18: φ = 1.97e-01 at T = 7.8243
+start  21: φ = 1.82e-01 at T = 10.0000
+start  81: φ = 1.82e-01 at T = 10.0000
+start  52: φ = 5.62e-02 at T = 6.4263
+start  60: φ = 2.43e-01 at T = 3.9080
+start  69: φ = 3.15e-02 at T = 10.0000
+start  53: φ = 2.43e-01 at T = 3.9059
+start  22: φ = 1.97e-01 at T = 7.8272
+start  62: φ = -2.92e-12 at T = 6.8954
+start  88: φ = 5.40e-12 at T = 8.3926
+start  35: φ = 2.93e-13 at T = 9.3367
+start   3: φ = 5.65e-03 at T = 10.0000
+start  46: φ = 1.33e-03 at T = 10.0000
+start  40: φ = -2.74e-12 at T = 6.8954
+start  10: φ = -1.84e-12 at T = 6.8954
+start  47: φ = 2.43e-01 at T = 3.9073
+start  54: φ = -9.20e-12 at T = 8.7083
+start  29: φ = -3.06e-12 at T = 6.8954
+start  41: φ = 2.43e-01 at T = 3.9069
+start  11: φ = 1.97e-01 at T = 7.8190
+start  48: φ = 2.43e-01 at T = 3.9046
+start  42: φ = 1.97e-01 at T = 7.8183
+start  78: φ = 3.20e-02 at T = 10.0000
+start  82: φ = -1.61e-12 at T = 6.8954
+start  23: φ = -1.63e-12 at T = 6.8954
+start   4: φ = -2.98e-12 at T = 6.8954
+start  24: φ = 2.43e-01 at T = 3.9053
+start  89: φ = -3.80e-12 at T = 6.8954
+start  36: φ = -3.10e-12 at T = 6.8954
+start  63: φ = -2.67e-12 at T = 6.8954
+start  95: φ = -1.31e-11 at T = 8.7083
+start  12: φ = 3.21e-02 at T = 10.0000
+start  30: φ = -1.81e-12 at T = 6.8954
+start  90: φ = 3.13e-02 at T = 10.0000
+start   5: φ = -1.50e-12 at T = 6.8954
+start  64: φ = 5.79e-13 at T = 6.8954
+start  65: φ = 1.97e-01 at T = 7.8182
+start  83: φ = -2.44e-12 at T = 6.8954
+start  96: φ = -1.87e-12 at T = 6.8954
+start  66: φ = -2.14e-12 at T = 6.8954
+start   6: φ = -1.40e-12 at T = 6.8954
+start  84: φ = -1.65e-12 at T = 6.8954
+start  70: φ = 2.92e-01 at T = 2.5001
+start  71: φ = 2.43e-01 at T = 3.9059
+start  72: φ = -1.15e-12 at T = 6.8954
+random starts: 54/96 = 56.2% reached φ < 1e-08   [95 s]
+  from gate at T = 6.8954 → T* = 6.8950
+  from gate at T = 8.3926 → T* = 8.3920
+  from gate at T = 6.9282 → T* = 6.9277
+  from gate at T = 8.7083 → T* = 6.8954
+────────────────────────────────────────
+Φ = 1.0000π:  T* = 6.8950   infidelity = 9.05e-09   success chance = 56.2% (54/96, φ < 1e-08)
+[PXP sweep] Φ = 1.000π  T* = 6.8950  φ = 9.0e-09  success 54/96 = 56.2%  (elapsed 2 min)
+Setup finished: Φ = 0.95π, 16 threads
+start  55: φ = 2.69e-01 at T = 3.9117
+start  56: φ = 2.21e-01 at T = 7.8277
+start  49: φ = -8.34e-12 at T = 6.9383
+start  37: φ = 7.55e-13 at T = 6.9383
+start  13: φ = 7.30e-12 at T = 7.0128
+start  50: φ = 2.69e-01 at T = 3.9083
+start  25: φ = -2.34e-12 at T = 6.9383
+start  73: φ = -3.48e-12 at T = 6.9383
+start  31: φ = 3.83e-02 at T = 10.0000
+start  85: φ = 1.74e-01 at T = 10.0000
+start  43: φ = -3.46e-13 at T = 6.9383
+start  74: φ = 2.21e-01 at T = 7.8221
+start  19: φ = 2.73e-01 at T = 2.5000
+start  57: φ = -2.61e-12 at T = 6.9383
+start   1: φ = -3.08e-12 at T = 6.9383
+start  79: φ = 2.04e-01 at T = 10.0000
+start  26: φ = -2.13e-12 at T = 6.9383
+start  61: φ = 3.69e-02 at T = 10.0000
+start  32: φ = -2.78e-12 at T = 6.9383
+start  14: φ = 1.52e-12 at T = 6.9383
+start  75: φ = -4.34e-12 at T = 6.9383
+start  44: φ = -5.23e-12 at T = 6.9383
+start  91: φ = 2.68e-01 at T = 2.5000
+start  38: φ = 2.66e-01 at T = 2.5000
+start  58: φ = -3.11e-12 at T = 6.9383
+start  80: φ = -7.59e-12 at T = 6.9383
+start   7: φ = 2.66e-01 at T = 2.5000
+start  59: φ = 2.21e-01 at T = 7.8236
+start  86: φ = -5.48e-12 at T = 6.9383
+start  76: φ = -3.11e-12 at T = 8.8289
+start  15: φ = -3.10e-12 at T = 6.9383
+start  81: φ = 2.21e-01 at T = 7.8234
+start  77: φ = 2.21e-01 at T = 7.8302
+start  87: φ = 2.21e-01 at T = 7.8243
+start  51: φ = 2.05e-01 at T = 10.0000
+start  60: φ = 2.69e-01 at T = 3.9099
+start  45: φ = -4.99e-12 at T = 6.9383
+start  67: φ = 5.31e-12 at T = 7.1079
+start  39: φ = 1.28e-12 at T = 6.9383
+start  33: φ = -1.26e-12 at T = 6.9383
+start  62: φ = 3.12e-12 at T = 6.9383
+start  92: φ = -4.09e-12 at T = 6.9383
+start  93: φ = 2.21e-01 at T = 7.8315
+start   8: φ = 1.95e-14 at T = 6.9383
+start  68: φ = -1.79e-11 at T = 7.0134
+start  20: φ = 5.33e-02 at T = 10.0000
+start  52: φ = 5.84e-02 at T = 6.2992
+start  27: φ = 1.48e-12 at T = 6.9383
+start  78: φ = 4.00e-02 at T = 10.0000
+start  82: φ = -8.39e-12 at T = 6.9383
+start   2: φ = 2.66e-01 at T = 2.5001
+start  88: φ = 6.11e-12 at T = 8.5206
+start  46: φ = 2.24e-02 at T = 10.0000
+start  28: φ = 2.21e-01 at T = 7.8234
+start  40: φ = 4.04e-02 at T = 10.0000
+start  34: φ = -3.05e-12 at T = 6.9383
+start  47: φ = 2.69e-01 at T = 3.9092
+start  63: φ = -1.42e-12 at T = 6.9383
+start  94: φ = -6.53e-12 at T = 6.9383
+start  16: φ = 2.69e-01 at T = 2.5000
+start   9: φ = 8.10e-14 at T = 6.9383
+start  29: φ = 2.69e-01 at T = 3.9059
+start  69: φ = 3.98e-02 at T = 10.0000
+start   3: φ = -9.04e-13 at T = 6.9383
+start  64: φ = -5.03e-12 at T = 6.9383
+start  89: φ = -3.05e-12 at T = 6.9383
+start  65: φ = 2.21e-01 at T = 7.8217
+start  21: φ = 2.05e-01 at T = 10.0000
+start  95: φ = -1.66e-11 at T = 8.8289
+start  35: φ = 6.51e-12 at T = 8.5206
+start  53: φ = -5.20e-13 at T = 6.9383
+start  96: φ = 2.21e-01 at T = 7.8259
+start  41: φ = -2.13e-12 at T = 6.9383
+start  22: φ = 2.21e-01 at T = 7.8287
+start  42: φ = 2.21e-01 at T = 7.8215
+start  10: φ = 1.06e-13 at T = 6.9383
+start  83: φ = -1.05e-12 at T = 6.9383
+start  17: φ = -8.14e-12 at T = 6.9383
+start   4: φ = 2.76e-01 at T = 2.5000
+start  30: φ = 4.45e-12 at T = 6.9383
+start  66: φ = -1.34e-12 at T = 6.9383
+start  70: φ = 2.66e-01 at T = 2.5085
+start  48: φ = 2.67e-01 at T = 2.5000
+start  18: φ = 2.21e-01 at T = 7.8281
+start  36: φ = -2.85e-12 at T = 6.9383
+start  23: φ = -4.84e-12 at T = 6.9383
+start  84: φ = -1.09e-12 at T = 6.9383
+start   5: φ = 4.22e-15 at T = 6.9383
+start  71: φ = 2.69e-01 at T = 2.5000
+start  54: φ = 4.39e-12 at T = 7.0453
+start  24: φ = 2.66e-01 at T = 2.5000
+start  11: φ = -2.88e-12 at T = 9.8012
+start   6: φ = -9.91e-13 at T = 6.9383
+start  72: φ = -2.32e-12 at T = 6.9383
+start  12: φ = 1.23e-12 at T = 9.4971
+start  90: φ = 2.66e-01 at T = 7.6548
+random starts: 54/96 = 56.2% reached φ < 1e-08   [299 s]
+  from gate at T = 6.9383 → T* = 6.9379
+  from gate at T = 7.0128 → T* = 7.0123
+  from gate at T = 7.0453 → T* = 6.9379
+  from gate at T = 7.1079 → T* = 6.9379
+────────────────────────────────────────
+Φ = 0.9500π:  T* = 6.9379   infidelity = 9.12e-09   success chance = 56.2% (54/96, φ < 1e-08)
+[PXP sweep] Φ = 0.950π  T* = 6.9379  φ = 9.1e-09  success 54/96 = 56.2%  (elapsed 7 min)
+Setup finished: Φ = 0.9π, 16 threads
+start   1: φ = 2.47e-01 at T = 7.8255
+start  49: φ = -2.89e-12 at T = 6.9745
+start   2: φ = 2.47e-01 at T = 7.8260
+start  13: φ = -8.09e-12 at T = 7.0949
+start  31: φ = 4.76e-02 at T = 10.0000
+start  73: φ = -2.38e-12 at T = 6.9745
+start  25: φ = -2.60e-12 at T = 6.9745
+start  19: φ = 2.47e-01 at T = 2.5000
+start   7: φ = 2.40e-01 at T = 2.5000
+start  67: φ = -1.81e-12 at T = 6.9745
+start  55: φ = 4.30e-12 at T = 7.0013
+start   3: φ = -3.89e-12 at T = 6.9745
+start  43: φ = -3.07e-12 at T = 6.9745
+start  37: φ = -3.59e-12 at T = 6.9745
+start  50: φ = 2.47e-01 at T = 2.5000
+start  32: φ = -2.18e-12 at T = 6.9745
+start  26: φ = -2.61e-12 at T = 6.9745
+start  56: φ = 2.47e-01 at T = 7.8285
+start  91: φ = -2.45e-12 at T = 6.9745
+start  68: φ = 9.11e-02 at T = 5.6802
+start  85: φ = 2.05e-03 at T = 10.0000
+start  44: φ = -4.18e-12 at T = 6.9745
+start  61: φ = -9.97e-12 at T = 8.1649
+start  79: φ = 2.41e-01 at T = 2.5000
+start   4: φ = 2.50e-01 at T = 2.5000
+start  33: φ = 1.53e-02 at T = 6.6951
+start  57: φ = -4.99e-12 at T = 6.9745
+start   8: φ = 2.43e-01 at T = 2.5000
+start  92: φ = -1.98e-12 at T = 6.9745
+start  80: φ = -1.25e-12 at T = 6.9745
+start  69: φ = 4.89e-02 at T = 10.0000
+start  74: φ = 2.40e-01 at T = 2.5000
+start  45: φ = -5.94e-12 at T = 6.9745
+start  38: φ = 2.41e-01 at T = 2.5000
+start  93: φ = 2.47e-01 at T = 7.8330
+start  62: φ = -2.14e-12 at T = 6.9745
+start   5: φ = -5.03e-12 at T = 6.9745
+start  86: φ = -5.02e-12 at T = 6.9745
+start  58: φ = -1.19e-12 at T = 6.9745
+start  14: φ = -9.64e-12 at T = 6.9745
+start   9: φ = -4.91e-12 at T = 6.9745
+start  87: φ = 2.47e-01 at T = 7.8272
+start  75: φ = -2.99e-12 at T = 6.9745
+start  34: φ = -2.22e-12 at T = 6.9745
+start  51: φ = 2.28e-01 at T = 10.0000
+start  94: φ = -5.26e-12 at T = 6.9745
+start  46: φ = 4.71e-02 at T = 10.0000
+start  39: φ = -4.63e-12 at T = 6.9745
+start  63: φ = 2.42e-01 at T = 2.5000
+start  15: φ = -3.42e-12 at T = 6.9745
+start  76: φ = 4.27e-12 at T = 8.9425
+start  10: φ = -4.37e-12 at T = 6.9745
+start   6: φ = -2.37e-12 at T = 6.9745
+start  88: φ = 5.12e-12 at T = 8.6444
+start  52: φ = 2.87e-02 at T = 6.4251
+start  77: φ = 2.47e-01 at T = 7.8322
+start  40: φ = -3.43e-12 at T = 6.9745
+start  59: φ = 2.40e-01 at T = 2.5000
+start  64: φ = -3.52e-12 at T = 6.9745
+start  81: φ = 2.43e-01 at T = 2.5000
+start  35: φ = -8.24e-12 at T = 7.0949
+start  47: φ = 4.97e-02 at T = 10.0000
+start  70: φ = 2.40e-01 at T = 2.5010
+start  11: φ = 2.41e-01 at T = 2.5002
+start  78: φ = 4.90e-02 at T = 10.0000
+start  89: φ = -4.47e-12 at T = 6.9745
+start  82: φ = -1.49e-12 at T = 6.9745
+start  41: φ = -3.53e-12 at T = 6.9745
+start  53: φ = -4.67e-12 at T = 6.9745
+start  27: φ = -5.60e-12 at T = 6.9745
+start  60: φ = 2.47e-01 at T = 2.5000
+start  28: φ = 2.47e-01 at T = 7.8268
+start  95: φ = 1.72e-12 at T = 6.9914
+start  65: φ = 2.41e-01 at T = 2.5000
+start  54: φ = 7.01e-12 at T = 8.9425
+start  36: φ = -3.31e-12 at T = 6.9745
+start  16: φ = 3.92e-02 at T = 10.0000
+start  12: φ = -4.10e-12 at T = 9.6517
+start  90: φ = 1.87e-02 at T = 10.0000
+start  48: φ = 2.40e-01 at T = 2.5000
+start  96: φ = 2.41e-01 at T = 2.5000
+start  66: φ = 2.50e-01 at T = 2.5000
+start  42: φ = 2.40e-01 at T = 2.5000
+start  71: φ = 1.85e-12 at T = 8.6640
+start  29: φ = 2.43e-01 at T = 2.5000
+start  17: φ = -2.79e-12 at T = 6.9745
+start  30: φ = -4.69e-12 at T = 6.9745
+start  72: φ = -5.08e-12 at T = 6.9745
+start  18: φ = -2.56e-12 at T = 6.9745
+start  83: φ = -4.81e-12 at T = 6.9745
+start  84: φ = -3.60e-12 at T = 6.9745
+start  20: φ = 2.40e-01 at T = 3.0129
+start  21: φ = 2.40e-01 at T = 2.5000
+start  22: φ = 2.41e-01 at T = 2.5000
+start  23: φ = -1.30e-12 at T = 6.9745
+start  24: φ = 2.40e-01 at T = 2.5000
+random starts: 53/96 = 55.2% reached φ < 1e-08   [248 s]
+  from gate at T = 6.9745 → T* = 6.9741
+  from gate at T = 7.0013 → T* = 6.9744
+  from gate at T = 7.0949 → T* = 7.0944
+  from gate at T = 8.1649 → T* = 6.9742
+────────────────────────────────────────
+Φ = 0.9000π:  T* = 6.9741   infidelity = 9.01e-09   success chance = 55.2% (53/96, φ < 1e-08)
+[PXP sweep] Φ = 0.900π  T* = 6.9741  φ = 9.0e-09  success 53/96 = 55.2%  (elapsed 11 min)
+Setup finished: Φ = 0.85π, 16 threads
+start  49: φ = 4.93e-13 at T = 7.0043
+start  13: φ = -8.62e-12 at T = 7.1745
+start  37: φ = -1.16e-11 at T = 7.0043
+start  31: φ = 5.70e-02 at T = 10.0000
+start  61: φ = -9.50e-12 at T = 7.0043
+start  91: φ = 2.25e-01 at T = 2.5000
+start   7: φ = 2.36e-01 at T = 2.5000
+start  25: φ = -1.15e-11 at T = 7.0043
+start  19: φ = 2.22e-01 at T = 2.5000
+start  73: φ = -1.19e-11 at T = 7.0043
+start  67: φ = -1.21e-11 at T = 7.0043
+start  43: φ = -1.17e-11 at T = 7.0043
+start  85: φ = 1.48e-02 at T = 10.0000
+start  32: φ = -1.20e-11 at T = 7.0043
+start  79: φ = 2.15e-01 at T = 2.5000
+start  38: φ = 2.30e-01 at T = 2.5000
+start  55: φ = -5.06e-12 at T = 7.0043
+start   1: φ = 2.16e-01 at T = 2.5000
+start  14: φ = -1.21e-11 at T = 7.0043
+start   8: φ = 2.24e-01 at T = 2.5000
+start  92: φ = -1.18e-11 at T = 7.0043
+start  44: φ = -9.89e-12 at T = 7.0043
+start  56: φ = 2.73e-01 at T = 7.8356
+start  68: φ = 5.50e-02 at T = 6.0297
+start  62: φ = -1.24e-11 at T = 7.0043
+start  26: φ = -1.04e-12 at T = 7.0043
+start  93: φ = 2.73e-01 at T = 7.8361
+start  80: φ = -1.06e-11 at T = 7.0043
+start  86: φ = 2.24e-01 at T = 2.5000
+start  15: φ = -9.00e-12 at T = 7.0043
+start  39: φ = -1.18e-11 at T = 7.0043
+start  87: φ = 2.73e-01 at T = 7.8298
+start   9: φ = -1.10e-11 at T = 7.0043
+start  45: φ = 7.76e-13 at T = 7.0043
+start  63: φ = 2.25e-01 at T = 2.5000
+start   2: φ = 2.15e-01 at T = 2.5000
+start  94: φ = -5.50e-12 at T = 7.0043
+start  20: φ = 2.15e-01 at T = 2.5002
+start  33: φ = -9.86e-12 at T = 7.0043
+start  40: φ = -7.04e-14 at T = 7.0043
+start  57: φ = -9.13e-12 at T = 7.0043
+start  69: φ = 1.48e-02 at T = 10.0000
+start  64: φ = -8.06e-13 at T = 7.0043
+start  88: φ = -2.74e-12 at T = 8.7641
+start  16: φ = 2.17e-01 at T = 2.5000
+start  46: φ = 5.86e-02 at T = 10.0000
+start   3: φ = -1.25e-11 at T = 7.0043
+start  27: φ = -1.20e-11 at T = 7.0043
+start  28: φ = 2.73e-01 at T = 7.8292
+start  21: φ = 6.08e-02 at T = 10.0000
+start  10: φ = -1.14e-11 at T = 7.0043
+start  34: φ = -9.10e-12 at T = 7.0043
+start  50: φ = 2.22e-01 at T = 2.5000
+start  58: φ = -1.13e-11 at T = 7.0043
+start  41: φ = -1.03e-11 at T = 7.0043
+start  89: φ = -1.35e-11 at T = 7.0043
+start  17: φ = -4.86e-12 at T = 7.0043
+start  59: φ = 2.36e-01 at T = 2.5000
+start  35: φ = -9.03e-12 at T = 7.1745
+start  81: φ = 2.45e-01 at T = 10.0000
+start  29: φ = 2.18e-01 at T = 2.5000
+start  11: φ = 2.16e-01 at T = 2.5000
+start  65: φ = 2.15e-01 at T = 2.5000
+start  95: φ = 1.04e-12 at T = 7.0610
+start  51: φ = 2.16e-01 at T = 2.5000
+start  18: φ = -8.12e-12 at T = 7.1745
+start  36: φ = -1.17e-11 at T = 7.0043
+start  90: φ = 2.15e-01 at T = 2.5001
+start  82: φ = -2.81e-12 at T = 7.0043
+start   4: φ = 2.15e-01 at T = 2.5000
+start  70: φ = 2.15e-01 at T = 2.5197
+start  22: φ = 2.15e-01 at T = 2.5000
+start  96: φ = 2.18e-01 at T = 2.5001
+start  66: φ = -1.18e-11 at T = 7.0043
+start  74: φ = 2.15e-01 at T = 2.5000
+start  60: φ = 6.39e-03 at T = 10.0000
+start  12: φ = -2.62e-12 at T = 9.8007
+start  30: φ = -1.21e-11 at T = 7.0043
+start   5: φ = -1.08e-11 at T = 7.0043
+start  23: φ = -1.25e-11 at T = 7.0043
+start  75: φ = -4.68e-12 at T = 7.0043
+start  83: φ = -1.18e-11 at T = 7.0043
+start  71: φ = 2.16e-01 at T = 2.5000
+start  52: φ = 4.89e-12 at T = 7.0687
+start  42: φ = 2.15e-01 at T = 2.5000
+start  84: φ = -1.22e-11 at T = 7.0043
+start   6: φ = -1.10e-11 at T = 7.0043
+start  76: φ = -2.07e-12 at T = 9.8007
+start  77: φ = 2.73e-01 at T = 7.8341
+start  24: φ = 2.15e-01 at T = 2.5000
+start  53: φ = -1.25e-11 at T = 7.0043
+start  72: φ = -1.25e-11 at T = 7.0043
+start  78: φ = 5.85e-02 at T = 10.0000
+start  54: φ = -5.54e-12 at T = 9.0491
+start  47: φ = -1.35e-11 at T = 7.0043
+start  48: φ = 2.16e-01 at T = 2.5000
+random starts: 54/96 = 56.2% reached φ < 1e-08   [73 s]
+  from gate at T = 7.0043 → T* = 7.0039
+  from gate at T = 7.1745 → T* = 7.1740
+  from gate at T = 8.7641 → T* = 8.7635
+  from gate at T = 7.0610 → T* = 7.0039
+────────────────────────────────────────
+Φ = 0.8500π:  T* = 7.0039   infidelity = 8.85e-09   success chance = 56.2% (54/96, φ < 1e-08)
+[PXP sweep] Φ = 0.850π  T* = 7.0039  φ = 8.9e-09  success 54/96 = 56.2%  (elapsed 13 min)
+Setup finished: Φ = 0.8π, 16 threads
+start  49: φ = -1.20e-11 at T = 7.0277
+start   7: φ = 1.93e-01 at T = 2.5000
+start  31: φ = -1.31e-11 at T = 7.0277
+start  13: φ = 3.75e-12 at T = 7.2518
+start  37: φ = -1.27e-11 at T = 7.0277
+start  19: φ = 1.98e-01 at T = 2.5000
+start  25: φ = -1.17e-11 at T = 7.0277
+start  61: φ = -2.15e-12 at T = 7.0277
+start  43: φ = -1.06e-11 at T = 7.0277
+start  67: φ = -1.26e-11 at T = 7.0277
+start  79: φ = 1.91e-01 at T = 2.5000
+start  26: φ = -3.83e-12 at T = 7.0277
+start   1: φ = 1.92e-01 at T = 2.5000
+start  55: φ = -1.41e-11 at T = 7.0277
+start   8: φ = 2.00e-01 at T = 2.5000
+start  50: φ = 1.98e-01 at T = 2.5000
+start  14: φ = -1.38e-11 at T = 7.0277
+start  80: φ = -9.36e-12 at T = 7.0277
+start  32: φ = 1.96e-01 at T = 2.5000
+start  44: φ = -1.80e-12 at T = 7.0277
+start  73: φ = -1.25e-11 at T = 7.0277
+start  38: φ = 7.38e-03 at T = 10.0000
+start  91: φ = 1.91e-01 at T = 2.5001
+start  68: φ = 4.09e-12 at T = 7.2518
+start  62: φ = -1.24e-11 at T = 7.0277
+start   2: φ = 1.94e-01 at T = 2.5000
+start  56: φ = -1.33e-11 at T = 7.0277
+start  15: φ = -1.11e-12 at T = 7.0277
+start   9: φ = -1.06e-11 at T = 7.0277
+start  45: φ = -2.46e-12 at T = 7.0277
+start  39: φ = -1.33e-11 at T = 7.0277
+start  92: φ = -1.06e-11 at T = 7.0277
+start  20: φ = 1.91e-01 at T = 2.5012
+start   3: φ = -1.24e-11 at T = 7.0277
+start  51: φ = 1.92e-01 at T = 2.5001
+start  40: φ = -4.74e-13 at T = 7.0277
+start  69: φ = 2.03e-02 at T = 10.0000
+start  27: φ = -1.46e-11 at T = 7.0469
+start  10: φ = -1.08e-11 at T = 7.0277
+start  33: φ = -1.21e-11 at T = 7.0277
+start  21: φ = 2.02e-01 at T = 10.0000
+start  81: φ = 1.94e-01 at T = 2.5000
+start  57: φ = 1.94e-01 at T = 2.5000
+start  52: φ = 2.93e-02 at T = 6.4030
+start  28: φ = 2.08e-01 at T = 2.5000
+start  16: φ = 1.92e-01 at T = 2.5000
+start  41: φ = -9.52e-12 at T = 7.0277
+start  34: φ = -2.78e-12 at T = 7.0277
+start  63: φ = 1.96e-01 at T = 2.5000
+start  58: φ = -1.16e-11 at T = 7.0277
+start  82: φ = 1.88e-12 at T = 7.0277
+start   4: φ = 1.93e-01 at T = 2.5000
+start  70: φ = 1.91e-01 at T = 2.5071
+start  93: φ = 1.91e-01 at T = 2.5000
+start  22: φ = 1.91e-01 at T = 2.5000
+start  11: φ = 1.92e-01 at T = 2.5000
+start  46: φ = 1.91e-01 at T = 2.5001
+start  29: φ = 1.94e-01 at T = 2.5000
+start  64: φ = -8.59e-12 at T = 7.0277
+start  35: φ = 4.59e-12 at T = 7.2518
+start  74: φ = 1.91e-01 at T = 2.5000
+start  53: φ = -1.28e-11 at T = 7.0277
+start  17: φ = -3.79e-12 at T = 7.0277
+start   5: φ = -1.07e-11 at T = 7.0277
+start  94: φ = -2.19e-12 at T = 7.0277
+start  75: φ = -9.82e-12 at T = 7.0277
+start  59: φ = 1.91e-01 at T = 2.5000
+start  36: φ = -1.09e-11 at T = 7.0277
+start  47: φ = -8.25e-12 at T = 7.0277
+start  23: φ = 1.91e-01 at T = 2.5000
+start  18: φ = -1.29e-11 at T = 7.0277
+start  83: φ = -1.33e-11 at T = 7.0277
+start  30: φ = -8.78e-12 at T = 7.0277
+start  71: φ = 1.92e-01 at T = 2.5000
+start   6: φ = -8.81e-12 at T = 7.0277
+start  65: φ = 1.91e-01 at T = 2.5000
+start  84: φ = -1.40e-11 at T = 7.0277
+start  24: φ = 1.92e-01 at T = 2.5000
+start  54: φ = -5.40e-12 at T = 7.0924
+start  60: φ = 1.95e-01 at T = 2.5000
+start  95: φ = -3.37e-12 at T = 7.0277
+start  48: φ = 1.91e-01 at T = 2.5000
+start  72: φ = -1.05e-11 at T = 7.0277
+start  66: φ = 7.83e-12 at T = 8.8800
+start  12: φ = -6.61e-12 at T = 9.9445
+start  96: φ = 3.75e-03 at T = 10.0000
+start  76: φ = -7.75e-12 at T = 9.9445
+start  77: φ = 1.98e-01 at T = 2.5000
+start  78: φ = -8.91e-12 at T = 7.0277
+start  85: φ = 1.91e-01 at T = 4.1255
+start  86: φ = 1.93e-01 at T = 2.5001
+start  87: φ = 1.92e-01 at T = 2.5000
+start  88: φ = 9.18e-12 at T = 8.8800
+start  89: φ = -2.66e-12 at T = 7.0277
+start  90: φ = 1.91e-01 at T = 2.5001
+start  42: φ = 1.91e-01 at T = 5.2917
+random starts: 54/96 = 56.2% reached φ < 1e-08   [283 s]
+  from gate at T = 7.0277 → T* = 7.0273
+  from gate at T = 7.2518 → T* = 7.2514
+  from gate at T = 8.8800 → T* = 8.8795
+  from gate at T = 7.0924 → T* = 7.0279
+────────────────────────────────────────
+Φ = 0.8000π:  T* = 7.0273   infidelity = 8.62e-09   success chance = 56.2% (54/96, φ < 1e-08)
+[PXP sweep] Φ = 0.800π  T* = 7.0273  φ = 8.6e-09  success 54/96 = 56.2%  (elapsed 18 min)
+Setup finished: Φ = 0.75π, 16 threads
+start  49: φ = -1.56e-12 at T = 7.0447
+start  37: φ = -6.58e-12 at T = 7.0447
+start  31: φ = -5.48e-12 at T = 7.0447
+start  13: φ = -5.80e-12 at T = 7.3269
+start  61: φ = 5.03e-12 at T = 7.0447
+start  85: φ = 3.26e-12 at T = 8.9924
+start   7: φ = 1.70e-01 at T = 2.5000
+start  25: φ = 7.72e-12 at T = 7.0447
+start  67: φ = 5.52e-12 at T = 7.0447
+start  43: φ = -6.38e-12 at T = 7.0447
+start  19: φ = 1.75e-01 at T = 2.5000
+start  50: φ = 1.75e-01 at T = 2.5000
+start  26: φ = 5.00e-12 at T = 7.0447
+start  55: φ = -5.14e-12 at T = 7.0447
+start  73: φ = -5.15e-12 at T = 7.0447
+start   1: φ = 1.70e-01 at T = 2.5000
+start  79: φ = 1.69e-01 at T = 2.5000
+start  91: φ = 1.69e-01 at T = 2.5000
+start  14: φ = -7.72e-12 at T = 7.0447
+start  44: φ = 4.74e-12 at T = 7.0447
+start  38: φ = 2.77e-12 at T = 7.0447
+start  68: φ = 1.78e-01 at T = 2.5000
+start  62: φ = -5.03e-12 at T = 7.0447
+start  80: φ = -2.58e-12 at T = 7.0447
+start   8: φ = 6.37e-12 at T = 9.2416
+start  15: φ = 4.62e-12 at T = 7.0447
+start  56: φ = -6.67e-12 at T = 7.3269
+start  32: φ = 5.22e-02 at T = 10.0000
+start  92: φ = 7.45e-12 at T = 7.0447
+start  39: φ = -6.16e-12 at T = 7.0447
+start  86: φ = 1.69e-01 at T = 2.5000
+start  27: φ = -6.39e-12 at T = 7.0447
+start  45: φ = 4.73e-12 at T = 7.0447
+start  51: φ = 1.69e-01 at T = 2.5000
+start   9: φ = -5.13e-12 at T = 7.0447
+start  20: φ = 1.69e-01 at T = 2.5003
+start  93: φ = 1.75e-01 at T = 2.5000
+start  40: φ = -6.97e-12 at T = 7.0447
+start  63: φ = 1.77e-01 at T = 2.5000
+start  74: φ = 1.69e-01 at T = 2.5000
+start  87: φ = 1.88e-01 at T = 2.5000
+start  57: φ = 1.77e-01 at T = 2.5000
+start  33: φ = 2.25e-12 at T = 7.0447
+start  21: φ = 1.75e-01 at T = 10.0000
+start  64: φ = -8.37e-12 at T = 7.0447
+start  16: φ = 1.70e-01 at T = 2.5000
+start  69: φ = 1.69e-01 at T = 2.5553
+start  81: φ = 1.69e-01 at T = 2.5000
+start  28: φ = 1.69e-01 at T = 2.5000
+start  10: φ = -3.60e-12 at T = 7.0447
+start  75: φ = -9.61e-12 at T = 7.0447
+start  94: φ = -8.24e-12 at T = 7.0447
+start   2: φ = 1.69e-01 at T = 2.5118
+start  58: φ = 5.87e-12 at T = 7.0447
+start  41: φ = 4.71e-12 at T = 7.0447
+start  88: φ = 5.27e-13 at T = 8.9924
+start  34: φ = 4.37e-12 at T = 7.0447
+start  52: φ = 1.69e-01 at T = 2.5000
+start  76: φ = 3.09e-12 at T = 9.2416
+start  59: φ = 1.89e-01 at T = 2.5000
+start  82: φ = -1.32e-12 at T = 7.0447
+start   3: φ = 6.83e-02 at T = 10.0000
+start  89: φ = 7.28e-12 at T = 7.0447
+start  11: φ = 1.70e-01 at T = 2.5000
+start  35: φ = -6.03e-12 at T = 7.3269
+start  17: φ = -9.62e-12 at T = 7.0447
+start  65: φ = 1.69e-01 at T = 2.5000
+start  22: φ = 1.70e-01 at T = 2.5000
+start  53: φ = -5.87e-12 at T = 7.0447
+start  29: φ = 7.57e-02 at T = 10.0000
+start  70: φ = 1.69e-01 at T = 2.5026
+start  83: φ = -7.67e-12 at T = 7.0447
+start   4: φ = 1.72e-01 at T = 2.5000
+start  36: φ = -9.22e-12 at T = 7.0447
+start  42: φ = 1.69e-01 at T = 2.5000
+start  12: φ = 1.27e-04 at T = 10.0000
+start  60: φ = 2.88e-02 at T = 10.0000
+start  95: φ = 6.06e-12 at T = 7.1363
+start  23: φ = 1.70e-01 at T = 2.5000
+start  66: φ = 3.26e-12 at T = 8.9924
+start  18: φ = 1.69e-01 at T = 2.5000
+start  84: φ = -6.57e-12 at T = 7.0447
+start  90: φ = 1.69e-01 at T = 2.5001
+start  30: φ = -4.72e-12 at T = 7.0447
+start  77: φ = 5.75e-02 at T = 10.0000
+start  54: φ = 1.29e-11 at T = 7.0554
+start  24: φ = 1.69e-01 at T = 2.5000
+start   5: φ = -4.86e-12 at T = 7.0447
+start  71: φ = 1.70e-01 at T = 2.5000
+start  78: φ = -1.97e-12 at T = 7.0447
+start  96: φ = 2.64e-02 at T = 10.0000
+start   6: φ = -5.62e-12 at T = 7.0447
+start  72: φ = -5.78e-12 at T = 7.0447
+start  46: φ = 1.69e-01 at T = 8.9691
+start  47: φ = -1.02e-11 at T = 7.0447
+start  48: φ = 1.69e-01 at T = 2.5000
+random starts: 53/96 = 55.2% reached φ < 1e-08   [169 s]
+  from gate at T = 7.0447 → T* = 7.0443
+  from gate at T = 8.9924 → T* = 8.9918
+  from gate at T = 7.1363 → T* = 7.0444
+  from gate at T = 7.3269 → T* = 7.3264
+────────────────────────────────────────
+Φ = 0.7500π:  T* = 7.0443   infidelity = 8.31e-09   success chance = 55.2% (53/96, φ < 1e-08)
+[PXP sweep] Φ = 0.750π  T* = 7.0443  φ = 8.3e-09  success 53/96 = 55.2%  (elapsed 21 min)
+Setup finished: Φ = 0.7π, 16 threads
+start  49: φ = -3.59e-12 at T = 7.0552
+start  37: φ = 3.76e-12 at T = 7.0552
+start  61: φ = 1.88e-12 at T = 7.0552
+start  25: φ = 3.38e-13 at T = 7.0552
+start  31: φ = 5.05e-12 at T = 7.0552
+start  13: φ = 1.03e-11 at T = 7.3997
+start  19: φ = 1.50e-01 at T = 2.5000
+start  67: φ = -3.10e-12 at T = 7.0552
+start   7: φ = 1.50e-01 at T = 2.5000
+start  50: φ = 1.53e-01 at T = 2.5000
+start  26: φ = 6.87e-13 at T = 7.0552
+start  43: φ = 4.39e-12 at T = 7.0552
+start   1: φ = 1.49e-01 at T = 2.5000
+start  85: φ = 1.48e-01 at T = 2.5000
+start  73: φ = 5.54e-12 at T = 7.0552
+start  38: φ = -1.63e-12 at T = 7.0552
+start  68: φ = 1.56e-01 at T = 2.5000
+start  55: φ = 8.13e-12 at T = 7.0575
+start  91: φ = 1.48e-01 at T = 2.5000
+start  14: φ = 3.70e-12 at T = 7.0552
+start  32: φ = 1.48e-01 at T = 2.5000
+start  62: φ = -1.33e-12 at T = 7.0552
+start  79: φ = 1.49e-01 at T = 2.5000
+start  44: φ = -2.46e-12 at T = 7.0552
+start   8: φ = 1.50e-01 at T = 2.5000
+start  15: φ = -2.23e-12 at T = 7.0552
+start  80: φ = -2.00e-12 at T = 7.0552
+start  39: φ = 4.58e-12 at T = 7.0552
+start  92: φ = -1.96e-12 at T = 7.0552
+start  27: φ = 3.57e-12 at T = 7.0552
+start  56: φ = 8.13e-12 at T = 7.3997
+start   9: φ = 4.20e-12 at T = 7.0552
+start  74: φ = 1.47e-01 at T = 2.5000
+start  45: φ = -4.74e-12 at T = 7.0552
+start  86: φ = 1.47e-01 at T = 2.5000
+start  51: φ = 1.48e-01 at T = 2.8914
+start  69: φ = 3.31e-02 at T = 10.0000
+start  16: φ = 1.50e-01 at T = 2.5000
+start  93: φ = 1.50e-01 at T = 2.5000
+start  40: φ = 1.13e-11 at T = 7.3997
+start  75: φ = -7.57e-14 at T = 7.0552
+start  81: φ = 1.53e-01 at T = 2.5000
+start  63: φ = 1.54e-01 at T = 2.5038
+start  57: φ = 1.56e-01 at T = 2.5000
+start  46: φ = 3.31e-02 at T = 10.0000
+start  20: φ = 1.47e-01 at T = 2.5335
+start  10: φ = 2.97e-12 at T = 7.0552
+start  17: φ = 9.81e-02 at T = 10.0000
+start  87: φ = 1.49e-01 at T = 2.5000
+start  64: φ = -1.73e-12 at T = 7.0552
+start  28: φ = 1.48e-01 at T = 2.5000
+start  76: φ = 7.24e-12 at T = 9.1013
+start  70: φ = 1.47e-01 at T = 2.5006
+start  21: φ = 1.47e-01 at T = 10.0000
+start  58: φ = 1.94e-12 at T = 7.0552
+start  41: φ = -3.17e-13 at T = 7.0552
+start  11: φ = 1.54e-01 at T = 2.5000
+start  82: φ = -5.90e-12 at T = 7.0552
+start  52: φ = 1.48e-01 at T = 2.5000
+start  94: φ = 3.43e-13 at T = 7.0552
+start  88: φ = 4.43e-12 at T = 9.1013
+start  65: φ = 1.48e-01 at T = 2.5003
+start  59: φ = 1.66e-01 at T = 2.5000
+start  77: φ = 1.49e-01 at T = 2.5000
+start  47: φ = 8.01e-12 at T = 7.4815
+start  71: φ = 1.50e-01 at T = 2.5000
+start  89: φ = 3.14e-12 at T = 7.0552
+start  12: φ = 1.00e-03 at T = 10.0000
+start  66: φ = 7.28e-12 at T = 9.1013
+start  29: φ = 1.49e-01 at T = 2.5000
+start  60: φ = 1.54e-01 at T = 2.5000
+start  22: φ = 1.48e-01 at T = 2.5000
+start  18: φ = 1.47e-01 at T = 2.5014
+start  83: φ = 3.48e-12 at T = 7.0552
+start  33: φ = -6.15e-12 at T = 7.0552
+start  23: φ = 1.49e-01 at T = 2.5003
+start  78: φ = 1.50e-01 at T = 2.5000
+start  53: φ = -4.84e-12 at T = 7.2357
+start  72: φ = 3.15e-12 at T = 7.0552
+start  48: φ = 1.48e-01 at T = 2.5001
+start  90: φ = 1.47e-01 at T = 2.5004
+start  84: φ = 4.77e-12 at T = 7.0552
+start  34: φ = -2.28e-12 at T = 7.0552
+start  30: φ = -4.67e-12 at T = 7.0552
+start  24: φ = 1.49e-01 at T = 2.5000
+start   2: φ = 1.47e-01 at T = 2.5071
+start  35: φ = 1.07e-11 at T = 7.3997
+start  54: φ = 2.37e-12 at T = 7.0570
+start   3: φ = 7.24e-02 at T = 10.0000
+start  36: φ = -3.04e-12 at T = 7.0552
+start  42: φ = 1.47e-01 at T = 2.5001
+start   4: φ = 1.47e-01 at T = 2.5002
+start  95: φ = -8.38e-12 at T = 7.2512
+start   5: φ = 6.15e-12 at T = 7.0552
+start   6: φ = 1.48e-01 at T = 2.5000
+start  96: φ = 8.51e-12 at T = 9.1013
+random starts: 49/96 = 51.0% reached φ < 1e-08   [94 s]
+  from gate at T = 7.0552 → T* = 7.0548
+  from gate at T = 7.3997 → T* = 7.3993
+  from gate at T = 7.4815 → T* = 7.3997
+  from gate at T = 7.2357 → T* = 7.0556
+────────────────────────────────────────
+Φ = 0.7000π:  T* = 7.0548   infidelity = 9.88e-09   success chance = 51.0% (49/96, φ < 1e-08)
+[PXP sweep] Φ = 0.700π  T* = 7.0548  φ = 9.9e-09  success 49/96 = 51.0%  (elapsed 22 min)
+Setup finished: Φ = 0.65π, 16 threads
+start  37: φ = 9.80e-12 at T = 7.0592
+start  13: φ = -1.51e-11 at T = 7.4703
+start  19: φ = 1.30e-01 at T = 2.5000
+start  25: φ = 6.55e-13 at T = 7.0592
+start   7: φ = 1.30e-01 at T = 2.5000
+start  61: φ = 7.02e-02 at T = 10.0000
+start  73: φ = 5.62e-14 at T = 7.0592
+start  55: φ = 9.33e-12 at T = 7.0592
+start  67: φ = -5.02e-12 at T = 7.0592
+start  26: φ = 4.05e-13 at T = 7.0592
+start  91: φ = 1.28e-01 at T = 2.5000
+start  43: φ = -2.88e-13 at T = 7.0592
+start   1: φ = 1.29e-01 at T = 2.5000
+start  49: φ = 1.28e-01 at T = 2.5000
+start  85: φ = 1.28e-01 at T = 2.5002
+start  62: φ = 1.29e-01 at T = 2.5001
+start  14: φ = 8.54e-12 at T = 7.0592
+start  31: φ = 1.28e-01 at T = 2.5000
+start  38: φ = 1.20e-11 at T = 7.0592
+start  79: φ = 1.28e-01 at T = 2.5002
+start  68: φ = 1.34e-01 at T = 2.5000
+start  44: φ = 5.44e-13 at T = 7.0592
+start   8: φ = 1.30e-01 at T = 2.5000
+start  92: φ = 9.33e-13 at T = 7.0592
+start  15: φ = 1.30e-11 at T = 7.0592
+start  50: φ = 1.33e-01 at T = 2.5000
+start  80: φ = -2.49e-13 at T = 7.0592
+start  69: φ = 1.46e-01 at T = 2.5000
+start  20: φ = 1.28e-01 at T = 2.5005
+start  39: φ = 1.01e-11 at T = 7.0592
+start  74: φ = 1.28e-01 at T = 2.5000
+start  32: φ = 1.28e-01 at T = 2.5000
+start   9: φ = 7.91e-12 at T = 7.0592
+start  56: φ = 1.28e-01 at T = 2.5005
+start  93: φ = 1.30e-01 at T = 2.5000
+start  86: φ = 1.29e-01 at T = 2.5000
+start  27: φ = -8.32e-12 at T = 7.9962
+start  63: φ = 1.33e-01 at T = 2.5000
+start  75: φ = 1.67e-12 at T = 7.0592
+start  21: φ = 1.13e-01 at T = 10.0000
+start  40: φ = -1.48e-11 at T = 7.4703
+start  45: φ = 4.90e-13 at T = 7.0592
+start   2: φ = 1.28e-01 at T = 2.5002
+start  64: φ = -3.58e-12 at T = 7.0592
+start  16: φ = 1.30e-01 at T = 2.5000
+start  57: φ = 1.35e-01 at T = 2.5000
+start  81: φ = 1.28e-01 at T = 2.5000
+start  10: φ = 1.07e-11 at T = 7.0592
+start  87: φ = 1.28e-01 at T = 2.5000
+start  46: φ = 2.05e-02 at T = 10.0000
+start  70: φ = 1.28e-01 at T = 2.5006
+start  51: φ = 1.28e-01 at T = 3.0766
+start  17: φ = 1.30e-01 at T = 2.5004
+start  58: φ = 1.02e-12 at T = 7.0592
+start  94: φ = 1.08e-11 at T = 7.0604
+start  33: φ = 7.16e-12 at T = 7.1666
+start   3: φ = 3.34e-12 at T = 7.0991
+start  88: φ = 4.96e-12 at T = 9.2070
+start  22: φ = 1.28e-01 at T = 2.5001
+start  11: φ = 1.30e-01 at T = 2.5000
+start  28: φ = 1.28e-01 at T = 2.5085
+start  41: φ = -3.76e-12 at T = 7.0892
+start  59: φ = 1.45e-01 at T = 2.5000
+start  34: φ = 1.26e-11 at T = 7.0592
+start  52: φ = 1.29e-01 at T = 2.5000
+start  82: φ = 1.66e-13 at T = 7.0592
+start  47: φ = 8.92e-12 at T = 7.0592
+start  65: φ = 1.28e-01 at T = 2.5000
+start  76: φ = 8.02e-12 at T = 7.4705
+start  71: φ = 1.30e-01 at T = 2.5000
+start  89: φ = 1.15e-11 at T = 7.0592
+start  18: φ = 1.00e-11 at T = 9.2070
+start  29: φ = 1.30e-01 at T = 2.5000
+start  35: φ = -1.53e-11 at T = 7.4703
+start  83: φ = 5.25e-02 at T = 6.6211
+start  77: φ = 1.29e-01 at T = 2.5000
+start   4: φ = 1.28e-01 at T = 2.5000
+start  66: φ = 5.71e-02 at T = 10.0000
+start  95: φ = 1.16e-11 at T = 7.0929
+start  90: φ = 2.03e-02 at T = 10.0000
+start  23: φ = 1.28e-01 at T = 2.5000
+start  60: φ = 2.75e-02 at T = 10.0000
+start  53: φ = 8.66e-12 at T = 7.0696
+start  36: φ = 1.23e-12 at T = 7.0592
+start  12: φ = 1.28e-01 at T = 2.5004
+start  30: φ = 3.31e-13 at T = 7.0592
+start  84: φ = 1.02e-11 at T = 7.0592
+start  48: φ = 1.28e-01 at T = 2.5001
+start  72: φ = -1.51e-11 at T = 7.9901
+start  96: φ = 1.04e-11 at T = 9.2070
+start  78: φ = 1.30e-01 at T = 2.5000
+start   5: φ = 1.09e-11 at T = 7.0592
+start  24: φ = 1.28e-01 at T = 2.5000
+start  54: φ = 4.72e-12 at T = 7.0687
+start   6: φ = 1.28e-01 at T = 2.5000
+start  42: φ = 1.28e-01 at T = 6.2048
+random starts: 44/96 = 45.8% reached φ < 1e-08   [295 s]
+  from gate at T = 7.0592 → T* = 7.0587
+  from gate at T = 7.0892 → T* = 7.0591
+  from gate at T = 7.1666 → T* = 7.0588
+  from gate at T = 7.4703 → T* = 7.4699
+────────────────────────────────────────
+Φ = 0.6500π:  T* = 7.0587   infidelity = 9.36e-09   success chance = 45.8% (44/96, φ < 1e-08)
+[PXP sweep] Φ = 0.650π  T* = 7.0587  φ = 9.4e-09  success 44/96 = 45.8%  (elapsed 28 min)
+Setup finished: Φ = 0.6π, 16 threads
+start  13: φ = -3.00e-12 at T = 7.5386
+start   1: φ = 2.35e-02 at T = 10.0000
+start  37: φ = -1.18e-12 at T = 7.0563
+start   7: φ = 1.18e-01 at T = 2.5000
+start  19: φ = 1.14e-01 at T = 2.5000
+start  49: φ = 1.12e-01 at T = 2.5000
+start  25: φ = 7.44e-13 at T = 7.0563
+start  61: φ = 8.33e-02 at T = 6.9592
+start  73: φ = 1.16e-01 at T = 2.5000
+start  43: φ = -1.44e-11 at T = 7.0563
+start  26: φ = 3.32e-12 at T = 7.0563
+start  14: φ = 4.47e-12 at T = 7.0563
+start  55: φ = 9.36e-13 at T = 7.0588
+start  79: φ = 1.09e-01 at T = 2.5069
+start  85: φ = 1.09e-01 at T = 2.5000
+start  91: φ = 1.09e-01 at T = 2.5002
+start  44: φ = 3.33e-12 at T = 7.0563
+start  31: φ = 1.09e-01 at T = 2.5039
+start  38: φ = 1.80e-12 at T = 7.0563
+start  50: φ = 1.14e-01 at T = 2.5000
+start  80: φ = -1.38e-11 at T = 7.0563
+start   8: φ = 1.12e-01 at T = 2.5000
+start  15: φ = 1.49e-12 at T = 7.0563
+start  62: φ = 1.83e-12 at T = 7.0563
+start  27: φ = 1.87e-13 at T = 7.0563
+start  92: φ = -1.44e-11 at T = 7.0563
+start  39: φ = -2.00e-15 at T = 7.0563
+start  74: φ = 1.09e-01 at T = 2.5000
+start  45: φ = 1.88e-12 at T = 7.0563
+start  32: φ = 1.10e-01 at T = 2.5000
+start  86: φ = -1.37e-11 at T = 7.0563
+start   9: φ = -1.36e-11 at T = 7.0563
+start  51: φ = 1.10e-01 at T = 2.5003
+start  56: φ = 1.09e-01 at T = 2.5003
+start  75: φ = -3.17e-12 at T = 7.0563
+start  93: φ = 1.11e-01 at T = 2.5000
+start  67: φ = -1.58e-11 at T = 7.2375
+start  16: φ = 1.11e-01 at T = 2.5000
+start  81: φ = 1.10e-01 at T = 2.5000
+start  46: φ = 2.55e-02 at T = 10.0000
+start  33: φ = 2.69e-02 at T = 6.3041
+start  87: φ = 1.09e-01 at T = 2.5000
+start  63: φ = 1.15e-01 at T = 2.5017
+start  76: φ = 8.74e-12 at T = 9.3096
+start  52: φ = 1.09e-01 at T = 2.5000
+start  10: φ = 3.12e-13 at T = 7.0563
+start  34: φ = 2.63e-12 at T = 7.0563
+start  57: φ = 1.16e-01 at T = 2.5000
+start  40: φ = 1.09e-01 at T = 2.5003
+start  28: φ = 1.09e-01 at T = 2.5100
+start  68: φ = 1.16e-01 at T = 2.5000
+start  64: φ = 2.98e-12 at T = 7.0563
+start  17: φ = 1.09e-01 at T = 2.5000
+start  94: φ = -1.43e-11 at T = 7.0563
+start  58: φ = -1.44e-11 at T = 7.0563
+start  47: φ = -1.33e-11 at T = 7.0563
+start  82: φ = -1.40e-11 at T = 7.0563
+start  11: φ = 1.10e-01 at T = 2.5000
+start  77: φ = 1.10e-01 at T = 2.5000
+start  29: φ = 1.12e-01 at T = 2.5000
+start  69: φ = 1.11e-01 at T = 2.5000
+start  41: φ = -1.45e-11 at T = 7.0563
+start  18: φ = 1.15e-01 at T = 2.5000
+start  59: φ = 1.09e-01 at T = 2.5000
+start  83: φ = 1.12e-01 at T = 2.5000
+start  53: φ = -1.30e-12 at T = 7.0623
+start  78: φ = 1.12e-01 at T = 2.5000
+start  35: φ = 1.09e-01 at T = 2.5079
+start  65: φ = 1.09e-01 at T = 2.5000
+start  12: φ = 4.18e-03 at T = 10.0000
+start  30: φ = 3.96e-12 at T = 7.0563
+start  95: φ = 1.16e-12 at T = 7.0593
+start  48: φ = 1.09e-01 at T = 2.5001
+start  84: φ = 1.25e-12 at T = 7.0563
+start  36: φ = -1.84e-12 at T = 7.0563
+start  66: φ = 2.55e-02 at T = 10.0000
+start  70: φ = 1.09e-01 at T = 2.5057
+start  54: φ = -6.21e-12 at T = 7.0718
+start  96: φ = 8.12e-12 at T = 9.3096
+start  60: φ = 4.18e-03 at T = 10.0000
+start  88: φ = -9.51e-12 at T = 9.3096
+start  71: φ = 1.11e-01 at T = 2.5000
+start  89: φ = 2.92e-12 at T = 7.0563
+start  72: φ = -4.99e-13 at T = 7.5255
+start   2: φ = 1.09e-01 at T = 8.4246
+start   3: φ = 1.15e-01 at T = 10.0000
+start   4: φ = 1.15e-01 at T = 2.5000
+start   5: φ = 3.52e-12 at T = 7.0563
+start   6: φ = 1.09e-01 at T = 2.5000
+start  20: φ = 1.09e-01 at T = 5.4982
+start  21: φ = 1.09e-01 at T = 2.5000
+start  22: φ = 1.10e-01 at T = 2.5000
+start  23: φ = 1.09e-01 at T = 2.5000
+start  24: φ = 1.10e-01 at T = 2.5000
+start  90: φ = 1.10e-01 at T = 2.5215
+start  42: φ = 1.09e-01 at T = 6.8608
+random starts: 40/96 = 41.7% reached φ < 1e-08   [360 s]
+  from gate at T = 7.0563 → T* = 7.0558
+  from gate at T = 9.3096 → T* = 9.3090
+  from gate at T = 7.2375 → T* = 7.0558
+  from gate at T = 7.5255 → T* = 7.0562
+────────────────────────────────────────
+Φ = 0.6000π:  T* = 7.0558   infidelity = 9.42e-09   success chance = 41.7% (40/96, φ < 1e-08)
+[PXP sweep] Φ = 0.600π  T* = 7.0558  φ = 9.4e-09  success 40/96 = 41.7%  (elapsed 34 min)
+Setup finished: Φ = 0.55π, 16 threads
+start  37: φ = 5.83e-12 at T = 7.0462
+start  49: φ = 9.42e-02 at T = 2.5000
+start   1: φ = 9.29e-02 at T = 2.5000
+start  25: φ = 7.11e-12 at T = 7.0462
+start  61: φ = 4.46e-02 at T = 9.0456
+start  73: φ = 9.79e-02 at T = 2.5000
+start  19: φ = 9.39e-02 at T = 2.5000
+start  43: φ = 5.60e-12 at T = 7.0462
+start   7: φ = 9.65e-02 at T = 2.5000
+start  91: φ = 9.30e-02 at T = 2.5000
+start  85: φ = 9.20e-02 at T = 2.5000
+start  55: φ = 7.54e-13 at T = 7.0479
+start  79: φ = 9.20e-02 at T = 2.5057
+start  50: φ = 9.67e-02 at T = 2.5000
+start  38: φ = 6.82e-12 at T = 7.0462
+start  44: φ = 8.80e-12 at T = 7.0462
+start  80: φ = 1.69e-12 at T = 7.0462
+start  26: φ = 9.20e-02 at T = 2.5001
+start  92: φ = 2.90e-12 at T = 7.0462
+start   8: φ = 9.42e-02 at T = 2.5000
+start  62: φ = 1.72e-12 at T = 7.0462
+start  86: φ = 4.75e-12 at T = 7.0462
+start  39: φ = 6.16e-12 at T = 7.0462
+start  13: φ = -3.13e-12 at T = 7.6045
+start  93: φ = 9.38e-02 at T = 2.5001
+start  51: φ = 9.25e-02 at T = 2.5022
+start   9: φ = 4.74e-12 at T = 7.0462
+start  56: φ = 9.21e-02 at T = 2.5009
+start  63: φ = 9.76e-02 at T = 2.5000
+start  45: φ = 7.72e-12 at T = 7.0462
+start  27: φ = 7.34e-12 at T = 7.0462
+start  87: φ = 9.38e-02 at T = 2.5000
+start  81: φ = 9.21e-02 at T = 2.5002
+start  14: φ = 4.88e-12 at T = 7.0462
+start  74: φ = 9.20e-02 at T = 7.6867
+start  57: φ = 9.87e-02 at T = 2.5000
+start  64: φ = 7.41e-12 at T = 7.0462
+start  40: φ = 9.21e-02 at T = 2.5002
+start  15: φ = 2.14e-12 at T = 7.0462
+start  28: φ = 9.74e-02 at T = 2.5000
+start  94: φ = -9.79e-12 at T = 7.0475
+start  75: φ = -8.86e-12 at T = 7.0462
+start  88: φ = -9.41e-12 at T = 9.4092
+start  10: φ = 1.76e-12 at T = 7.0462
+start  46: φ = 3.07e-02 at T = 10.0000
+start  58: φ = 7.55e-12 at T = 7.0462
+start  52: φ = 9.20e-02 at T = 2.5000
+start  82: φ = 2.93e-12 at T = 7.0462
+start  65: φ = 9.25e-02 at T = 2.5000
+start  67: φ = -3.04e-12 at T = 7.2640
+start  89: φ = 4.33e-12 at T = 7.0462
+start  76: φ = 9.40e-02 at T = 2.5000
+start  59: φ = 9.52e-02 at T = 2.5000
+start  16: φ = 9.38e-02 at T = 2.5000
+start  83: φ = 9.42e-02 at T = 2.5000
+start  41: φ = -7.41e-12 at T = 7.0523
+start  47: φ = 4.52e-12 at T = 7.0462
+start  11: φ = 9.38e-02 at T = 2.5000
+start  29: φ = 9.29e-02 at T = 2.5000
+start  77: φ = -5.76e-12 at T = 9.5410
+start  95: φ = -5.62e-13 at T = 7.0995
+start  68: φ = 9.79e-02 at T = 2.5000
+start  53: φ = 6.67e-12 at T = 7.0584
+start  84: φ = 6.14e-12 at T = 7.0462
+start  17: φ = 9.29e-02 at T = 2.5000
+start  90: φ = 2.04e-12 at T = 7.0462
+start  66: φ = 3.81e-12 at T = 7.7227
+start  69: φ = 8.92e-02 at T = 5.2583
+start  12: φ = 3.09e-02 at T = 10.0000
+start  30: φ = 6.90e-12 at T = 7.0462
+start  60: φ = 9.27e-02 at T = 2.7188
+start  54: φ = 5.28e-02 at T = 10.0000
+start  96: φ = 7.98e-12 at T = 9.4092
+start  78: φ = 9.26e-02 at T = 2.5000
+start  48: φ = 9.19e-02 at T = 2.5006
+start  18: φ = 9.30e-02 at T = 2.5000
+start  70: φ = 9.20e-02 at T = 2.5004
+start  71: φ = 1.05e-01 at T = 2.5000
+start  72: φ = -5.69e-12 at T = 7.1990
+start   2: φ = 9.19e-02 at T = 2.7058
+start   3: φ = 9.76e-12 at T = 9.4092
+start   4: φ = 9.30e-02 at T = 2.5000
+start   5: φ = -1.45e-11 at T = 7.0462
+start   6: φ = 9.85e-02 at T = 2.5000
+start  31: φ = 9.20e-02 at T = 6.8723
+start  32: φ = 9.29e-02 at T = 2.5000
+start  33: φ = 3.14e-12 at T = 7.0469
+start  34: φ = 2.13e-12 at T = 7.0462
+start  35: φ = 9.29e-02 at T = 2.5000
+start  36: φ = 2.85e-12 at T = 7.0462
+start  20: φ = 9.22e-02 at T = 7.2211
+start  21: φ = 9.66e-02 at T = 2.5000
+start  22: φ = 9.38e-02 at T = 2.5000
+start  23: φ = 9.42e-02 at T = 2.5000
+start  24: φ = 9.20e-02 at T = 2.5000
+start  42: φ = 9.25e-02 at T = 5.0182
+random starts: 42/96 = 43.8% reached φ < 1e-08   [321 s]
+  from gate at T = 7.0462 → T* = 7.0457
+  from gate at T = 7.1990 → T* = 7.0457
+  from gate at T = 7.2640 → T* = 7.0463
+  from gate at T = 7.0995 → T* = 7.0457
+────────────────────────────────────────
+Φ = 0.5500π:  T* = 7.0457   infidelity = 9.91e-09   success chance = 43.8% (42/96, φ < 1e-08)
+[PXP sweep] Φ = 0.550π  T* = 7.0457  φ = 9.9e-09  success 42/96 = 43.8%  (elapsed 40 min)
+Setup finished: Φ = 0.5π, 16 threads
+start  13: φ = -1.64e-12 at T = 7.6678
+start  19: φ = 8.09e-02 at T = 2.5000
+start  61: φ = 1.35e-01 at T = 8.7919
+start   7: φ = 8.75e-02 at T = 2.5000
+start  37: φ = -1.95e-12 at T = 7.0283
+start  91: φ = 7.71e-02 at T = 2.5000
+start  25: φ = -2.04e-12 at T = 7.0283
+start  49: φ = 7.83e-02 at T = 2.5000
+start  31: φ = 7.68e-02 at T = 2.5000
+start  73: φ = 8.17e-02 at T = 2.5000
+start   1: φ = 7.71e-02 at T = 2.5000
+start  79: φ = 7.65e-02 at T = 2.5000
+start  85: φ = 7.63e-02 at T = 2.5001
+start  14: φ = 5.46e-13 at T = 7.0283
+start  55: φ = 8.51e-12 at T = 7.0363
+start  26: φ = 7.83e-02 at T = 2.5000
+start  67: φ = 3.76e-12 at T = 7.1377
+start  50: φ = 8.05e-02 at T = 2.5000
+start  43: φ = 7.62e-02 at T = 2.5000
+start  92: φ = -1.31e-12 at T = 7.0283
+start  32: φ = 7.95e-02 at T = 2.5000
+start  80: φ = -8.71e-13 at T = 7.0283
+start  38: φ = -1.51e-12 at T = 7.0283
+start   8: φ = 7.83e-02 at T = 2.5000
+start  62: φ = 2.89e-12 at T = 7.0290
+start  15: φ = -1.33e-13 at T = 7.0283
+start  86: φ = -3.69e-12 at T = 7.6678
+start  44: φ = 8.83e-13 at T = 7.0283
+start  93: φ = 7.79e-02 at T = 2.5000
+start  68: φ = 8.18e-02 at T = 2.5000
+start  16: φ = 7.79e-02 at T = 2.5000
+start  39: φ = -2.38e-13 at T = 7.0283
+start   2: φ = 7.63e-02 at T = 2.5053
+start  87: φ = 7.62e-02 at T = 2.5000
+start  81: φ = 7.64e-02 at T = 2.5000
+start   9: φ = -1.86e-12 at T = 7.0283
+start  27: φ = 2.43e-12 at T = 7.0355
+start  69: φ = -2.77e-12 at T = 7.6678
+start  56: φ = 7.62e-02 at T = 2.5006
+start  51: φ = 7.71e-02 at T = 2.5011
+start  33: φ = 2.96e-12 at T = 7.0363
+start  74: φ = 7.63e-02 at T = 7.8714
+start  88: φ = 1.29e-11 at T = 9.5059
+start  63: φ = 8.16e-02 at T = 2.5028
+start  45: φ = -6.97e-13 at T = 7.0283
+start  17: φ = 7.62e-02 at T = 2.5000
+start  28: φ = 7.67e-02 at T = 2.5000
+start  75: φ = -3.98e-12 at T = 7.0283
+start  94: φ = -8.56e-12 at T = 7.0771
+start  10: φ = -4.29e-13 at T = 7.0283
+start  34: φ = 7.14e-12 at T = 9.9995
+start  57: φ = 8.24e-02 at T = 2.5000
+start  40: φ = 7.62e-02 at T = 2.5045
+start  64: φ = -2.54e-12 at T = 7.0283
+start  82: φ = -9.36e-12 at T = 7.0482
+start  89: φ = -6.45e-13 at T = 7.0283
+start  18: φ = 8.22e-02 at T = 2.5000
+start  29: φ = 6.96e-02 at T = 5.7262
+start  76: φ = 1.16e-11 at T = 9.5059
+start  52: φ = 7.63e-02 at T = 2.5000
+start  58: φ = -2.93e-12 at T = 7.0283
+start  70: φ = 7.61e-02 at T = 2.5982
+start  83: φ = 7.83e-02 at T = 2.5000
+start  90: φ = -6.66e-12 at T = 7.6678
+start  11: φ = 7.64e-02 at T = 2.5000
+start  46: φ = 7.61e-02 at T = 2.5026
+start  35: φ = 7.67e-02 at T = 2.5000
+start  65: φ = 7.67e-02 at T = 2.5000
+start  77: φ = 5.99e-02 at T = 10.0000
+start  41: φ = -4.62e-12 at T = 7.0549
+start  95: φ = -1.02e-11 at T = 7.2384
+start  84: φ = -6.59e-13 at T = 7.0283
+start  71: φ = 8.01e-02 at T = 2.5000
+start   3: φ = -1.59e-12 at T = 9.5059
+start  59: φ = 7.63e-02 at T = 2.5000
+start  36: φ = -2.48e-13 at T = 7.0283
+start  30: φ = -3.60e-12 at T = 7.0287
+start  53: φ = 8.82e-12 at T = 7.0347
+start  12: φ = 7.63e-02 at T = 2.5000
+start  78: φ = 7.84e-02 at T = 2.5000
+start  66: φ = -1.25e-12 at T = 7.6678
+start  47: φ = 3.12e-12 at T = 7.1054
+start   4: φ = 7.65e-02 at T = 2.5000
+start  60: φ = 8.00e-02 at T = 2.5030
+start  54: φ = 1.28e-11 at T = 8.4804
+start  72: φ = 7.63e-02 at T = 3.6362
+start  48: φ = 7.62e-02 at T = 2.5005
+start   5: φ = 4.29e-12 at T = 7.0287
+start  96: φ = 8.58e-14 at T = 9.5059
+start   6: φ = 8.24e-02 at T = 2.5000
+start  20: φ = 7.64e-02 at T = 5.7514
+start  21: φ = 7.65e-02 at T = 2.5003
+start  22: φ = 7.79e-02 at T = 2.5000
+start  23: φ = 7.72e-02 at T = 2.5000
+start  24: φ = 7.63e-02 at T = 2.5000
+start  42: φ = 7.63e-02 at T = 6.9977
+random starts: 42/96 = 43.8% reached φ < 1e-08   [259 s]
+  from gate at T = 7.0283 → T* = 7.0278
+  from gate at T = 7.0771 → T* = 7.0281
+  from gate at T = 7.1054 → T* = 7.0283
+  from gate at T = 7.0549 → T* = 7.0278
+────────────────────────────────────────
+Φ = 0.5000π:  T* = 7.0278   infidelity = 9.09e-09   success chance = 43.8% (42/96, φ < 1e-08)
+[PXP sweep] Φ = 0.500π  T* = 7.0278  φ = 9.1e-09  success 42/96 = 43.8%  (elapsed 44 min)
+Setup finished: Φ = 0.45π, 16 threads
+start  13: φ = -1.07e-12 at T = 7.7284
+start   7: φ = 6.34e-02 at T = 2.5001
+start   1: φ = -3.74e-12 at T = 9.6438
+start  61: φ = 1.18e-01 at T = 8.6750
+start  37: φ = -2.98e-12 at T = 7.0019
+start  49: φ = 6.38e-02 at T = 2.5000
+start  19: φ = 6.59e-02 at T = 2.5000
+start  73: φ = 6.68e-02 at T = 2.5000
+start   8: φ = 6.75e-02 at T = 2.5000
+start  91: φ = 6.28e-02 at T = 2.5000
+start  62: φ = 6.63e-02 at T = 2.5000
+start  43: φ = -1.96e-11 at T = 7.0803
+start  55: φ = 2.17e-12 at T = 7.0141
+start  25: φ = 1.04e-12 at T = 7.2339
+start  85: φ = 6.19e-02 at T = 2.5002
+start  67: φ = 8.21e-12 at T = 7.0027
+start  79: φ = 6.18e-02 at T = 2.6728
+start  50: φ = 6.58e-02 at T = 2.5000
+start  14: φ = -6.87e-13 at T = 7.0019
+start  38: φ = 1.33e-12 at T = 7.0019
+start  74: φ = 6.18e-02 at T = 2.5005
+start   9: φ = -2.94e-12 at T = 7.0019
+start  15: φ = -7.46e-13 at T = 7.0019
+start  26: φ = 6.19e-02 at T = 2.5001
+start  75: φ = -2.57e-12 at T = 7.0019
+start  63: φ = 6.65e-02 at T = 2.5000
+start  92: φ = 2.37e-12 at T = 7.0019
+start  68: φ = 6.74e-02 at T = 2.5000
+start  44: φ = 3.98e-02 at T = 10.0000
+start  80: φ = -5.09e-12 at T = 7.0019
+start  39: φ = -7.31e-13 at T = 7.0019
+start  76: φ = -1.53e-12 at T = 9.5998
+start  51: φ = 6.24e-02 at T = 2.5368
+start  64: φ = -1.37e-12 at T = 7.0019
+start  56: φ = 6.22e-02 at T = 2.5001
+start  69: φ = 6.60e-02 at T = 2.5000
+start  93: φ = 6.34e-02 at T = 2.5000
+start  86: φ = -5.77e-12 at T = 7.0019
+start  10: φ = -2.64e-12 at T = 7.0019
+start  40: φ = 6.28e-02 at T = 2.5000
+start  16: φ = 6.34e-02 at T = 2.5000
+start  45: φ = 4.85e-13 at T = 7.0019
+start  87: φ = 7.50e-02 at T = 2.5000
+start  65: φ = 6.22e-02 at T = 2.5002
+start  27: φ = -2.88e-12 at T = 7.0048
+start  77: φ = 7.67e-02 at T = 2.5000
+start  57: φ = 6.76e-02 at T = 2.5000
+start  11: φ = 6.34e-02 at T = 2.5001
+start  81: φ = 6.27e-02 at T = 2.5001
+start  88: φ = -2.43e-12 at T = 9.5998
+start  94: φ = -7.07e-12 at T = 7.0019
+start  78: φ = 6.38e-02 at T = 2.5000
+start  52: φ = 6.19e-02 at T = 2.5030
+start  17: φ = 6.59e-02 at T = 2.5001
+start  28: φ = 6.27e-02 at T = 2.5000
+start  66: φ = 1.50e-13 at T = 7.7284
+start  89: φ = 1.27e-12 at T = 7.0019
+start  29: φ = 6.85e-02 at T = 5.0306
+start  46: φ = 6.19e-02 at T = 2.5070
+start  82: φ = -5.73e-12 at T = 7.0627
+start  58: φ = 6.20e-02 at T = 2.5075
+start  18: φ = 6.27e-02 at T = 2.5000
+start  95: φ = 6.28e-02 at T = 2.5000
+start  12: φ = 6.18e-02 at T = 2.5000
+start  53: φ = 4.69e-12 at T = 7.0093
+start  83: φ = 6.28e-02 at T = 2.5000
+start  30: φ = 6.23e-02 at T = 2.5008
+start  59: φ = 6.27e-02 at T = 2.5000
+start  96: φ = 1.23e-02 at T = 10.0000
+start  41: φ = -7.28e-12 at T = 7.0456
+start  90: φ = 6.56e-02 at T = 2.5000
+start  54: φ = 6.21e-02 at T = 2.5001
+start  47: φ = -4.85e-12 at T = 7.0390
+start  84: φ = -8.60e-12 at T = 7.0027
+start  70: φ = 6.22e-02 at T = 5.7004
+start  60: φ = 6.51e-02 at T = 2.5063
+start  71: φ = 6.57e-02 at T = 2.5000
+start  48: φ = 6.19e-02 at T = 2.5006
+start  72: φ = -1.97e-12 at T = 7.0183
+start   2: φ = 6.22e-02 at T = 8.5744
+start   3: φ = -1.38e-11 at T = 9.5998
+start  42: φ = 6.19e-02 at T = 4.7708
+start   4: φ = 6.28e-02 at T = 2.5000
+start   5: φ = 2.45e-12 at T = 7.1586
+start  20: φ = 6.20e-02 at T = 6.5600
+start   6: φ = 6.76e-02 at T = 2.5000
+start  21: φ = 6.23e-02 at T = 2.5000
+start  22: φ = 6.34e-02 at T = 2.5000
+start  23: φ = 6.18e-02 at T = 2.5172
+start  24: φ = 6.22e-02 at T = 2.5000
+start  31: φ = 6.20e-02 at T = 7.4538
+start  32: φ = 6.19e-02 at T = 2.6832
+start  33: φ = 1.12e-12 at T = 7.2493
+start  34: φ = -5.25e-12 at T = 8.6639
+start  35: φ = 6.19e-02 at T = 2.6494
+start  36: φ = 1.98e-12 at T = 7.0019
+random starts: 36/96 = 37.5% reached φ < 1e-08   [359 s]
+  from gate at T = 7.0019 → T* = 7.0014
+  from gate at T = 7.0390 → T* = 7.0014
+  from gate at T = 7.0627 → T* = 7.0014
+  from gate at T = 7.1586 → T* = 7.0018
+────────────────────────────────────────
+Φ = 0.4500π:  T* = 7.0014   infidelity = 9.89e-09   success chance = 37.5% (36/96, φ < 1e-08)
+[PXP sweep] Φ = 0.450π  T* = 7.0014  φ = 9.9e-09  success 36/96 = 37.5%  (elapsed 50 min)
+Setup finished: Φ = 0.4π, 16 threads
+start  91: φ = 5.07e-02 at T = 2.5000
+start  13: φ = 5.61e-13 at T = 7.7859
+start   7: φ = 5.04e-02 at T = 2.5001
+start  49: φ = 5.07e-02 at T = 2.5000
+start  19: φ = 5.34e-02 at T = 2.5000
+start  37: φ = -7.12e-12 at T = 6.9662
+start  73: φ = 5.36e-02 at T = 2.5000
+start  79: φ = 4.92e-02 at T = 2.5052
+start  31: φ = 4.93e-02 at T = 2.5000
+start   1: φ = 4.97e-02 at T = 2.5000
+start   8: φ = 5.49e-02 at T = 2.5000
+start  43: φ = 1.19e-12 at T = 6.9759
+start  85: φ = 4.91e-02 at T = 2.5001
+start  67: φ = 1.55e-11 at T = 7.0921
+start  55: φ = 2.13e-12 at T = 7.0234
+start  80: φ = -7.56e-12 at T = 6.9662
+start  50: φ = 5.26e-02 at T = 2.5000
+start  61: φ = 6.29e-12 at T = 7.9042
+start  25: φ = 4.90e-02 at T = 2.6802
+start  92: φ = -1.05e-11 at T = 6.9662
+start  14: φ = -1.89e-11 at T = 6.9813
+start  68: φ = 5.45e-02 at T = 2.5000
+start  44: φ = 5.53e-02 at T = 10.0000
+start  56: φ = 5.04e-02 at T = 2.5000
+start  93: φ = 5.04e-02 at T = 2.5000
+start   9: φ = -7.49e-12 at T = 6.9662
+start  32: φ = 4.94e-02 at T = 2.5000
+start  26: φ = 5.07e-02 at T = 2.5000
+start  15: φ = 5.07e-02 at T = 2.5000
+start  20: φ = 4.90e-02 at T = 2.5235
+start  74: φ = 4.90e-02 at T = 2.5092
+start  86: φ = 4.90e-02 at T = 2.5020
+start   2: φ = 4.90e-02 at T = 2.5148
+start  81: φ = 4.94e-02 at T = 2.5001
+start  51: φ = 4.93e-02 at T = 2.5113
+start  69: φ = 5.44e-02 at T = 2.5000
+start  62: φ = 3.86e-12 at T = 6.9746
+start  75: φ = -9.67e-12 at T = 6.9662
+start  57: φ = 5.42e-02 at T = 2.5000
+start  33: φ = 5.31e-03 at T = 9.7118
+start  16: φ = 5.04e-02 at T = 2.5000
+start  45: φ = -7.99e-12 at T = 7.0580
+start  87: φ = 4.94e-02 at T = 2.5000
+start  94: φ = -4.04e-12 at T = 6.9662
+start  21: φ = 4.92e-02 at T = 2.5014
+start  10: φ = -7.63e-12 at T = 6.9789
+start  76: φ = -2.87e-13 at T = 9.6910
+start  63: φ = 5.41e-02 at T = 2.5000
+start   3: φ = -5.24e-12 at T = 9.6910
+start  58: φ = 4.94e-02 at T = 2.5000
+start  27: φ = 4.92e-02 at T = 2.5004
+start  11: φ = 4.94e-02 at T = 2.5000
+start  88: φ = 3.80e-12 at T = 9.6910
+start  82: φ = 1.21e-12 at T = 7.0336
+start  52: φ = 4.91e-02 at T = 2.5000
+start  17: φ = 5.26e-02 at T = 2.5001
+start  70: φ = 4.90e-02 at T = 2.5311
+start   4: φ = 5.07e-02 at T = 2.5000
+start  28: φ = 6.01e-02 at T = 2.5000
+start  46: φ = 1.52e-02 at T = 10.0000
+start  59: φ = 5.04e-02 at T = 2.5000
+start  34: φ = -3.46e-12 at T = 8.4710
+start  95: φ = 1.52e-02 at T = 10.0000
+start  22: φ = 5.04e-02 at T = 2.5000
+start  83: φ = 4.93e-02 at T = 2.5000
+start  29: φ = 6.16e-02 at T = 4.7717
+start   5: φ = 9.38e-03 at T = 6.5398
+start  77: φ = 5.04e-02 at T = 2.5000
+start  71: φ = 5.23e-02 at T = 2.5000
+start  18: φ = 4.97e-02 at T = 2.5000
+start  89: φ = -9.37e-12 at T = 6.9662
+start  64: φ = -8.57e-12 at T = 9.6819
+start  60: φ = 5.27e-02 at T = 2.5000
+start  35: φ = 4.97e-02 at T = 2.5000
+start  12: φ = 4.90e-02 at T = 2.5009
+start   6: φ = 5.07e-02 at T = 2.5000
+start  78: φ = 4.98e-02 at T = 2.5001
+start  38: φ = -1.30e-11 at T = 7.1165
+start  96: φ = 4.93e-02 at T = 2.5004
+start  23: φ = 4.90e-02 at T = 2.5022
+start  36: φ = 5.07e-02 at T = 2.5000
+start  84: φ = 6.38e-14 at T = 6.9670
+start  90: φ = -4.31e-12 at T = 6.9807
+start  72: φ = -6.24e-12 at T = 7.0096
+start  65: φ = 4.92e-02 at T = 2.5000
+start  30: φ = 4.90e-02 at T = 2.5038
+start  66: φ = 1.00e-11 at T = 9.6819
+start  39: φ = -9.77e-12 at T = 6.9662
+start  53: φ = -1.22e-11 at T = 7.0397
+start  24: φ = 4.91e-02 at T = 2.5001
+start  40: φ = 4.98e-02 at T = 2.5000
+start  54: φ = 4.93e-02 at T = 2.5000
+start  47: φ = -8.68e-12 at T = 6.9671
+start  41: φ = 1.83e-11 at T = 7.0310
+start  48: φ = 4.90e-02 at T = 2.5010
+start  42: φ = 4.90e-02 at T = 2.7931
+random starts: 31/96 = 32.3% reached φ < 1e-08   [327 s]
+  from gate at T = 6.9662 → T* = 6.9656
+  from gate at T = 7.0096 → T* = 6.9656
+  from gate at T = 7.0580 → T* = 6.9656
+  from gate at T = 7.0310 → T* = 6.9663
+────────────────────────────────────────
+Φ = 0.4000π:  T* = 6.9656   infidelity = 9.81e-09   success chance = 32.3% (31/96, φ < 1e-08)
+[PXP sweep] Φ = 0.400π  T* = 6.9656  φ = 9.8e-09  success 31/96 = 32.3%  (elapsed 56 min)
+Setup finished: Φ = 0.35π, 16 threads
+start  13: φ = -1.45e-11 at T = 7.8400
+start  19: φ = 4.17e-02 at T = 2.5000
+start  49: φ = 3.81e-02 at T = 2.5000
+start  61: φ = 8.65e-02 at T = 8.2701
+start   7: φ = 4.10e-02 at T = 2.5000
+start  37: φ = -2.22e-12 at T = 6.9198
+start  73: φ = 4.18e-02 at T = 2.5000
+start   1: φ = 5.57e-12 at T = 8.5487
+start  91: φ = 3.91e-02 at T = 2.5000
+start  31: φ = 3.83e-02 at T = 2.5000
+start  85: φ = 3.78e-02 at T = 2.5001
+start  43: φ = -3.89e-12 at T = 6.9422
+start  20: φ = 3.80e-02 at T = 2.5000
+start  79: φ = 3.76e-02 at T = 2.5021
+start  50: φ = 4.07e-02 at T = 2.5000
+start  55: φ = -2.03e-12 at T = 7.0588
+start  25: φ = 1.17e-11 at T = 6.9380
+start   8: φ = 4.21e-02 at T = 2.5000
+start  67: φ = -1.50e-11 at T = 7.1622
+start  68: φ = 6.00e-02 at T = 3.9181
+start  80: φ = -2.26e-12 at T = 6.9198
+start  32: φ = -1.46e-11 at T = 7.8400
+start  14: φ = 3.77e-02 at T = 2.5001
+start  26: φ = -1.41e-11 at T = 7.8400
+start  38: φ = 2.94e-12 at T = 7.2784
+start  62: φ = 8.51e-12 at T = 6.9622
+start  51: φ = 3.88e-02 at T = 2.5000
+start  74: φ = 3.77e-02 at T = 2.5001
+start  44: φ = 3.96e-02 at T = 10.0000
+start  56: φ = 3.88e-02 at T = 2.5000
+start  15: φ = 3.80e-02 at T = 2.5000
+start  92: φ = 1.76e-11 at T = 6.9737
+start  52: φ = 5.21e-02 at T = 2.5000
+start   2: φ = 3.76e-02 at T = 2.5549
+start   9: φ = -4.70e-12 at T = 6.9198
+start  75: φ = -1.29e-11 at T = 6.9198
+start  21: φ = 3.76e-02 at T = 2.5108
+start  63: φ = 4.19e-02 at T = 2.5000
+start  45: φ = 2.55e-02 at T = 7.0109
+start  69: φ = 3.82e-02 at T = 2.5000
+start  93: φ = 3.88e-02 at T = 2.5001
+start  53: φ = 3.35e-02 at T = 5.7771
+start  27: φ = 3.78e-02 at T = 2.5001
+start  57: φ = 4.22e-02 at T = 2.5000
+start  81: φ = 3.80e-02 at T = 2.5001
+start   3: φ = -8.18e-12 at T = 9.7796
+start  76: φ = -9.15e-12 at T = 9.7796
+start  16: φ = 3.88e-02 at T = 2.5000
+start  33: φ = 4.20e-12 at T = 7.1850
+start  77: φ = 8.74e-02 at T = 7.8376
+start  39: φ = 7.59e-12 at T = 6.9468
+start  64: φ = -9.03e-12 at T = 7.8400
+start   4: φ = 4.22e-02 at T = 2.5000
+start  22: φ = 3.88e-02 at T = 2.5000
+start  28: φ = 3.82e-02 at T = 2.5000
+start  54: φ = 3.82e-02 at T = 2.5000
+start  10: φ = 3.07e-12 at T = 6.9611
+start  78: φ = 3.91e-02 at T = 2.5001
+start  65: φ = 3.82e-02 at T = 2.5000
+start  17: φ = 3.80e-02 at T = 2.5000
+start  46: φ = 3.78e-02 at T = 2.5006
+start  82: φ = 4.03e-12 at T = 6.9275
+start  70: φ = 3.76e-02 at T = 2.5197
+start   5: φ = 3.51e-02 at T = 5.5556
+start  58: φ = 3.78e-02 at T = 2.5001
+start  94: φ = 8.05e-12 at T = 6.9462
+start  29: φ = 3.82e-02 at T = 5.2749
+start  11: φ = 3.80e-02 at T = 2.5004
+start  34: φ = 1.98e-12 at T = 8.8143
+start   6: φ = 4.22e-02 at T = 2.5000
+start  40: φ = 3.77e-02 at T = 2.5134
+start  18: φ = 3.82e-02 at T = 2.5000
+start  30: φ = 3.88e-02 at T = 2.5001
+start  95: φ = -4.97e-12 at T = 9.7796
+start  83: φ = 3.83e-02 at T = 2.5000
+start  71: φ = 4.05e-02 at T = 2.5000
+start  59: φ = 3.88e-02 at T = 2.5000
+start  66: φ = -6.80e-12 at T = 7.8400
+start  47: φ = -6.39e-12 at T = 7.0140
+start  35: φ = 3.82e-02 at T = 2.5000
+start  12: φ = 3.77e-02 at T = 2.5000
+start  41: φ = -6.14e-12 at T = 6.9510
+start  96: φ = 3.78e-02 at T = 2.5102
+start  84: φ = -3.73e-12 at T = 6.9516
+start  72: φ = -9.00e-12 at T = 6.9443
+start  36: φ = 3.91e-02 at T = 2.5001
+start  60: φ = 4.01e-02 at T = 2.5045
+start  48: φ = 3.77e-02 at T = 2.5000
+start  86: φ = 3.76e-02 at T = 3.1320
+start  87: φ = 3.88e-02 at T = 2.5002
+start  88: φ = -9.82e-12 at T = 9.7796
+start  89: φ = 2.65e-12 at T = 6.9687
+start  90: φ = 4.25e-02 at T = 2.5000
+start  23: φ = 3.76e-02 at T = 6.3356
+start  24: φ = 3.80e-02 at T = 2.5000
+start  42: φ = 3.76e-02 at T = 6.6372
+random starts: 32/96 = 33.3% reached φ < 1e-08   [347 s]
+  from gate at T = 6.9198 → T* = 6.9192
+  from gate at T = 7.0140 → T* = 6.9196
+  from gate at T = 6.9622 → T* = 6.9195
+  from gate at T = 6.9422 → T* = 6.9197
+────────────────────────────────────────
+Φ = 0.3500π:  T* = 6.9192   infidelity = 9.21e-09   success chance = 33.3% (32/96, φ < 1e-08)
+[PXP sweep] Φ = 0.350π  T* = 6.9192  φ = 9.2e-09  success 32/96 = 33.3%  (elapsed 62 min)
+Setup finished: Φ = 0.3π, 16 threads
+start  61: φ = 7.21e-02 at T = 8.0028
+start  13: φ = -5.88e-13 at T = 7.8899
+start  91: φ = 2.90e-02 at T = 2.5000
+start   7: φ = 2.87e-02 at T = 2.5000
+start  19: φ = 3.05e-02 at T = 2.5000
+start   1: φ = 6.49e-02 at T = 8.2722
+start  73: φ = 3.11e-02 at T = 2.5000
+start  85: φ = 2.79e-02 at T = 2.5001
+start  49: φ = 2.79e-02 at T = 2.5000
+start  79: φ = 2.80e-02 at T = 2.5012
+start   8: φ = 3.16e-02 at T = 2.5000
+start  55: φ = 7.88e-12 at T = 6.9972
+start  31: φ = -3.17e-12 at T = 6.8708
+start  37: φ = 6.22e-13 at T = 6.8610
+start  25: φ = 3.38e-12 at T = 6.9012
+start  43: φ = 2.62e-12 at T = 6.9928
+start  62: φ = 1.04e-11 at T = 7.1727
+start  67: φ = -5.09e-13 at T = 6.8925
+start  92: φ = 6.39e-12 at T = 6.9167
+start  80: φ = 4.90e-13 at T = 6.8610
+start  14: φ = -1.97e-12 at T = 7.0664
+start  20: φ = 2.78e-02 at T = 2.5001
+start  38: φ = 3.35e-02 at T = 5.2033
+start  26: φ = 3.43e-12 at T = 7.8899
+start  50: φ = 3.04e-02 at T = 2.5000
+start  74: φ = 2.76e-02 at T = 2.5020
+start   2: φ = 2.77e-02 at T = 2.5921
+start  68: φ = 3.10e-02 at T = 2.5000
+start  93: φ = 3.05e-02 at T = 2.5000
+start  44: φ = 3.80e-02 at T = 10.0000
+start  63: φ = 3.10e-02 at T = 2.5000
+start  86: φ = 2.80e-02 at T = 2.5000
+start  56: φ = 2.79e-02 at T = 2.5002
+start   9: φ = -8.32e-13 at T = 6.8610
+start   3: φ = -1.37e-11 at T = 9.8661
+start  15: φ = 2.79e-02 at T = 2.5001
+start  64: φ = 1.48e-12 at T = 7.8899
+start  57: φ = 3.20e-02 at T = 2.5000
+start  81: φ = 2.82e-02 at T = 2.5014
+start  69: φ = 2.83e-02 at T = 2.5000
+start  21: φ = 2.79e-02 at T = 2.5012
+start   4: φ = 3.18e-02 at T = 2.5000
+start  87: φ = 3.05e-02 at T = 2.5000
+start  27: φ = 2.90e-02 at T = 2.5000
+start  45: φ = -2.06e-12 at T = 7.2257
+start  39: φ = 2.78e-02 at T = 2.5000
+start  94: φ = 8.18e-13 at T = 6.8805
+start  51: φ = 2.79e-02 at T = 2.5223
+start  16: φ = 2.87e-02 at T = 2.5000
+start  10: φ = 7.39e-12 at T = 6.8930
+start  28: φ = 2.82e-02 at T = 2.5000
+start  65: φ = 2.80e-02 at T = 2.5000
+start  52: φ = 3.40e-02 at T = 2.5000
+start  95: φ = -1.12e-11 at T = 9.8656
+start  82: φ = -3.61e-12 at T = 6.9118
+start  22: φ = 2.87e-02 at T = 2.5000
+start   5: φ = 2.80e-02 at T = 2.5000
+start  58: φ = 2.78e-02 at T = 2.5020
+start  70: φ = 2.77e-02 at T = 2.5165
+start  11: φ = 2.87e-02 at T = 2.5000
+start  29: φ = 4.37e-02 at T = 4.4271
+start  46: φ = 2.77e-02 at T = 2.5324
+start  40: φ = 2.78e-02 at T = 2.5032
+start  17: φ = 2.76e-02 at T = 2.5000
+start  83: φ = 3.20e-02 at T = 2.5000
+start   6: φ = 3.17e-02 at T = 2.5000
+start  23: φ = 2.83e-02 at T = 2.5000
+start  32: φ = 1.46e-12 at T = 7.8899
+start  30: φ = 2.87e-02 at T = 2.5001
+start  66: φ = 5.67e-12 at T = 7.8899
+start  53: φ = 4.58e-12 at T = 7.1547
+start  71: φ = 3.02e-02 at T = 2.5000
+start  59: φ = 2.87e-02 at T = 2.5000
+start  96: φ = 2.77e-02 at T = 2.5027
+start  18: φ = 2.82e-02 at T = 2.5000
+start  88: φ = -1.45e-11 at T = 9.8657
+start  12: φ = 2.83e-02 at T = 2.5000
+start  54: φ = -7.71e-12 at T = 9.8656
+start  24: φ = 2.80e-02 at T = 2.5000
+start  47: φ = -1.07e-11 at T = 6.8644
+start  72: φ = 2.90e-02 at T = 2.5000
+start  84: φ = 2.29e-12 at T = 6.8840
+start  41: φ = -1.21e-11 at T = 7.0860
+start  60: φ = 3.01e-02 at T = 2.5119
+start  89: φ = 2.77e-02 at T = 2.5013
+start  90: φ = 2.90e-02 at T = 2.5000
+start  33: φ = -2.18e-12 at T = 7.2072
+start  42: φ = 2.76e-02 at T = 2.5155
+start  34: φ = -1.08e-11 at T = 9.7276
+start  35: φ = 2.87e-02 at T = 2.5000
+start  36: φ = 3.16e-02 at T = 2.5000
+start  48: φ = 2.76e-02 at T = 2.9630
+start  75: φ = 2.77e-02 at T = 4.3435
+start  76: φ = 7.73e-03 at T = 8.0535
+start  77: φ = 7.21e-02 at T = 7.8426
+start  78: φ = 2.90e-02 at T = 2.5001
+random starts: 30/96 = 31.2% reached φ < 1e-08   [234 s]
+  from gate at T = 6.8610 → T* = 6.8603
+  from gate at T = 6.9118 → T* = 6.8611
+  from gate at T = 6.8840 → T* = 6.8603
+  from gate at T = 6.9928 → T* = 6.8609
+────────────────────────────────────────
+Φ = 0.3000π:  T* = 6.8603   infidelity = 9.27e-09   success chance = 31.2% (30/96, φ < 1e-08)
+[PXP sweep] Φ = 0.300π  T* = 6.8603  φ = 9.3e-09  success 30/96 = 31.2%  (elapsed 66 min)
+Setup finished: Φ = 0.25π, 16 threads
+start  31: φ = 5.82e-02 at T = 7.8487
+start  49: φ = 1.95e-02 at T = 2.5000
+start   7: φ = 2.22e-02 at T = 2.5000
+start   1: φ = 2.85e-02 at T = 2.5000
+start  91: φ = 2.04e-02 at T = 2.5000
+start  73: φ = 2.24e-02 at T = 2.5000
+start  61: φ = 2.10e-02 at T = 2.5000
+start  25: φ = 5.70e-12 at T = 7.0060
+start  55: φ = 3.90e-12 at T = 7.0416
+start  37: φ = -4.49e-13 at T = 6.9883
+start  67: φ = -5.61e-12 at T = 6.8047
+start  85: φ = 1.92e-02 at T = 2.5194
+start   8: φ = 2.26e-02 at T = 2.5000
+start  50: φ = 2.16e-02 at T = 2.5000
+start  19: φ = 2.17e-02 at T = 2.5099
+start  38: φ = 2.74e-02 at T = 5.1852
+start  62: φ = -7.46e-12 at T = 7.1970
+start  92: φ = 1.95e-02 at T = 3.0363
+start  56: φ = 1.95e-02 at T = 2.5000
+start   2: φ = 1.93e-02 at T = 2.5267
+start  68: φ = 2.02e-02 at T = 2.5000
+start  20: φ = 1.98e-02 at T = 2.5000
+start  86: φ = 1.95e-02 at T = 2.5001
+start   9: φ = 1.90e-12 at T = 6.7904
+start  63: φ = 2.26e-02 at T = 2.5000
+start  57: φ = 2.39e-02 at T = 2.5000
+start   3: φ = 1.39e-06 at T = 10.0000
+start  51: φ = 1.96e-02 at T = 3.7927
+start  93: φ = 1.97e-02 at T = 2.5000
+start  10: φ = 2.69e-02 at T = 2.5000
+start  87: φ = 1.93e-02 at T = 2.5000
+start  69: φ = 1.98e-02 at T = 2.5000
+start  58: φ = 2.04e-02 at T = 2.5001
+start  32: φ = -5.76e-12 at T = 7.9351
+start  52: φ = 2.03e-02 at T = 2.5000
+start  39: φ = 1.93e-02 at T = 2.7117
+start   4: φ = 2.03e-02 at T = 2.5000
+start  21: φ = 1.93e-02 at T = 2.5022
+start  88: φ = 2.16e-02 at T = 10.0000
+start  11: φ = 2.02e-02 at T = 2.5003
+start  33: φ = 2.78e-02 at T = 2.5000
+start  43: φ = -9.72e-12 at T = 7.0512
+start  22: φ = 2.58e-02 at T = 2.5000
+start  59: φ = 2.02e-02 at T = 2.5000
+start  94: φ = 9.31e-12 at T = 6.8354
+start  53: φ = 2.64e-02 at T = 5.0516
+start  70: φ = 1.93e-02 at T = 2.5327
+start  44: φ = 6.02e-12 at T = 7.9351
+start  34: φ = -2.96e-12 at T = 9.7329
+start  13: φ = 3.60e-13 at T = 7.9351
+start  95: φ = 5.70e-12 at T = 9.9491
+start  35: φ = 5.82e-02 at T = 7.8456
+start   5: φ = 1.98e-02 at T = 2.5000
+start  40: φ = 1.93e-02 at T = 2.5388
+start  12: φ = 1.96e-02 at T = 2.5000
+start  23: φ = 2.04e-02 at T = 2.5000
+start  89: φ = 1.00e-11 at T = 6.8104
+start  54: φ = 2.20e-02 at T = 2.5000
+start  96: φ = 6.19e-12 at T = 7.9351
+start   6: φ = 2.27e-02 at T = 2.5000
+start  71: φ = 2.15e-02 at T = 2.5000
+start  60: φ = 2.13e-02 at T = 2.5040
+start  45: φ = 7.71e-03 at T = 6.9093
+start  26: φ = -3.94e-13 at T = 7.9351
+start  36: φ = 2.25e-02 at T = 2.5000
+start  90: φ = 1.98e-02 at T = 2.5000
+start  14: φ = 9.36e-12 at T = 6.8299
+start  27: φ = 1.98e-02 at T = 2.5000
+start  24: φ = 1.97e-02 at T = 2.5000
+start  72: φ = 1.98e-02 at T = 2.5000
+start  28: φ = 6.87e-12 at T = 10.0000
+start  29: φ = 3.43e-02 at T = 4.3096
+start  15: φ = 1.94e-02 at T = 2.5006
+start  30: φ = 2.24e-02 at T = 2.5000
+start  16: φ = 2.02e-02 at T = 2.5000
+start  17: φ = 2.02e-02 at T = 2.5013
+start  41: φ = -5.48e-12 at T = 6.8640
+start  18: φ = 1.97e-02 at T = 2.5000
+start  42: φ = 1.92e-02 at T = 2.5253
+start  64: φ = 2.75e-12 at T = 7.9351
+start  65: φ = 1.94e-02 at T = 2.5001
+start  66: φ = 6.76e-12 at T = 7.9351
+start  46: φ = 1.93e-02 at T = 8.5901
+start  79: φ = 1.94e-02 at T = 9.4385
+start  47: φ = 1.93e-12 at T = 6.9827
+start  80: φ = 2.76e-12 at T = 6.7874
+start  81: φ = 1.95e-02 at T = 2.5032
+start  48: φ = 1.92e-02 at T = 2.5058
+start  74: φ = 1.93e-02 at T = 8.1188
+start  82: φ = 2.41e-02 at T = 5.5113
+start  83: φ = 2.59e-02 at T = 2.5000
+start  84: φ = 1.48e-12 at T = 6.9094
+start  75: φ = 1.93e-02 at T = 4.3695
+start  76: φ = 2.26e-02 at T = 2.5000
+start  77: φ = 5.82e-02 at T = 7.8457
+start  78: φ = 1.98e-02 at T = 2.5002
+random starts: 24/96 = 25.0% reached φ < 1e-08   [416 s]
+  from gate at T = 6.7874 → T* = 6.7867
+  from gate at T = 6.8354 → T* = 6.7867
+  from gate at T = 6.8104 → T* = 6.7867
+  from gate at T = 6.8640 → T* = 6.7867
+────────────────────────────────────────
+Φ = 0.2500π:  T* = 6.7867   infidelity = 9.98e-09   success chance = 25.0% (24/96, φ < 1e-08)
+[PXP sweep] Φ = 0.250π  T* = 6.7867  φ = 1.0e-08  success 24/96 = 25.0%  (elapsed 73 min)
+Setup finished: Φ = 0.2π, 16 threads
+start  61: φ = 4.57e-02 at T = 7.8224
+start  13: φ = 4.57e-02 at T = 7.8442
+start  91: φ = 1.52e-02 at T = 2.5000
+start  73: φ = 1.50e-02 at T = 2.5000
+start   1: φ = 1.53e-02 at T = 2.5000
+start  19: φ = 1.51e-02 at T = 2.5000
+start   7: φ = 1.43e-02 at T = 2.5000
+start  62: φ = 1.23e-02 at T = 2.5030
+start  49: φ = 1.26e-02 at T = 2.5000
+start  85: φ = 1.25e-02 at T = 2.5002
+start  31: φ = 1.25e-02 at T = 2.5000
+start  37: φ = 4.78e-12 at T = 7.0249
+start  55: φ = 8.21e-12 at T = 6.9727
+start  25: φ = 5.13e-12 at T = 6.8921
+start  67: φ = -3.71e-12 at T = 6.9078
+start  79: φ = 1.25e-02 at T = 2.5288
+start   8: φ = 1.51e-02 at T = 2.5000
+start  14: φ = -2.24e-12 at T = 6.8973
+start  63: φ = 1.51e-02 at T = 2.5000
+start  32: φ = 1.87e-12 at T = 7.9744
+start  50: φ = 1.43e-02 at T = 2.5000
+start  80: φ = 4.58e-12 at T = 6.6955
+start  92: φ = 1.06e-11 at T = 6.7605
+start  33: φ = 2.64e-02 at T = 3.9171
+start  20: φ = 1.24e-02 at T = 2.5001
+start  64: φ = -1.43e-12 at T = 7.9744
+start  26: φ = 4.79e-13 at T = 7.9744
+start  38: φ = 2.24e-02 at T = 4.6994
+start   2: φ = 1.24e-02 at T = 3.9065
+start  68: φ = 1.27e-02 at T = 2.5000
+start  86: φ = 1.23e-02 at T = 2.5220
+start  43: φ = -5.43e-13 at T = 7.1108
+start  15: φ = 1.24e-02 at T = 2.5081
+start  34: φ = 1.31e-02 at T = 2.5002
+start  56: φ = 1.23e-02 at T = 2.7150
+start   9: φ = 3.69e-12 at T = 6.8492
+start  35: φ = 4.57e-02 at T = 7.8481
+start  93: φ = 1.30e-02 at T = 2.5000
+start  51: φ = 1.24e-02 at T = 2.6137
+start   3: φ = 1.32e-02 at T = 2.5000
+start  44: φ = 1.93e-12 at T = 7.9744
+start  81: φ = 1.27e-02 at T = 2.5018
+start  69: φ = 1.28e-02 at T = 2.5000
+start  10: φ = 1.93e-02 at T = 2.5000
+start  87: φ = 1.96e-02 at T = 2.5000
+start  21: φ = 1.24e-02 at T = 2.5290
+start  57: φ = 1.60e-02 at T = 2.5000
+start  45: φ = 2.64e-02 at T = 3.9080
+start  36: φ = 1.69e-02 at T = 2.5000
+start  27: φ = 1.26e-02 at T = 2.5003
+start  65: φ = 1.24e-02 at T = 2.5007
+start  39: φ = 1.09e-12 at T = 6.8262
+start  52: φ = 1.32e-02 at T = 2.5000
+start  16: φ = 1.31e-02 at T = 2.5000
+start  22: φ = 1.78e-02 at T = 2.5000
+start  58: φ = 1.32e-02 at T = 2.5001
+start   4: φ = 1.32e-02 at T = 2.5000
+start  88: φ = 2.11e-02 at T = 10.0000
+start  28: φ = 2.09e-02 at T = 10.0000
+start  17: φ = 1.52e-02 at T = 2.5000
+start  11: φ = 1.50e-02 at T = 2.5000
+start  53: φ = 1.90e-02 at T = 5.0562
+start  40: φ = 1.28e-02 at T = 2.5000
+start  70: φ = 1.23e-02 at T = 2.5190
+start  59: φ = 1.33e-02 at T = 2.5000
+start  29: φ = 2.54e-02 at T = 4.2228
+start  66: φ = -1.17e-11 at T = 7.9826
+start  18: φ = 1.27e-02 at T = 2.5000
+start  23: φ = 1.24e-02 at T = 2.5135
+start  54: φ = 1.44e-02 at T = 2.5000
+start  30: φ = 1.31e-02 at T = 2.5001
+start   5: φ = 1.24e-02 at T = 2.5050
+start  12: φ = 1.28e-02 at T = 2.5000
+start  71: φ = 1.41e-02 at T = 2.5000
+start  89: φ = -1.17e-12 at T = 6.9301
+start  94: φ = -9.46e-12 at T = 7.2006
+start   6: φ = 1.51e-02 at T = 2.5000
+start  41: φ = -7.36e-13 at T = 7.1485
+start  60: φ = 1.41e-02 at T = 2.5151
+start  24: φ = 1.31e-02 at T = 2.5000
+start  72: φ = 1.28e-02 at T = 2.5000
+start  95: φ = 2.57e-05 at T = 10.0000
+start  90: φ = 1.32e-02 at T = 2.5000
+start  96: φ = -3.19e-12 at T = 7.9744
+start  42: φ = 1.23e-02 at T = 2.5121
+start  46: φ = 1.24e-02 at T = 7.0354
+start  47: φ = -2.23e-11 at T = 6.8265
+start  48: φ = 1.23e-02 at T = 2.5046
+start  82: φ = 1.23e-02 at T = 5.2035
+start  83: φ = 2.08e-02 at T = 2.5000
+start  84: φ = 1.48e-02 at T = 5.4714
+start  74: φ = 1.24e-02 at T = 8.2002
+start  75: φ = 1.24e-02 at T = 2.5878
+start  76: φ = 1.53e-02 at T = 2.5000
+start  77: φ = 4.57e-02 at T = 7.8476
+start  78: φ = 1.32e-02 at T = 2.5000
+random starts: 20/96 = 20.8% reached φ < 1e-08   [315 s]
+  from gate at T = 6.6955 → T* = 6.6947
+  from gate at T = 6.7605 → T* = 6.6947
+  from gate at T = 6.8492 → T* = 6.6953
+  from gate at T = 6.8262 → T* = 6.6947
+────────────────────────────────────────
+Φ = 0.2000π:  T* = 6.6947   infidelity = 9.98e-09   success chance = 20.8% (20/96, φ < 1e-08)
+[PXP sweep] Φ = 0.200π  T* = 6.6947  φ = 1.0e-08  success 20/96 = 20.8%  (elapsed 78 min)
+Setup finished: Φ = 0.15π, 16 threads
+start  61: φ = 3.47e-02 at T = 7.8435
+start  13: φ = 4.32e-12 at T = 8.0085
+start  55: φ = 1.43e-02 at T = 2.5000
+start  49: φ = 9.15e-03 at T = 2.5000
+start  73: φ = 9.12e-03 at T = 2.5000
+start   7: φ = 7.50e-03 at T = 2.5001
+start  19: φ = 8.49e-03 at T = 2.5000
+start  31: φ = 7.52e-03 at T = 2.5000
+start  91: φ = 7.63e-03 at T = 2.5000
+start   1: φ = 7.63e-03 at T = 2.5000
+start  85: φ = 7.13e-03 at T = 2.5002
+start  43: φ = 5.38e-12 at T = 7.2340
+start  50: φ = 8.45e-03 at T = 2.5000
+start  79: φ = 7.00e-03 at T = 2.5345
+start   8: φ = 9.07e-03 at T = 2.5000
+start  32: φ = -2.06e-12 at T = 8.0066
+start  37: φ = -2.34e-12 at T = 6.7686
+start  33: φ = 1.82e-02 at T = 3.9224
+start  56: φ = 7.88e-03 at T = 2.5000
+start  14: φ = -6.01e-12 at T = 6.7525
+start  34: φ = 3.47e-02 at T = 7.8328
+start  44: φ = -2.39e-12 at T = 8.0066
+start  35: φ = 3.47e-02 at T = 7.8468
+start  45: φ = 1.82e-02 at T = 3.9216
+start  80: φ = 7.51e-03 at T = 2.5000
+start  74: φ = 6.95e-03 at T = 2.5269
+start  92: φ = 7.11e-03 at T = 2.5003
+start  57: φ = 9.16e-03 at T = 2.5000
+start  25: φ = -6.19e-12 at T = 7.2093
+start  36: φ = 1.15e-02 at T = 2.5000
+start  86: φ = 7.03e-03 at T = 2.5015
+start  87: φ = 3.47e-02 at T = 7.8427
+start   2: φ = 6.95e-03 at T = 2.9310
+start  38: φ = 1.38e-02 at T = 4.9964
+start  51: φ = 7.04e-03 at T = 2.6987
+start  26: φ = -2.62e-12 at T = 8.0345
+start  93: φ = 7.40e-03 at T = 2.5000
+start  52: φ = 9.13e-03 at T = 2.5000
+start  88: φ = 4.05e-04 at T = 10.0000
+start  46: φ = 7.03e-03 at T = 2.5267
+start   3: φ = 7.62e-03 at T = 2.5000
+start  75: φ = 7.02e-03 at T = 2.5146
+start  81: φ = 7.23e-03 at T = 2.5029
+start  94: φ = 1.28e-02 at T = 2.5000
+start  58: φ = 6.95e-03 at T = 2.5569
+start   4: φ = 7.62e-03 at T = 2.5000
+start  27: φ = 7.27e-03 at T = 2.5001
+start  39: φ = 1.26e-11 at T = 6.8606
+start  53: φ = 9.28e-03 at T = 5.8867
+start  76: φ = 5.43e-04 at T = 10.0000
+start  77: φ = 3.47e-02 at T = 7.8489
+start  95: φ = 3.27e-04 at T = 10.0000
+start  67: φ = -1.60e-11 at T = 6.8513
+start  89: φ = -5.37e-13 at T = 6.8495
+start  28: φ = 1.92e-02 at T = 10.0000
+start  40: φ = 7.63e-03 at T = 2.5001
+start   9: φ = -1.08e-11 at T = 6.9901
+start  47: φ = -7.73e-12 at T = 6.8612
+start  78: φ = 7.64e-03 at T = 2.5001
+start  59: φ = 7.51e-03 at T = 2.5000
+start  82: φ = 6.95e-03 at T = 2.5706
+start  96: φ = -9.07e-12 at T = 8.0226
+start  68: φ = 8.61e-03 at T = 2.5000
+start  54: φ = 7.23e-03 at T = 2.5000
+start  83: φ = 1.44e-02 at T = 2.5000
+start  90: φ = 7.63e-03 at T = 2.5000
+start  10: φ = 7.23e-03 at T = 2.5000
+start   5: φ = 6.95e-03 at T = 2.5527
+start  29: φ = 1.78e-02 at T = 4.1356
+start  11: φ = 3.47e-02 at T = 7.8428
+start   6: φ = 9.13e-03 at T = 2.5000
+start  60: φ = 8.34e-03 at T = 2.5132
+start  48: φ = 7.02e-03 at T = 2.5018
+start  30: φ = 7.51e-03 at T = 2.5001
+start  69: φ = 7.27e-03 at T = 2.5000
+start  84: φ = 2.77e-03 at T = 7.4313
+start  12: φ = 7.64e-03 at T = 2.5000
+start  70: φ = 6.96e-03 at T = 2.5066
+start  62: φ = -1.09e-11 at T = 7.5196
+start  41: φ = -2.99e-12 at T = 6.9955
+start  71: φ = 8.29e-03 at T = 2.5000
+start  63: φ = 8.77e-03 at T = 2.5000
+start  72: φ = 9.02e-03 at T = 2.5000
+start  64: φ = 7.52e-03 at T = 2.5001
+start  65: φ = 6.95e-03 at T = 2.5769
+start  66: φ = 1.10e-12 at T = 9.6997
+start  15: φ = 6.95e-03 at T = 3.3734
+start  16: φ = 7.51e-03 at T = 2.5000
+start  17: φ = 7.62e-03 at T = 2.5000
+start  18: φ = 7.23e-03 at T = 2.5000
+start  20: φ = 7.01e-03 at T = 7.8081
+start  21: φ = 7.02e-03 at T = 2.5087
+start  22: φ = 1.12e-02 at T = 2.5000
+start  23: φ = 6.98e-03 at T = 2.5897
+start  24: φ = 7.02e-03 at T = 2.5007
+start  42: φ = 7.01e-03 at T = 7.1089
+random starts: 17/96 = 17.7% reached φ < 1e-08   [906 s]
+  from gate at T = 6.7525 → T* = 6.5797
+  from gate at T = 6.9901 → T* = 6.5798
+  from gate at T = 7.2093 → T* = 6.5802
+  from gate at T = 6.8495 → T* = 6.5793
+────────────────────────────────────────
+Φ = 0.1500π:  T* = 6.5793   infidelity = 9.18e-09   success chance = 17.7% (17/96, φ < 1e-08)
+[PXP sweep] Φ = 0.150π  T* = 6.5793  φ = 9.2e-09  success 17/96 = 17.7%  (elapsed 94 min)
+Setup finished: Φ = 0.1π, 16 threads
+start  55: φ = 1.15e-02 at T = 3.9231
+start  25: φ = 1.15e-02 at T = 3.9053
+start  13: φ = 2.52e-02 at T = 7.8494
+start   1: φ = 2.52e-02 at T = 7.8480
+start  91: φ = 4.64e-03 at T = 2.5000
+start  26: φ = 7.51e-03 at T = 2.5000
+start  49: φ = 4.64e-03 at T = 2.5000
+start  43: φ = 7.52e-03 at T = 2.5000
+start  19: φ = 4.17e-03 at T = 2.5000
+start  31: φ = 4.31e-03 at T = 2.5000
+start  44: φ = 1.99e-12 at T = 8.0452
+start  45: φ = 1.15e-02 at T = 3.9233
+start   7: φ = 3.47e-03 at T = 2.5001
+start  32: φ = 7.21e-12 at T = 8.0360
+start  56: φ = 3.47e-03 at T = 2.5001
+start  73: φ = 4.47e-03 at T = 2.5000
+start  33: φ = 1.15e-02 at T = 3.9242
+start  92: φ = 3.28e-03 at T = 2.5001
+start  34: φ = 2.52e-02 at T = 7.8475
+start  50: φ = 4.15e-03 at T = 2.5000
+start  61: φ = 3.18e-03 at T = 2.5295
+start  37: φ = 3.11e-03 at T = 2.5075
+start  35: φ = 2.52e-02 at T = 7.8490
+start  85: φ = 3.09e-03 at T = 2.5891
+start  38: φ = 1.15e-02 at T = 3.9147
+start  79: φ = 3.09e-03 at T = 2.6337
+start  57: φ = 4.65e-03 at T = 2.5000
+start   8: φ = 4.58e-03 at T = 2.5000
+start   2: φ = 3.12e-03 at T = 2.9698
+start  27: φ = 3.22e-03 at T = 2.5018
+start  20: φ = 3.22e-03 at T = 2.5001
+start  93: φ = 3.28e-03 at T = 2.5000
+start  46: φ = 3.22e-03 at T = 2.5033
+start   9: φ = 7.67e-03 at T = 2.5000
+start  94: φ = 1.15e-02 at T = 3.9232
+start  80: φ = 3.55e-03 at T = 2.5000
+start  62: φ = 3.21e-03 at T = 2.5000
+start  74: φ = 3.10e-03 at T = 2.5568
+start  10: φ = 8.07e-03 at T = 2.5000
+start  51: φ = 3.15e-03 at T = 2.6553
+start  39: φ = 7.11e-03 at T = 2.5000
+start   3: φ = 3.55e-03 at T = 2.5000
+start  58: φ = 3.13e-03 at T = 2.5000
+start  86: φ = 3.22e-03 at T = 2.5013
+start  11: φ = 2.52e-02 at T = 7.8480
+start  87: φ = 2.52e-02 at T = 7.8482
+start  36: φ = 1.71e-12 at T = 6.4343
+start  47: φ = 7.03e-03 at T = 2.5000
+start  95: φ = 1.03e-03 at T = 10.0000
+start  28: φ = 1.63e-02 at T = 10.0000
+start  29: φ = 1.15e-02 at T = 3.9197
+start  52: φ = 4.60e-03 at T = 2.5000
+start  40: φ = 3.56e-03 at T = 2.5000
+start  53: φ = 1.15e-02 at T = 3.9140
+start  75: φ = 3.55e-03 at T = 2.5000
+start  63: φ = 4.36e-03 at T = 2.5000
+start  21: φ = 3.11e-03 at T = 2.7958
+start  54: φ = 2.52e-02 at T = 7.8489
+start   4: φ = 3.55e-03 at T = 2.5000
+start  59: φ = 3.47e-03 at T = 2.5000
+start  81: φ = 3.29e-03 at T = 2.5174
+start  30: φ = 3.47e-03 at T = 2.5001
+start  96: φ = 3.56e-03 at T = 2.5000
+start  41: φ = 6.24e-03 at T = 2.5000
+start  14: φ = -9.96e-12 at T = 6.9500
+start  12: φ = 3.31e-03 at T = 2.5001
+start  22: φ = 6.31e-03 at T = 2.5000
+start  64: φ = 5.34e-12 at T = 8.0377
+start  76: φ = 9.15e-04 at T = 10.0000
+start  77: φ = 2.52e-02 at T = 7.8496
+start  88: φ = 3.32e-03 at T = 2.5003
+start   5: φ = 3.56e-03 at T = 2.5000
+start  48: φ = 3.09e-03 at T = 2.5239
+start  67: φ = -8.77e-12 at T = 6.7203
+start  89: φ = 7.73e-03 at T = 2.5000
+start  15: φ = 3.17e-03 at T = 2.5000
+start   6: φ = 4.63e-03 at T = 2.5000
+start  60: φ = 4.02e-03 at T = 2.5051
+start  78: φ = 3.56e-03 at T = 2.5000
+start  42: φ = 3.10e-03 at T = 2.5088
+start  65: φ = 3.20e-03 at T = 2.5003
+start  16: φ = 3.47e-03 at T = 2.5000
+start  90: φ = 3.17e-03 at T = 2.5000
+start  68: φ = 3.21e-03 at T = 2.5343
+start  66: φ = 1.14e-11 at T = 8.0361
+start  17: φ = 3.22e-03 at T = 2.5026
+start  69: φ = 3.31e-03 at T = 2.5000
+start  18: φ = 3.28e-03 at T = 2.5000
+start  70: φ = 3.09e-03 at T = 2.7493
+start  71: φ = 4.07e-03 at T = 2.5000
+start  72: φ = 3.56e-03 at T = 2.5001
+start  23: φ = 3.11e-03 at T = 6.0068
+start  24: φ = 3.20e-03 at T = 2.5000
+start  82: φ = 3.11e-03 at T = 3.6994
+start  83: φ = 9.39e-03 at T = 2.5000
+start  84: φ = 1.15e-02 at T = 3.9175
+random starts: 7/96 = 7.3% reached φ < 1e-08   [181 s]
+  from gate at T = 8.0360 → T* = 8.0293
+  from gate at T = 6.4343 → T* = 6.4328
+  from gate at T = 6.9500 → T* = 6.4333
+  from gate at T = 6.7203 → T* = 6.4318
+────────────────────────────────────────
+Φ = 0.1000π:  T* = 6.4318   infidelity = 9.91e-09   success chance = 7.3% (7/96, φ < 1e-08)
+[PXP sweep] Φ = 0.100π  T* = 6.4318  φ = 9.9e-09  success 7/96 = 7.3%  (elapsed 97 min)
+Setup finished: Φ = 0.05π, 16 threads
+start  55: φ = 6.32e-03 at T = 3.9249
+start  25: φ = 6.32e-03 at T = 3.9246
+start  43: φ = 6.32e-03 at T = 3.9245
+start  13: φ = 1.72e-02 at T = 7.8500
+start   1: φ = 1.72e-02 at T = 7.8499
+start  31: φ = 1.72e-02 at T = 7.8499
+start  14: φ = 6.32e-03 at T = 3.9246
+start  44: φ = 1.30e-12 at T = 8.0474
+start  26: φ = -8.00e-12 at T = 8.0411
+start  45: φ = 6.32e-03 at T = 3.9250
+start  32: φ = 7.66e-13 at T = 8.0425
+start  61: φ = 3.48e-12 at T = 9.5868
+start  33: φ = 6.32e-03 at T = 3.9249
+start   7: φ = 9.73e-04 at T = 2.5001
+start  49: φ = 1.65e-03 at T = 2.5000
+start  91: φ = 1.64e-03 at T = 2.5000
+start  34: φ = 1.72e-02 at T = 7.8499
+start  19: φ = 1.37e-03 at T = 2.5000
+start  62: φ = 2.39e-13 at T = 8.0576
+start  35: φ = 1.72e-02 at T = 7.8500
+start  73: φ = 1.56e-03 at T = 2.5037
+start  36: φ = 4.52e-13 at T = 6.2726
+start  37: φ = 7.93e-04 at T = 2.5039
+start  85: φ = 8.04e-04 at T = 2.5268
+start  38: φ = 6.32e-03 at T = 3.9246
+start   8: φ = 1.61e-03 at T = 2.5000
+start  20: φ = 1.02e-03 at T = 2.5000
+start  56: φ = 7.95e-04 at T = 2.5708
+start  50: φ = 1.36e-03 at T = 2.5000
+start  79: φ = 8.23e-04 at T = 2.6890
+start  39: φ = 6.32e-03 at T = 3.9245
+start   9: φ = 6.32e-03 at T = 3.9246
+start  46: φ = 8.40e-04 at T = 2.5069
+start  27: φ = 8.40e-04 at T = 2.5042
+start   2: φ = 7.83e-04 at T = 3.1701
+start  63: φ = 1.51e-03 at T = 2.5007
+start  47: φ = 6.32e-03 at T = 3.9244
+start  64: φ = 1.72e-02 at T = 7.8498
+start  92: φ = 8.13e-04 at T = 2.5120
+start  57: φ = 1.65e-03 at T = 2.5000
+start  15: φ = 7.94e-04 at T = 5.5375
+start  93: φ = 1.72e-02 at T = 7.8499
+start  80: φ = 1.37e-03 at T = 2.5000
+start  10: φ = 9.74e-04 at T = 2.5000
+start  94: φ = 6.32e-03 at T = 3.9249
+start  11: φ = 1.72e-02 at T = 7.8499
+start  28: φ = 1.64e-03 at T = 2.5000
+start  29: φ = 6.32e-03 at T = 3.9246
+start  40: φ = 8.16e-04 at T = 2.5018
+start  86: φ = 8.40e-04 at T = 2.5038
+start  74: φ = 7.94e-04 at T = 2.7320
+start  51: φ = 8.04e-04 at T = 2.5642
+start  87: φ = 1.72e-02 at T = 7.8499
+start  67: φ = 1.21e-12 at T = 6.9749
+start  41: φ = 6.32e-03 at T = 3.9244
+start   3: φ = 1.02e-03 at T = 2.5000
+start  21: φ = 8.05e-04 at T = 2.8624
+start  95: φ = 1.71e-03 at T = 10.0000
+start  58: φ = 8.03e-04 at T = 2.5003
+start  65: φ = 8.33e-04 at T = 2.5021
+start  16: φ = 9.74e-04 at T = 2.5000
+start  52: φ = 1.64e-03 at T = 2.5000
+start  48: φ = 7.76e-04 at T = 2.5284
+start  22: φ = 2.97e-03 at T = 2.5000
+start  53: φ = 6.32e-03 at T = 3.9245
+start  96: φ = 8.40e-04 at T = 2.5026
+start  30: φ = 9.74e-04 at T = 2.5001
+start  12: φ = 1.02e-03 at T = 2.5000
+start  81: φ = 8.80e-04 at T = 2.5496
+start  66: φ = -1.49e-11 at T = 8.1541
+start  54: φ = 1.72e-02 at T = 7.8500
+start   4: φ = 1.02e-03 at T = 2.5000
+start  75: φ = 7.84e-04 at T = 2.5576
+start  23: φ = 1.02e-03 at T = 2.5000
+start  59: φ = 9.73e-04 at T = 2.5000
+start  76: φ = 1.72e-02 at T = 7.8499
+start  68: φ = 8.76e-04 at T = 2.5005
+start  77: φ = 1.72e-02 at T = 7.8500
+start  88: φ = 8.47e-04 at T = 2.5444
+start   5: φ = 1.02e-03 at T = 2.5000
+start  42: φ = 7.76e-04 at T = 2.6666
+start  17: φ = 8.88e-04 at T = 2.5002
+start  89: φ = 6.32e-03 at T = 3.9245
+start  82: φ = 7.87e-04 at T = 2.5556
+start   6: φ = 1.64e-03 at T = 2.5000
+start  69: φ = 1.02e-03 at T = 2.5000
+start  24: φ = 9.74e-04 at T = 2.5000
+start  90: φ = 1.02e-03 at T = 2.5000
+start  78: φ = 1.02e-03 at T = 2.5000
+start  83: φ = 5.89e-03 at T = 2.5000
+start  18: φ = 8.74e-04 at T = 2.5056
+start  60: φ = 1.31e-03 at T = 2.5076
+start  84: φ = 6.32e-03 at T = 3.9246
+start  70: φ = 7.86e-04 at T = 2.5271
+start  71: φ = 1.33e-03 at T = 2.5000
+start  72: φ = 8.89e-04 at T = 2.5000
+random starts: 8/96 = 8.3% reached φ < 1e-08   [58 s]
+  from gate at T = 8.0411 → T* = 8.0406
+  from gate at T = 8.1541 → T* = 8.0397
+  from gate at T = 6.2726 → T* = 6.2372
+  from gate at T = 6.9749 → T* = 6.2371
+────────────────────────────────────────
+Φ = 0.0500π:  T* = 6.2371   infidelity = 9.87e-09   success chance = 8.3% (8/96, φ < 1e-08)
+[PXP sweep] Φ = 0.050π  T* = 6.2371  φ = 9.9e-09  success 8/96 = 8.3%  (elapsed 98 min)
+Setup finished: Φ = 0.025π, 16 threads
+start  55: φ = 4.31e-03 at T = 3.9250
+start  25: φ = 4.31e-03 at T = 3.9250
+start  43: φ = 4.31e-03 at T = 3.9250
+start   1: φ = 1.38e-02 at T = 7.8502
+start  44: φ = 1.92e-12 at T = 8.0438
+start  26: φ = -6.54e-12 at T = 8.0396
+start  45: φ = 4.31e-03 at T = 3.9250
+start  61: φ = 4.65e-11 at T = 9.5408
+start  49: φ = 7.20e-04 at T = 2.5000
+start  91: φ = 7.13e-04 at T = 2.5000
+start  13: φ = -1.76e-11 at T = 8.0412
+start  62: φ = -3.76e-12 at T = 8.0521
+start  73: φ = 7.11e-04 at T = 2.5000
+start  14: φ = 4.31e-03 at T = 3.9250
+start  19: φ = 5.40e-04 at T = 2.5000
+start   7: φ = 3.00e-04 at T = 2.5000
+start  37: φ = 2.14e-04 at T = 2.5036
+start  50: φ = 5.34e-04 at T = 2.5000
+start  38: φ = 4.31e-03 at T = 3.9250
+start  56: φ = 3.30e-04 at T = 3.1125
+start  39: φ = 4.31e-03 at T = 3.9251
+start  27: φ = 2.29e-04 at T = 2.5151
+start  67: φ = -6.34e-12 at T = 7.2845
+start   2: φ = 2.10e-04 at T = 2.6205
+start  63: φ = 6.25e-04 at T = 2.5032
+start  85: φ = 1.78e-03 at T = 7.1147
+start   8: φ = 6.98e-04 at T = 2.5000
+start  46: φ = 2.55e-04 at T = 2.5113
+start   9: φ = 4.31e-03 at T = 3.9250
+start  47: φ = 4.31e-03 at T = 3.9250
+start  64: φ = 1.38e-02 at T = 7.8502
+start  57: φ = 7.24e-04 at T = 2.5000
+start  20: φ = 2.17e-04 at T = 2.5468
+start  92: φ = 1.99e-04 at T = 3.4809
+start  93: φ = 1.38e-02 at T = 7.8501
+start  68: φ = 3.03e-04 at T = 2.5002
+start  94: φ = 4.31e-03 at T = 3.9250
+start  28: φ = 2.54e-04 at T = 2.5009
+start  74: φ = 1.98e-04 at T = 2.7820
+start  40: φ = 2.54e-04 at T = 2.5002
+start  51: φ = 2.69e-04 at T = 4.6058
+start  29: φ = 4.31e-03 at T = 3.9250
+start  10: φ = 3.00e-04 at T = 2.5000
+start  41: φ = 4.31e-03 at T = 3.9250
+start   3: φ = 3.27e-04 at T = 2.5000
+start  11: φ = 1.38e-02 at T = 7.8502
+start  65: φ = 3.01e-04 at T = 2.5000
+start  31: φ = -3.56e-12 at T = 8.0916
+start  52: φ = 7.06e-04 at T = 2.5000
+start  95: φ = 2.16e-03 at T = 10.0000
+start  53: φ = 4.31e-03 at T = 3.9250
+start  66: φ = 5.10e-12 at T = 8.1327
+start  32: φ = 4.35e-13 at T = 8.0404
+start  69: φ = 3.26e-04 at T = 2.5000
+start  30: φ = 3.00e-04 at T = 2.5001
+start  86: φ = 1.96e-04 at T = 2.6328
+start  33: φ = 4.31e-03 at T = 3.9250
+start  21: φ = 2.04e-04 at T = 2.8923
+start  48: φ = 2.01e-04 at T = 2.5900
+start   4: φ = 3.25e-04 at T = 2.5000
+start  87: φ = 1.38e-02 at T = 7.8502
+start  34: φ = 1.38e-02 at T = 7.8502
+start  96: φ = 3.27e-04 at T = 2.5011
+start  35: φ = 1.38e-02 at T = 7.8501
+start  54: φ = 2.44e-03 at T = 10.0000
+start  75: φ = 2.14e-04 at T = 2.7053
+start  36: φ = 4.31e-03 at T = 3.9250
+start  12: φ = 3.27e-04 at T = 2.5000
+start  22: φ = 2.02e-03 at T = 2.5000
+start  42: φ = 1.96e-04 at T = 2.8500
+start   5: φ = 2.54e-04 at T = 2.5000
+start  23: φ = 3.26e-04 at T = 2.5000
+start  70: φ = 2.00e-04 at T = 2.7045
+start  76: φ = 3.24e-04 at T = 2.5000
+start  88: φ = 2.20e-04 at T = 2.9244
+start  77: φ = 1.38e-02 at T = 7.8501
+start  89: φ = 4.31e-03 at T = 3.9250
+start   6: φ = 7.12e-04 at T = 2.5000
+start  71: φ = 5.31e-04 at T = 2.5000
+start  24: φ = 2.46e-04 at T = 2.5001
+start  78: φ = 3.27e-04 at T = 2.5001
+start  90: φ = 2.16e-04 at T = 2.5003
+start  72: φ = 7.01e-04 at T = 2.5000
+start  79: φ = 2.24e-04 at T = 9.0058
+start  80: φ = 3.00e-04 at T = 2.5000
+start  81: φ = 2.63e-04 at T = 2.7358
+start  82: φ = 2.03e-04 at T = 2.5992
+start  83: φ = 4.79e-03 at T = 2.5000
+start  84: φ = 4.31e-03 at T = 3.9250
+start  58: φ = 2.00e-04 at T = 5.6222
+start  59: φ = 3.00e-04 at T = 2.5000
+start  60: φ = 5.23e-04 at T = 2.5014
+start  15: φ = 2.12e-04 at T = 7.0862
+start  16: φ = 3.01e-04 at T = 2.5001
+start  17: φ = 3.25e-04 at T = 2.5000
+start  18: φ = 2.46e-04 at T = 2.5047
+random starts: 9/96 = 9.4% reached φ < 1e-08   [198 s]
+  from gate at T = 8.0396 → T* = 8.0391
+  from gate at T = 8.1327 → T* = 8.0399
+  from gate at T = 8.0916 → T* = 8.0395
+  from gate at T = 7.2845 → T* = 6.1142
+────────────────────────────────────────
+Φ = 0.0250π:  T* = 6.1142   infidelity = 1.89e-09   success chance = 9.4% (9/96, φ < 1e-08)
+[PXP sweep] Φ = 0.025π  T* = 6.1142  φ = 1.9e-09  success 9/96 = 9.4%  (elapsed 102 min)
+Setup finished: Φ = 0.01π, 16 threads
+start  43: φ = 3.28e-03 at T = 3.9251
+start  55: φ = 3.28e-03 at T = 3.9251
+start  25: φ = 3.28e-03 at T = 3.9251
+start  31: φ = 1.19e-02 at T = 7.8502
+start   1: φ = 1.19e-02 at T = 7.8502
+start  13: φ = -1.65e-11 at T = 8.0378
+start  67: φ = 3.28e-03 at T = 3.9252
+start   7: φ = 1.19e-02 at T = 7.8502
+start  14: φ = 3.28e-03 at T = 3.9251
+start  26: φ = -3.80e-12 at T = 8.0370
+start  44: φ = -1.07e-11 at T = 8.0395
+start  32: φ = -3.48e-12 at T = 8.0372
+start  61: φ = -4.99e-12 at T = 9.5089
+start  45: φ = 3.28e-03 at T = 3.9251
+start  49: φ = 3.45e-04 at T = 2.5000
+start  33: φ = 3.28e-03 at T = 3.9251
+start  62: φ = -1.18e-11 at T = 8.0470
+start  91: φ = 3.40e-04 at T = 2.5000
+start  34: φ = 1.19e-02 at T = 7.8502
+start  35: φ = 1.19e-02 at T = 7.8502
+start  73: φ = 3.20e-04 at T = 2.5000
+start  79: φ = 4.50e-05 at T = 2.5462
+start   8: φ = 3.29e-04 at T = 2.5000
+start  19: φ = 2.26e-04 at T = 2.5003
+start   9: φ = 3.28e-03 at T = 3.9251
+start  85: φ = 4.63e-05 at T = 2.5243
+start  37: φ = 3.31e-05 at T = 2.7682
+start  68: φ = 8.23e-05 at T = 2.5003
+start  50: φ = 2.22e-04 at T = 2.5000
+start  56: φ = 1.71e-04 at T = 3.5700
+start  92: φ = 8.12e-05 at T = 2.5002
+start  63: φ = 3.27e-04 at T = 2.5000
+start  15: φ = 4.08e-05 at T = 2.5269
+start  38: φ = 3.28e-03 at T = 3.9251
+start  39: φ = 3.28e-03 at T = 3.9251
+start  93: φ = 1.19e-02 at T = 7.8502
+start  64: φ = 1.19e-02 at T = 7.8502
+start  27: φ = 4.64e-05 at T = 2.5264
+start  80: φ = 8.10e-05 at T = 2.5001
+start  46: φ = 5.94e-05 at T = 2.5364
+start  94: φ = 3.28e-03 at T = 3.9251
+start  36: φ = 9.43e-05 at T = 2.5001
+start  47: φ = 3.28e-03 at T = 3.9251
+start  10: φ = 8.12e-05 at T = 2.5001
+start  57: φ = 3.48e-04 at T = 2.5000
+start  20: φ = 9.48e-05 at T = 2.5000
+start  51: φ = 2.25e-04 at T = 2.5000
+start  11: φ = 1.19e-02 at T = 7.8503
+start  69: φ = 9.47e-05 at T = 2.5000
+start  74: φ = 3.70e-05 at T = 2.7385
+start  86: φ = 4.09e-05 at T = 2.5408
+start  95: φ = 2.44e-03 at T = 10.0000
+start  16: φ = 8.14e-05 at T = 2.5001
+start  87: φ = 1.19e-02 at T = 7.8502
+start  52: φ = 3.36e-04 at T = 2.5000
+start  53: φ = 3.28e-03 at T = 3.9251
+start  65: φ = 4.43e-05 at T = 2.5021
+start  28: φ = 4.82e-05 at T = 2.6121
+start  40: φ = 3.34e-05 at T = 2.6796
+start  88: φ = 4.86e-05 at T = 9.7902
+start  29: φ = 3.28e-03 at T = 3.9251
+start  96: φ = 9.51e-05 at T = 2.5004
+start  41: φ = 3.28e-03 at T = 3.9251
+start  66: φ = 7.22e-12 at T = 8.1156
+start  89: φ = 3.28e-03 at T = 3.9251
+start  58: φ = 4.13e-05 at T = 2.5581
+start  81: φ = 7.34e-05 at T = 2.9618
+start  12: φ = 9.56e-05 at T = 2.5000
+start  48: φ = 3.19e-05 at T = 2.6118
+start  54: φ = 2.61e-03 at T = 10.0000
+start  21: φ = 3.73e-05 at T = 3.2577
+start  30: φ = 7.72e-04 at T = 2.5000
+start  75: φ = 4.74e-05 at T = 2.5748
+start  17: φ = 4.11e-05 at T = 2.5542
+start  76: φ = 1.19e-02 at T = 7.8502
+start  77: φ = 1.19e-02 at T = 7.8501
+start  59: φ = 8.11e-05 at T = 2.5000
+start  22: φ = 1.38e-03 at T = 2.5000
+start  82: φ = 3.35e-05 at T = 2.7226
+start  90: φ = 3.37e-05 at T = 2.7906
+start  83: φ = 4.40e-03 at T = 2.5000
+start  18: φ = 5.45e-05 at T = 2.5145
+start  23: φ = 9.48e-05 at T = 2.5000
+start  78: φ = 9.52e-05 at T = 2.5002
+start  84: φ = 3.28e-03 at T = 3.9251
+start  60: φ = 2.20e-04 at T = 2.5019
+start  24: φ = 8.13e-05 at T = 2.5000
+start   2: φ = 4.34e-05 at T = 8.5679
+start   3: φ = 9.55e-05 at T = 2.5000
+start   4: φ = 9.45e-05 at T = 2.5000
+start   5: φ = 9.43e-05 at T = 2.5000
+start   6: φ = 3.40e-04 at T = 2.5000
+start  70: φ = 4.28e-05 at T = 7.2037
+start  71: φ = 2.21e-04 at T = 2.5000
+start  72: φ = 3.41e-04 at T = 2.5000
+start  42: φ = 6.40e-05 at T = 7.1096
+random starts: 7/96 = 7.3% reached φ < 1e-08   [214 s]
+  from gate at T = 8.0370 → T* = 8.0365
+  from gate at T = 8.1156 → T* = 8.0370
+  from gate at T = 9.5089 → T* = 6.0272
+────────────────────────────────────────
+Φ = 0.0100π:  T* = 6.0272   infidelity = 9.66e-09   success chance = 7.3% (7/96, φ < 1e-08)
+[PXP sweep] Φ = 0.010π  T* = 6.0272  φ = 9.7e-09  success 7/96 = 7.3%  (elapsed 107 min)
+┌ Warning: Terminated early: trial iterate had non-finite values.
+└ @ Optim ~/.julia/packages/Optim/z6105/src/multivariate/optimize/optimize.jl:100
+┌ Warning: Terminated early: trial iterate had non-finite values.
+└ @ Optim ~/.julia/packages/Optim/z6105/src/multivariate/optimize/optimize.jl:100
+┌ Warning: Terminated early: trial iterate had non-finite values.
+└ @ Optim ~/.julia/packages/Optim/z6105/src/multivariate/optimize/optimize.jl:100
+┌ Warning: Positive final curvature for ADM. g: 0.08501765348809605, h: 0.24536751683495153
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.08501765348809605, h: 0.24536751683495153
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.08501765348809605, h: 0.24536751683495153
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.08501765348809605, h: 0.24536751683495153
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.08501765348809605, h: 0.24536751683495153
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.08501765348809605, h: 0.24536751683495153
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.08501765348809605, h: 0.24536751683495153
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.08501765348809605, h: 0.24536751683495153
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.08501765348809605, h: 0.24536751683495153
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.08501765348809605, h: 0.24536751683495153
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.08501765348809605, h: 0.24536751683495153
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.08501765348809605, h: 0.24536751683495153
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.08501765348809605, h: 0.24536751683495153
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.08501765348809605, h: 0.24536751683495153
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.08501765348809605, h: 0.24536751683495153
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.08501765348809605, h: 0.24536751683495153
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.08501765348809605, h: 0.24536751683495153
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.08501765348809605, h: 0.24536751683495153
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.08501765348809605, h: 0.24536751683495153
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.08501765348809605, h: 0.24536751683495153
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.08501765348809605, h: 0.24536751683495153
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.08501765348809605, h: 0.24536751683495153
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.08501765348809605, h: 0.24536751683495153
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.08501765348809605, h: 0.24536751683495153
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.08501765348809605, h: 0.24536751683495153
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.08501765348809605, h: 0.24536751683495153
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.08501765348809605, h: 0.24536751683495153
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.08501765348809605, h: 0.24536751683495153
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.08501765348809605, h: 0.24536751683495153
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.08501765348809605, h: 0.24536751683495153
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.08501765348809605, h: 0.24536751683495153
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Terminated early: trial iterate had non-finite values.
+└ @ Optim ~/.julia/packages/Optim/z6105/src/multivariate/optimize/optimize.jl:100
+┌ Warning: Terminated early: trial iterate had non-finite values.
+└ @ Optim ~/.julia/packages/Optim/z6105/src/multivariate/optimize/optimize.jl:100
+┌ Warning: Terminated early: trial iterate had non-finite values.
+└ @ Optim ~/.julia/packages/Optim/z6105/src/multivariate/optimize/optimize.jl:100
+┌ Warning: Positive final curvature for ADM. g: 0.43039746880512264, h: 0.5759428166483105
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Terminated early: trial iterate had non-finite values.
+└ @ Optim ~/.julia/packages/Optim/z6105/src/multivariate/optimize/optimize.jl:100
+┌ Warning: Positive final curvature for ADM. g: 0.016201266788654346, h: 0.03139540219188729
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Terminated early: trial iterate had non-finite values.
+└ @ Optim ~/.julia/packages/Optim/z6105/src/multivariate/optimize/optimize.jl:100
+┌ Warning: Terminated early: trial iterate had non-finite values.
+└ @ Optim ~/.julia/packages/Optim/z6105/src/multivariate/optimize/optimize.jl:100
+┌ Warning: Positive final curvature for ADM. g: 0.04108588129329541, h: 0.012608239680341927
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.04108588129329541, h: 0.012608239680341927
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.04108588129329541, h: 0.012608239680341927
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.04108588129329541, h: 0.012608239680341927
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.04108588129329541, h: 0.012608239680341927
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.04108588129329541, h: 0.012608239680341927
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.04108588129329541, h: 0.012608239680341927
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.04108588129329541, h: 0.012608239680341927
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.04108588129329541, h: 0.012608239680341927
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.04108588129329541, h: 0.012608239680341927
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.04108588129329541, h: 0.012608239680341927
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.04108588129329541, h: 0.012608239680341927
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.04108588129329541, h: 0.012608239680341927
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.04108588129329541, h: 0.012608239680341927
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.04108588129329541, h: 0.012608239680341927
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.04108588129329541, h: 0.012608239680341927
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.04108588129329541, h: 0.012608239680341927
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.04108588129329541, h: 0.012608239680341927
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.04108588129329541, h: 0.012608239680341927
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.04108588129329541, h: 0.012608239680341927
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.04108588129329541, h: 0.012608239680341927
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.04108588129329541, h: 0.012608239680341927
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.04108588129329541, h: 0.012608239680341927
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.04108588129329541, h: 0.012608239680341927
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.20394638502129947, h: 0.16696089962176835
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.03260893611952436, h: 0.054567551258727066
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.03260893611952436, h: 0.054567551258727066
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.03260893611952436, h: 0.054567551258727066
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.03260893611952436, h: 0.054567551258727066
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.03260893611952436, h: 0.054567551258727066
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.03260893611952436, h: 0.054567551258727066
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.03260893611952436, h: 0.054567551258727066
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.03260893611952436, h: 0.054567551258727066
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.03260893611952436, h: 0.054567551258727066
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.03260893611952436, h: 0.054567551258727066
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.03260893611952436, h: 0.054567551258727066
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.03260893611952436, h: 0.054567551258727066
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.03260893611952436, h: 0.054567551258727066
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.03260893611952436, h: 0.054567551258727066
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.03260893611952436, h: 0.054567551258727066
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.03260893611952436, h: 0.054567551258727066
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.03260893611952436, h: 0.054567551258727066
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.03260893611952436, h: 0.054567551258727066
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.03260893611952436, h: 0.054567551258727066
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.03260893611952436, h: 0.054567551258727066
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.03260893611952436, h: 0.054567551258727066
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.03260893611952436, h: 0.054567551258727066
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.03260893611952436, h: 0.054567551258727066
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.03260893611952436, h: 0.054567551258727066
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.03260893611952436, h: 0.054567551258727066
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.03260893611952436, h: 0.054567551258727066
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.03260893611952436, h: 0.054567551258727066
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.03260893611952436, h: 0.054567551258727066
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.03260893611952436, h: 0.054567551258727066
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.03260893611952436, h: 0.054567551258727066
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.03260893611952436, h: 0.054567551258727066
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.03260893611952436, h: 0.054567551258727066
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.03260893611952436, h: 0.054567551258727066
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.03260893611952436, h: 0.054567551258727066
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.03260893611952436, h: 0.054567551258727066
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.03260893611952436, h: 0.054567551258727066
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: -0.0035574556669026626, h: 0.005569013546773598
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: -0.0028411426014314863, h: 0.005966348248676473
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: -0.47278570584451285, h: 0.5692113131030582
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: 0.34398690086884814, h: 0.30517729078064854
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: -0.1542655517461608, h: 0.215565687951862
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: -0.1542655517461608, h: 0.215565687951862
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: -0.1542655517461608, h: 0.215565687951862
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: -0.1542655517461608, h: 0.215565687951862
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: -0.1542655517461608, h: 0.215565687951862
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: -0.1542655517461608, h: 0.215565687951862
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: -0.1542655517461608, h: 0.215565687951862
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: -0.1542655517461608, h: 0.215565687951862
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: -0.1542655517461608, h: 0.215565687951862
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: -0.1542655517461608, h: 0.215565687951862
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: -0.1542655517461608, h: 0.215565687951862
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: -0.1542655517461608, h: 0.215565687951862
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: -0.1542655517461608, h: 0.215565687951862
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: -0.1542655517461608, h: 0.215565687951862
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: -0.1542655517461608, h: 0.215565687951862
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: -0.1542655517461608, h: 0.215565687951862
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: -0.1542655517461608, h: 0.215565687951862
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: -0.1542655517461608, h: 0.215565687951862
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: -0.1542655517461608, h: 0.215565687951862
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: -0.1542655517461608, h: 0.215565687951862
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: -0.1542655517461608, h: 0.215565687951862
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: -0.1542655517461608, h: 0.215565687951862
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: -0.1542655517461608, h: 0.215565687951862
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: -0.1542655517461608, h: 0.215565687951862
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: -0.1542655517461608, h: 0.215565687951862
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: -0.1542655517461608, h: 0.215565687951862
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: -0.1542655517461608, h: 0.215565687951862
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: -0.1542655517461608, h: 0.215565687951862
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: -0.1542655517461608, h: 0.215565687951862
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: -0.1542655517461608, h: 0.215565687951862
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: -0.1542655517461608, h: 0.215565687951862
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: -0.1542655517461608, h: 0.215565687951862
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: -0.1542655517461608, h: 0.215565687951862
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: -0.1542655517461608, h: 0.215565687951862
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: -0.1542655517461608, h: 0.215565687951862
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: -0.1542655517461608, h: 0.215565687951862
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Terminated early: trial iterate had non-finite values.
+└ @ Optim ~/.julia/packages/Optim/z6105/src/multivariate/optimize/optimize.jl:100
+┌ Warning: Positive final curvature for ADM. g: 0.004935561051842821, h: 0.17004274188936178
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Terminated early: trial iterate had non-finite values.
+└ @ Optim ~/.julia/packages/Optim/z6105/src/multivariate/optimize/optimize.jl:100
+┌ Warning: Terminated early: trial iterate had non-finite values.
+└ @ Optim ~/.julia/packages/Optim/z6105/src/multivariate/optimize/optimize.jl:100
+┌ Warning: Positive final curvature for ADM. g: -0.015352786371271769, h: 0.03511762109269326
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: -0.02514462057841479, h: 0.02643657768352648
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: -0.17982161189267176, h: 0.34809419688802395
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: -0.17982161189267176, h: 0.34809419688802395
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: -0.17982161189267176, h: 0.34809419688802395
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: -0.17982161189267176, h: 0.34809419688802395
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: -0.17982161189267176, h: 0.34809419688802395
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: -0.17982161189267176, h: 0.34809419688802395
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: -0.17982161189267176, h: 0.34809419688802395
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: -0.17982161189267176, h: 0.34809419688802395
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: -0.17982161189267176, h: 0.34809419688802395
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: -0.17982161189267176, h: 0.34809419688802395
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: -0.17982161189267176, h: 0.34809419688802395
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: -0.17982161189267176, h: 0.34809419688802395
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: -0.17982161189267176, h: 0.34809419688802395
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: -0.17982161189267176, h: 0.34809419688802395
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: -0.17982161189267176, h: 0.34809419688802395
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: -0.17982161189267176, h: 0.34809419688802395
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: -0.17982161189267176, h: 0.34809419688802395
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: -0.17982161189267176, h: 0.34809419688802395
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: -0.17982161189267176, h: 0.34809419688802395
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: -0.17982161189267176, h: 0.34809419688802395
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: -0.17982161189267176, h: 0.34809419688802395
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: -0.17982161189267176, h: 0.34809419688802395
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: -0.17982161189267176, h: 0.34809419688802395
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: -0.17982161189267176, h: 0.34809419688802395
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: -0.17982161189267176, h: 0.34809419688802395
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: -0.17982161189267176, h: 0.34809419688802395
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: -0.17982161189267176, h: 0.34809419688802395
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: -0.17982161189267176, h: 0.34809419688802395
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: -0.17982161189267176, h: 0.34809419688802395
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: -0.17982161189267176, h: 0.34809419688802395
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: -0.17982161189267176, h: 0.34809419688802395
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: -0.17982161189267176, h: 0.34809419688802395
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: -0.17982161189267176, h: 0.34809419688802395
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: -0.17982161189267176, h: 0.34809419688802395
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: -0.17982161189267176, h: 0.34809419688802395
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: -0.17982161189267176, h: 0.34809419688802395
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: -0.17982161189267176, h: 0.34809419688802395
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: -0.17982161189267176, h: 0.34809419688802395
+└ @ Main ~/MEP/src/adm.jl:51
+┌ Warning: Positive final curvature for ADM. g: -0.17982161189267176, h: 0.34809419688802395
+└ @ Main ~/MEP/src/adm.jl:51
+[PXP sweep] done: saved /home/rokas/MEP/dev/../res/PXP_T_vs_phase_success.png, _alpha_controls.png, _T_vs_phase.jld2, _T_vs_phase.txt

@@ -1,6 +1,9 @@
-include("../src/structs.jl")
-include("../src/propagation.jl")
-include("../src/optimise.jl")
+# src is included only once, so that this file can be included repeatedly (e.g. by dev/sweep_ckphase.jl)
+if !@isdefined(Algebra)
+    include("../src/structs.jl")
+    include("../src/propagation.jl")
+    include("../src/optimise.jl")
+end
 
 using Plots, LaTeXStrings, Random, Printf, JLD2
 
@@ -11,8 +14,10 @@ using Plots, LaTeXStrings, Random, Printf, JLD2
 # Same procedure as dev/plot_T_vs_controlled_phase.jl, for a single Φ.
 
 # ── settings ──────────────────────────────────────────────────────────────────
-phase       = π     # target controlled phase Φ
-n_random    = 16       # number of random starts
+# phase, n_random and generator_fn keep their values if they are already defined (set by a sweep script before include)
+@isdefined(phase)        || (phase = π)                                # target controlled phase Φ
+@isdefined(n_random)     || (n_random = 16)                            # number of random starts
+@isdefined(generator_fn) || (generator_fn = construct_HJB_generators)   # returns (control, drift)
 success_tol = 1e-8     # a start is successful if its polished infidelity is below this
 descend_tol = 1e-8     # infidelity that still counts as a gate while T is lowered
 n_descend   = 4        # number of shortest distinct gates from which T is lowered
@@ -20,14 +25,14 @@ time_weight = 1e-3     # time penalty at Φ = π (scaled with Φ below)
 T_step      = 0.1      # step by which T is lowered before bisection
 n_bisect    = 11       # final T resolution T_step / 2^n_bisect ≈ 5e-5
 tstar_min   = 2.5      # T window of the random starts (excludes the T → 0 identity trap)
-tstar_max   = 10.0
+tstar_max   = 20.0
 dt          = 1e-2
 seed        = 1
 
 # ── setup ─────────────────────────────────────────────────────────────────────
-n_qubits  = 2
+n_qubits  = 3
 gate_type = "k1"
-im_control, im_drift = im .* construct_HJB_generators(n_qubits)
+im_control, im_drift = im .* generator_fn(n_qubits)
 algebra = Algebra(im_control, im_drift)
 reltol = abstol = dist_tol = grad_tol = unitary_tol = 1e-8
 d   = length(algebra.lie_basis)
