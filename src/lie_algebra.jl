@@ -145,3 +145,22 @@ function build_adjoint_representation_map(x_lie::Vector{T}, f::Array{T, 3}) wher
     end
     return res_mat
 end
+
+# isometry transformations
+⊗(a::Vector{<:Number}, b::Vector{<:Number}) = kron(ComplexF64.(a), ComplexF64.(b))
+⊗(v::Vector) = isempty(v) ? ComplexF64[1.0+0im] : foldl(⊗, v)
+function build_Rydberg_isometries(n_particles::Integer)
+    isometries = Vector{Matrix{ComplexF64}}(undef, n_particles)
+    for λ in 1:n_particles 
+        ket_g_λ = ⊗([k0 for _ ∈ 1:(n_particles - λ)]) ⊗ (⊗([k1 for _ ∈ 1:λ]))
+        ket_e_λ = 1/sqrt(λ) * (
+            ⊗([k0 for _ ∈ 1:(n_particles - λ)]) ⊗
+            sum(
+                ⊗([k1 for _ ∈ 1:(k-1)]) ⊗ kr ⊗ (⊗([k1 for _ ∈ 1:(λ - k)]))
+                for k ∈ 1:λ)
+        )
+        # construct V_λ
+        isometries[λ] = hcat(ket_g_λ, ket_e_λ)
+    end 
+    return isometries
+end 

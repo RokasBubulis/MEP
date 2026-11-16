@@ -1,4 +1,4 @@
-using SparseArrays, LinearAlgebra
+using SparseArrays, LinearAlgebra, Kronecker
 
 T = Complex{Float64}
 id3 = sparse(Matrix(T[1 0 0; 0 1 0; 0 0 1]))
@@ -194,6 +194,7 @@ end
 # CkPhase gates
 k0 = ComplexF64[1.0; 0.0; 0.0]
 k1 = ComplexF64[0.0; 1.0; 0.0]
+kr = ComplexF32[0.0; 0.0; 1.0]
 si = ComplexF64[1.0 0.0 0.0;0.0 1.0 0.0;0.0 0.0 1.0]
 gate_k0(n, phi) = (⊗([si for _ ∈ 1:n]...) * exp(-1im*phi) + ⊗([k0*k0' for _ ∈ 1:n]...) * (1 - exp(-1im*phi))) |> sparse
 gate_k1(n, phi) = (⊗([si for _ ∈ 1:n]...) * exp(-1im*phi) + ⊗([k1*k1' for _ ∈ 1:n]...) * (1 - exp(-1im*phi))) |> sparse
