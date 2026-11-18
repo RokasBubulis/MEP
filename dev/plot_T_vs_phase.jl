@@ -46,7 +46,7 @@ function find_gates(phase, extra_starts, tmin, tmax)
         # stage 2: polish without time penalty, so T settles at the gate time itself
         res2 = run_bfgs(m1, T1, algebra, solver, tar; time_weight=0.0, nsteps=nsteps, iterations=300)
         m2, T2 = minimizer_mT(res2, solver)
-        cost = new_propagate(m2, algebra, solver, tar; T=T2, nsteps=nsteps, track_min=false).min_cost
+        cost = propagate(m2, algebra, solver, tar; T=T2, nsteps=nsteps, track_min=false).min_cost
         if Optim.converged(res2) && cost < gate_tol
             push!(gates, (T = T2, cost = cost, m = m2))
         end

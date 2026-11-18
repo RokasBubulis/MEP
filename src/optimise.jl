@@ -15,7 +15,7 @@ function make_optimisation_problem(algebra::Algebra, solver::SolverParams, tar::
         r = norm(view(x, 1:d))
         m = x[1:d] ./ r
         T = T_of_τ(x[end], solver.tstar_min, solver.tstar_max)
-        tracker = new_propagate(m, algebra, solver, tar; T=T, nsteps=nsteps, track_min=false)
+        tracker = propagate(m, algebra, solver, tar; T=T, nsteps=nsteps, track_min=false)
         if G !== nothing
             grad_infidelity!(grad_m, algebra, tracker)
             grad_m .-= dot(grad_m, m) .* m      # φ is invariant under m → λm: keep the tangent part

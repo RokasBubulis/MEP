@@ -35,15 +35,15 @@ method = Midpoint()
 # ── compute errors: dφ/dm ─────────────────────────────────────────────────────
 # |analytic - central fd| for each μ at a given (dt, dm)
 function grad_errs(m0, dt, dm)
-    tracker = new_propagate(m0, algebra, solver, tar; dt=dt, method=method)
+    tracker = propagate(m0, algebra, solver, tar; dt=dt, method=method)
     dφ_analytic = zeros(Float64, d)
     grad_infidelity!(dφ_analytic, algebra, tracker)
     errs = zeros(d)
     for μ in 1:d
         mp = copy(m0); mp[μ] += dm
         mm = copy(m0); mm[μ] -= dm
-        tracker_mp = new_propagate(mp, algebra, solver, tar; dt=dt, method=method)
-        tracker_mm = new_propagate(mm, algebra, solver, tar; dt=dt, method=method)
+        tracker_mp = propagate(mp, algebra, solver, tar; dt=dt, method=method)
+        tracker_mm = propagate(mm, algebra, solver, tar; dt=dt, method=method)
         errs[μ] = abs(dφ_analytic[μ] - (tracker_mp.min_cost - tracker_mm.min_cost) / (2dm))
     end
     return errs

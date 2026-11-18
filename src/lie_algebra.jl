@@ -147,6 +147,8 @@ function build_adjoint_representation_map(x_lie::Vector{T}, f::Array{T, 3}) wher
 end
 
 # isometry transformations
+# extend Kronecker's ⊗ (matrix ⊗ matrix is used by gate_k0 / gate_k1) rather than shadowing it
+import Kronecker: ⊗
 ⊗(a::Vector{<:Number}, b::Vector{<:Number}) = kron(ComplexF64.(a), ComplexF64.(b))
 ⊗(v::Vector) = isempty(v) ? ComplexF64[1.0+0im] : foldl(⊗, v)
 function build_Rydberg_isometries(n_particles::Integer)
@@ -163,4 +165,12 @@ function build_Rydberg_isometries(n_particles::Integer)
         isometries[λ] = hcat(ket_g_λ, ket_e_λ)
     end 
     return isometries
+end
+
+# transform operator to λ-th invariant subspace 
+function apply_λth_isometry_transformation!(res, operator, isometry, tmp)
+    mul!(tmp, isometry', operator)
+    mul!(res, tmp, isometry)
+    tmp .= 0
+    return nothing
 end 

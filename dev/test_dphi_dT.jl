@@ -37,10 +37,10 @@ method = Midpoint()
 # so dt = T/nsteps scales with T and the cost is a smooth function of T
 function dT_err(m0, T, dt, dT)
     nsteps = round(Int, T/dt)
-    tracker = new_propagate(m0, algebra, solver, tar; T=T, nsteps=nsteps, method=method, track_min=false)
+    tracker = propagate(m0, algebra, solver, tar; T=T, nsteps=nsteps, method=method, track_min=false)
     dφ_analytic = dphi_dT(algebra, tracker)
-    tracker_Tp = new_propagate(m0, algebra, solver, tar; T=T+dT, nsteps=nsteps, method=method, track_min=false)
-    tracker_Tm = new_propagate(m0, algebra, solver, tar; T=T-dT, nsteps=nsteps, method=method, track_min=false)
+    tracker_Tp = propagate(m0, algebra, solver, tar; T=T+dT, nsteps=nsteps, method=method, track_min=false)
+    tracker_Tm = propagate(m0, algebra, solver, tar; T=T-dT, nsteps=nsteps, method=method, track_min=false)
     return abs(dφ_analytic - (tracker_Tp.min_cost - tracker_Tm.min_cost) / (2dT))
 end
 

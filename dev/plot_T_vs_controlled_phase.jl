@@ -53,7 +53,7 @@ end
 # infidelity of (m, T), propagated on the same grid as fixed_T
 function cost_at(m, T, tar)
     s = SolverParams(T, reltol, abstol, dist_tol, grad_tol, unitary_tol, T - 1e-6, T + 1e-6)
-    return new_propagate(m, algebra, s, tar; T=T, nsteps=ceil(Int, T/dt)).min_cost
+    return propagate(m, algebra, s, tar; T=T, nsteps=ceil(Int, T/dt)).min_cost
 end
 
 # lower T from a gate (m, T) while a gate still exists, then bisect between the last gate and the first failure
@@ -190,7 +190,7 @@ function alpha_profile(r)
     tar = build_tar(gate_type, r.Φ, n_qubits, algebra)
     s = SolverParams(r.T, reltol, abstol, dist_tol, grad_tol, unitary_tol, r.T - 1e-6, r.T + 1e-6)
     hist = Tuple{Float64,Float64}[]
-    new_propagate(r.m, algebra, s, tar; T=r.T, nsteps=ceil(Int, r.T/dt), alpha_history=hist)
+    propagate(r.m, algebra, s, tar; T=r.T, nsteps=ceil(Int, r.T/dt), alpha_history=hist)
     return first.(hist), last.(hist)
 end
 Φ_show = [π, 0.8π, 0.6π, 0.4π, 0.2π]

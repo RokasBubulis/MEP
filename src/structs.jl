@@ -37,6 +37,7 @@ struct Algebra{T}
     im_control_vec_3levels::Vector{T}
     im_single_qubit_phase_vec::Vector{T}   # i·(number of qubits in |1⟩) per logical basis state: Z(θ)⊗…⊗Z(θ) = Diagonal(exp.(θ .* this))
     KrylovSubspace::KrylovSubspace{Float64, Float64, Float64, Matrix{Float64}, Matrix{Float64}}
+    isometries::Vector{Matrix{T}}                        # V_λ: 3^N x 2, spans the λ-th invariant subspace (λ = 1 … N)
 end
 
 function Algebra(im_control::SparseMatrixCSC{T, Int}, im_drift::SparseMatrixCSC{T, Int})
@@ -62,19 +63,22 @@ function Algebra(im_control::SparseMatrixCSC{T, Int}, im_drift::SparseMatrixCSC{
     im_control_vec_2levels = diag(im_control_2levels)
 
     # single-qubit phase rotations on the logical subspace: Z(θ) = diag(1, e^{iθ}) on every qubit,
-    # Z(θ)⊗…⊗Z(θ) = exp(iθ Σ_j |1⟩⟨1|_j), so only the number of qubits in |1⟩ per basis state is needed
+    # Z(θ)⊗…⊗Z(θ) = exp(iθ Σ_j |1⟩⟨1|_j), so only the number of qubits in |1⟩ per basis state is needed.
     n1  = spdiagm(0 => T[0, 1, 0])
     id_ = spdiagm(0 => ones(T, 3))
     n_ones_ryd = sum(reduce(kron, [j == i ? n1 : id_ for j in 1:n_particles]) for i in 1:n_particles)
     im_single_qubit_phase_vec = im .* diag(adj_ryd_to_logic_conv_mat * n_ones_ryd * ryd_to_logic_conv_mat)
 
     KrylovSubspace = arnoldi(adj_repr_map, neg_im_drift_lie; m=length(lie_basis))
-    
+
+    isometries = build_Rydberg_isometries(n_particles)
+
     return Algebra{T}(
         n_particles, n_levels, im_control, im_drift,
         lie_basis, p_basis, depths, structure_tensor, adj_repr_map, im_control_lie, neg_im_drift_lie,
         ryd_to_logic_conv_mat, adj_ryd_to_logic_conv_mat, 
-        im_control_vec_2levels, im_control_vec_3levels, im_single_qubit_phase_vec, KrylovSubspace
+        im_control_vec_2levels, im_control_vec_3levels, im_single_qubit_phase_vec, KrylovSubspace,
+        isometries
     )
 end
 
@@ -89,55 +93,48 @@ struct SolverParams
     tstar_max::Float64
 end 
 
-mutable struct CostOptimumTracker
+mutable struct PropagationOutput
+    # value and state of the propagation at t_star (t_star = T unless track_min)
     min_cost::Float64
     t_star::Float64
-    B_t_star::Matrix{Float64}
-    U_t_star::Matrix{ComplexF64}
-    W_t_star::Matrix{ComplexF64}
+    U_t_star::Vector{Matrix{ComplexF64}}   # reduced propagators U^(λ) = V_λ' U V_λ
+    B_t_star::Matrix{Float64}              # ∂U/∂m in the Lie basis
     M_t_star::Vector{Float64}
     χ_t_star::Matrix{Float64}
-    H_t_star::Matrix{ComplexF64}    # H_opt at t_star in Hilbert space, dU/dt = H U  (needed for dφ/dT)
-    # preallocated memory for grad_infidelity! and dphi_dT
-    W_pad::Matrix{ComplexF64}       # W_t_star placed in the full 3^N x 3^N space (zero outside the logical block)
-    P::Matrix{ComplexF64}           # U_t_star W_padᵀ
-    g_lie::Vector{Float64}          # one overlap per Lie basis element
-end
+    H_t_star::Vector{Float64}              # H_opt(t_star) in the Lie basis
+    a_t::Vector{ComplexF64}                # amplitudes a_r = (U^(r))[1,1] for r = 1 … N, preceded by a_0 = 1 (dark)
+    τ::Vector{ComplexF64}                  # target amplitudes on the same subspaces
+    phase_opt::Float64                     # θ_opt minimising φ(θ) at t_star
+    target_k::Int                          # CkPhase order (1: all-ones gets the phase, 0: all-zeros)
+    target_ϕ::Float64                      # controlled phase
 
-mutable struct OutputTracker
-    min_dist::Float64
-    tstar::Float64
-end
 
-struct TargetContainer
-    target::AbstractMatrix
-    adjoint_target::AbstractMatrix
-    tmp_for_target::Matrix{ComplexF64}
-end 
-function TargetContainer(target::AbstractMatrix)
-    return TargetContainer(target, adjoint(target), Matrix{ComplexF64}(undef, size(target, 1), size(target, 1)))
-end 
+    # scratch of cost_grad!: the full 3^N operator Σ_ν c_ν L_ν, its λ-th restriction and the
+    # 2 x 3^N buffer of apply_λth_isometry_transformation!
+    op_full::Matrix{ComplexF64}
+    op_λ::Matrix{ComplexF64}
+    iso_tmp::Matrix{ComplexF64}
+end
 
 Base.@kwdef mutable struct Storage{T, R, C}
     # state control
     alpha::R
     a::R
-    phase_opt::R                    # optimal phase in the cost: θ (single-qubit, logical target) or β (full target)
+    phase_opt::R
 
-    # initial states Hilbert, size 3^n x 3^n
-    U0::Matrix{T}
-
-    # temporary matrices Hilbert, size 3^n x 3^n
-    U::Matrix{T}
-    dU::Matrix{T}
-    H_opt::Matrix{T}
+    # N inequivalent two-level systems, Hilbert representation
+    U::Vector{Matrix{T}}                       # reduced propagators U^(λ) on the invariant subspaces
+    dU::Vector{Matrix{T}}                      # exp(dt H_mid^(λ)) for the λ-th subspace
+    H_opt::Matrix{T}                           # H_opt(t) in the full 3^N x 3^N representation
     H_opt_t_minus_dt::Matrix{T}
-    tmp::Matrix{T}
-    H_opt_prime::Matrix{T}      # ∂H_opt/∂α  (renamed from unused H_opt_dt)
-    U_buffer::Matrix{T}
-    U_unitary_buffer_check::Matrix{T}
-    tmp_3levels::Matrix{T}
-    U_adj_buffer::Matrix{T}
+    H_opt_invariant::Vector{Matrix{T}}         # H_opt(t) restricted to V_λ
+    H_opt_t_minus_dt_invariant::Vector{Matrix{T}}
+    H_opt_lie::Vector{R}                       # H_opt(t) in the Lie basis
+    H_opt_t_minus_dt_lie::Vector{R}
+    tmp_for_isometry::Matrix{T}                # scratch of apply_λth_isometry_transformation! (2 x 3^N)
+
+    # target amplitudes on the invariant subspaces: index 1 is the dark |0…0⟩ state (r = 0 … N)
+    target_amplitude::Vector{T}
 
     # sensitivities
     χ::Matrix{T}
@@ -147,34 +144,16 @@ Base.@kwdef mutable struct Storage{T, R, C}
     D::Matrix{R}
     E::Matrix{R}
     F::Matrix{R}
-    # temporary matrices Hilbert logical, size 2^n x 2^n
-    tmp_2levels::Matrix{T}
-    U_2levels::Matrix{T}
-
-    # temporary matrices Lie, size dim(g) x dim(g)
-    tmp_mat_lie::Matrix{R}
 
     # arrays Lie, size dim(g) x 1
     tmp_adj_drift_arr::Vector{R}
     tmp_adj_drift_first_der_arr::Vector{R}
     tmp_adj_drift_second_der_arr::Vector{R}
-    H_opt_lie::Vector{R}
     H_opt_prime_lie::Vector{R}    # ∂H_opt/∂α  in Lie representation
-    H_opt_dprime_lie::Vector{R}   # ∂²H_opt/∂α² in Lie representation
     overlap_Hdprime_M::R
     bracket_lie::Vector{R}        # [H_opt', M] in Lie representation (used in costate_sensitivity_drift!)
-    tmp_expv::Vector{T}
 
-    # temporary arrays for distance 2 levels, size 2^n x 1
-    tmp_diag_2levels::Vector{T}
-    exp_buffer_dist_2levels::Vector{T}
-
-    # temporary arrays for distance 3 levels, size 3^n x 1
-    tmp_diag_3levels::Vector{T}
-    exp_buffer_dist_3levels::Vector{T}
-
-    # temporary matrix for conversion from 3 to 2 levels, size  3^n x 2^n
-    tmp_logical1::Matrix{T}
+    U_buffer::Vector{Matrix{T}}
 
     expv_cache::ExpvCache{Float64}
 
@@ -185,27 +164,29 @@ end
 function Storage(n_particles::Int, n_basis::Int)
     T = ComplexF64
     R = real(T)
-    ryd_dim = 3^n_particles
     log_dim = 2^n_particles
+    full_dim = 3^n_particles
 
+    # the propagated objects are 2 x 2 (one per invariant subspace)
     exp_cache = ExponentialUtilities.alloc_mem(
-        Matrix{T}(undef, ryd_dim, ryd_dim), ExpMethodHigham2005())
+        Matrix{T}(undef, 2, 2), ExpMethodHigham2005())
 
     return Storage(
         alpha         = zero(R),
         a             = one(R),
         phase_opt     = zero(R),
-        U0            = Matrix{T}(I, ryd_dim, ryd_dim),
-        U             = Matrix{T}(undef, ryd_dim, ryd_dim),
-        dU            = Matrix{T}(undef, ryd_dim, ryd_dim),
-        H_opt         = Matrix{T}(undef, ryd_dim, ryd_dim),
-        H_opt_t_minus_dt = Matrix{T}(undef, ryd_dim, ryd_dim),
-        tmp           = Matrix{T}(undef, ryd_dim, ryd_dim),
-        H_opt_prime   = Matrix{T}(undef, ryd_dim, ryd_dim),
-        U_buffer      = Matrix{T}(undef, ryd_dim, ryd_dim),
-        U_unitary_buffer_check = Matrix{T}(undef, ryd_dim, ryd_dim),
-        tmp_3levels   = Matrix{T}(undef, ryd_dim, ryd_dim),
-        U_adj_buffer  = Matrix{T}(undef, ryd_dim, ryd_dim),
+        U = [Matrix{T}(undef, 2, 2) for _ in 1:n_particles],
+        dU = [Matrix{T}(undef, 2, 2) for _ in 1:n_particles],
+        H_opt = Matrix{T}(undef, full_dim, full_dim),
+        H_opt_t_minus_dt = Matrix{T}(undef, full_dim, full_dim),
+        H_opt_invariant = [Matrix{T}(undef, 2, 2) for _ in 1:n_particles],
+        H_opt_t_minus_dt_invariant = [Matrix{T}(undef, 2, 2) for _ in 1:n_particles],
+        H_opt_lie = Vector{R}(undef, n_basis),
+        H_opt_t_minus_dt_lie = Vector{R}(undef, n_basis),
+        tmp_for_isometry = Matrix{T}(undef, 2, full_dim),
+
+        target_amplitude = Vector{T}(undef, n_particles + 1),
+
         χ = Matrix{T}(I, n_basis, n_basis),
         B = Matrix{T}(undef, n_basis, n_basis),
         dχ = Matrix{T}(undef, n_basis, n_basis),
@@ -214,30 +195,16 @@ function Storage(n_particles::Int, n_basis::Int)
         E = Matrix{R}(undef, n_basis, n_basis),
         F = Matrix{R}(undef, n_basis, n_basis),
 
-        tmp_2levels   = Matrix{T}(undef, log_dim, log_dim),
-        U_2levels     = Matrix{T}(undef, log_dim, log_dim),
-
-        tmp_mat_lie   = Matrix{R}(undef, n_basis, n_basis),
-
         tmp_adj_drift_arr            = Vector{R}(undef, n_basis),
         tmp_adj_drift_first_der_arr  = Vector{R}(undef, n_basis),
         tmp_adj_drift_second_der_arr = Vector{R}(undef, n_basis),
-        H_opt_lie                    = Vector{R}(undef, n_basis),
         H_opt_prime_lie              = Vector{R}(undef, n_basis),
-        H_opt_dprime_lie             = Vector{R}(undef, n_basis),
-        overlap_Hdprime_M = one(R), 
+        overlap_Hdprime_M = one(R),
         bracket_lie                  = Vector{R}(undef, n_basis),
-        tmp_expv                     = Vector{T}(undef, n_basis),
 
-        tmp_diag_2levels        = Vector{T}(undef, log_dim),
-        exp_buffer_dist_2levels = Vector{T}(undef, log_dim),
+        U_buffer = [Matrix{T}(undef, 2, 2) for _ in 1:n_particles],
 
-        tmp_diag_3levels        = Vector{T}(undef, ryd_dim),
-        exp_buffer_dist_3levels = Vector{T}(undef, ryd_dim),
-
-        tmp_logical1  = Matrix{T}(undef, ryd_dim, log_dim),
-
-        expv_cache    = ExpvCache{Float64}(ryd_dim),
+        expv_cache    = ExpvCache{Float64}(log_dim),
         exp_method    = ExpMethodHigham2005(),
         exp_cache     = exp_cache
     )
@@ -252,7 +219,7 @@ function build_tar(type, phi, n, algebra)
         throw("unknown gate type")
     end 
     target = project_from_3_to_2_levels(ryd_target, algebra.ryd_to_logic_conv_mat)
-    return TargetContainer(target)
+    return TargetContainer(target, type == "k1" ? 1 : 0, Float64(phi))
 end 
 
 function build_tar_ryd(type, phi, n)
@@ -263,5 +230,11 @@ function build_tar_ryd(type, phi, n)
     else
         throw("unknown gate type")
     end 
-    return TargetContainer(ryd_target)
+    return TargetContainer(ryd_target, type == "k1" ? 1 : 0, Float64(phi))
+end 
+
+struct TargetContainer
+    target::AbstractMatrix
+    k::Int        # CkPhase order: k = 1 (all-ones state gets the phase) or k = 0 (all-zeros)
+    ϕ::Float64    # controlled phase
 end 

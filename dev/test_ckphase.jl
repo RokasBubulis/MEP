@@ -30,7 +30,7 @@ dt          = 1e-2
 seed        = 1
 
 # ── setup ─────────────────────────────────────────────────────────────────────
-n_qubits  = 3
+n_qubits  = 2
 gate_type = "k1"
 im_control, im_drift = im .* generator_fn(n_qubits)
 algebra = Algebra(im_control, im_drift)
@@ -116,7 +116,7 @@ end
 # ── 3. result and control law α_opt(t) ────────────────────────────────────────
 s_best = SolverParams(T_best, reltol, abstol, dist_tol, grad_tol, unitary_tol, T_best - 1e-6, T_best + 1e-6)
 alpha_hist = Tuple{Float64,Float64}[]
-tracker = new_propagate(m_best, algebra, s_best, tar; T=T_best, nsteps=ceil(Int, T_best/dt), alpha_history=alpha_hist)
+tracker = propagate(m_best, algebra, s_best, tar; T=T_best, nsteps=ceil(Int, T_best/dt), alpha_history=alpha_hist)
 t_α, α = first.(alpha_hist), last.(alpha_hist)
 φ_best = tracker.min_cost
 
