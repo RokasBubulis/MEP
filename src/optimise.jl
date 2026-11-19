@@ -8,14 +8,14 @@ T_of_τ(τ, tmin, tmax) = tmin + (tmax - tmin) / (1 + exp(-τ))
 
 # x = [m; τ]: m is the initial costate direction (only m/|m| matters), T = T_of_τ(τ) the final time
 # J(m, T) = φ(U(T; m)) + time_weight * T  is smooth in both m and T
-function make_optimisation_problem(algebra::Algebra, solver::SolverParams, tar::TargetContainer; time_weight=1e-3, nsteps=1000)
+function make_optimisation_problem(algebra::Algebra, solver::SolverParams, ϕ::Float64; time_weight=1e-3, nsteps=1000)
     d = length(algebra.lie_basis)
     grad_m = zeros(Float64, d)
     return function (F, G, x)
         r = norm(view(x, 1:d))
         m = x[1:d] ./ r
         T = T_of_τ(x[end], solver.tstar_min, solver.tstar_max)
-        tracker = propagate(m, algebra, solver, tar; T=T, nsteps=nsteps, track_min=false)
+        tracker = propagate(m, algebra, solver, ϕ; T=T, nsteps=nsteps, track_min=false)
         if G !== nothing
             grad_infidelity!(grad_m, algebra, tracker)
             grad_m .-= dot(grad_m, m) .* m      # φ is invariant under m → λm: keep the tangent part
@@ -36,10 +36,10 @@ end
 
 # g_tol: the analytic gradient matches the discretised cost only to O(dt²) (≈1e-4 at dt = 1e-2),
 # so smaller gradient tolerances cannot be met and BFGS would run to the iteration limit
-function run_bfgs(m0::Vector{Float64}, T0::Float64, algebra::Algebra, solver::SolverParams, tar::TargetContainer; time_weight=1e-3, nsteps=1000, iterations=100, g_tol=1e-6, f_reltol=1e-8)
+function run_bfgs(m0::Vector{Float64}, T0::Float64, algebra::Algebra, solver::SolverParams, ϕ::Float64; time_weight=1e-3, nsteps=1000, iterations=100, g_tol=1e-6, f_reltol=1e-8)
 
     # wrap cost and gradient functions
-    cg! = make_optimisation_problem(algebra, solver, tar; time_weight=time_weight, nsteps=nsteps)
+    cg! = make_optimisation_problem(algebra, solver, ϕ; time_weight=time_weight, nsteps=nsteps)
 
     d = length(algebra.lie_basis)
     x0 = [normalize(m0); τ_of_T(T0, solver.tstar_min, solver.tstar_max)]
@@ -50,10 +50,10 @@ function run_bfgs(m0::Vector{Float64}, T0::Float64, algebra::Algebra, solver::So
     return res
 end
 
-function run_nelder_mead(m0::Vector{Float64}, T0::Float64, algebra::Algebra, solver::SolverParams, tar::TargetContainer; time_weight=1e-3, nsteps=1000, iterations=1000)
+function run_nelder_mead(m0::Vector{Float64}, T0::Float64, algebra::Algebra, solver::SolverParams, ϕ::Float64; time_weight=1e-3, nsteps=1000, iterations=1000)
 
     # value-only call of the cost used by run_bfgs
-    cg! = make_optimisation_problem(algebra, solver, tar; time_weight=time_weight, nsteps=nsteps)
+    cg! = make_optimisation_problem(algebra, solver, ϕ; time_weight=time_weight, nsteps=nsteps)
     J(x) = cg!(true, nothing, x)
 
     x0 = [normalize(m0); τ_of_T(T0, solver.tstar_min, solver.tstar_max)]

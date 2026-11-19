@@ -68,17 +68,17 @@ end
 # nsteps given     : dt = T/nsteps, so the step grid scales with T
 # cost_history     : if a Vector{Tuple{Float64,Float64}} is given, (t, φ(t)) is pushed at every step
 # alpha_history    : if a Vector{Tuple{Float64,Float64}} is given, (t, α_opt(t)) is pushed at every step (incl. t = 0)
-function propagate(m0::Vector{Float64}, algebra::Algebra, solver::SolverParams, tar::TargetContainer; dt=1e-2, method=Midpoint(), T=solver.tmax, nsteps=nothing, track_min=false, time_weight=0.0, cost_history=nothing, alpha_history=nothing)
+function propagate(m0::Vector{Float64}, algebra::Algebra, solver::SolverParams, ϕ::Float64; dt=1e-2, method=Midpoint(), T=solver.tmax, nsteps=nothing, track_min=false, time_weight=0.0, cost_history=nothing, alpha_history=nothing)
     dt = nsteps === nothing ? dt : T/nsteps
 
     # initialisation
     d = length(algebra.lie_basis)
     N = algebra.n_particles
+    k = N - 1  # control qubits
     stor = Storage(N, d)
     @inbounds for λ in 1:N
         copyto!(stor.U[λ], Matrix{ComplexF64}(I, 2, 2))
     end
-    target_amplitudes!(stor, algebra, tar)
     x0 = ArrayPartition(m0, Matrix{Float64}(I, d, d), zeros(Float64, d, d))
 
     params = algebra, stor
@@ -89,7 +89,7 @@ function propagate(m0::Vector{Float64}, algebra::Algebra, solver::SolverParams, 
     tracker = PropagationOutput(Inf, 0.0, [Matrix{ComplexF64}(I, 2, 2) for _ in 1:N],
                                 zeros(Float64, d, d), copy(m0), Matrix{Float64}(I, d, d),
                                 copy(stor.H_opt_lie), zeros(ComplexF64, N + 1), copy(stor.target_amplitude),
-                                zero(Float64), tar.k, tar.ϕ,
+                                zero(Float64), k, ϕ,
                                 Matrix{ComplexF64}(undef, full_dim, full_dim),
                                 Matrix{ComplexF64}(undef, 2, 2),
                                 Matrix{ComplexF64}(undef, 2, full_dim))
@@ -119,11 +119,11 @@ function propagate(m0::Vector{Float64}, algebra::Algebra, solver::SolverParams, 
         M, _, _ = u.x
         manual_unitary_propagation!(M, integrator, algebra, stor; first_step=first_step)
         if cost_history !== nothing
-            φ = cost(stor.U, t, algebra, stor, tar.k, tar.ϕ, 0.0)
+            φ = cost(stor.U, t, algebra, stor, k, ϕ, 0.0)
             push!(cost_history, (t, φ))
         end
         if track_min
-            φ = cost(stor.U, t, algebra, stor, tar.k, tar.ϕ, 0.0)
+            φ = cost(stor.U, t, algebra, stor, k, ϕ, 0.0)
             if φ < tracker.min_cost
                 tracker.min_cost = φ
                 save_state!(tracker, stor, u, t)
@@ -136,7 +136,7 @@ function propagate(m0::Vector{Float64}, algebra::Algebra, solver::SolverParams, 
     sol = solve(prob, method; callback=step_cb, reltol=solver.reltol, abstol=solver.abstol, adaptive=false, dt=dt, save_everystep=false, dense=false)
 
     # wrap output: state of the propagation at t = T
-    φ = cost(stor.U, T, algebra, stor, tar.k, tar.ϕ, 0.0)
+    φ = cost(stor.U, T, algebra, stor, k, ϕ, 0.0)
     if !track_min
         save_state!(tracker, stor, sol.u[end], T)
         tracker.min_cost = φ

@@ -43,24 +43,24 @@ end
 # The dark amplitude is kept even though it is constant: it is what makes the error
 # non-degenerate. Without it the free θ can rephase every term of z, |z| saturates the
 # normaliser at U = I, and the identity scores a perfect gate.
-function target_diag(θ::Real, k::Int, ϕ::Real, N::Int)
+function target_diag(θ::Real, k::Int, ϕ::Float64, N::Int)
     return [binomial(N, r) * exp(-im * r * θ) * ((k == 1 ? r == N : r == 0) ? 1.0 : exp(-im * ϕ))
             for r ∈ 0:N]
 end
 
-# τ_r of the target, from N, k and ϕ alone (index 1 is the dark |0…0⟩ state)
-function target_amplitudes!(stor::Storage, algebra::Algebra, tar::TargetContainer)
-    N = algebra.n_particles
-    @inbounds for r in 0:N
-        stor.target_amplitude[r + 1] = ((tar.k == 1 ? r == N : r == 0) ? 1.0 + 0im : cis(-tar.ϕ))
-    end
-    return nothing
-end
+# # τ_r of the target, from N, k and ϕ alone (index 1 is the dark |0…0⟩ state)
+# function target_amplitudes!(stor::Storage, algebra::Algebra, tar::TargetContainer)
+#     N = algebra.n_particles
+#     @inbounds for r in 0:N
+#         stor.target_amplitude[r + 1] = ((tar.k == 1 ? r == N : r == 0) ? 1.0 + 0im : cis(-tar.ϕ))
+#     end
+#     return nothing
+# end
 
 # a_r = (U^(r))[1,1] on the N invariant subspaces, preceded by a_0 = 1 for the dark |0…0⟩ state
 state_diag(U::Vector{Matrix{ComplexF64}}) = [1.0 + 0im; [U[λ][1, 1] for λ ∈ eachindex(U)]]
 
-function cost(U::Vector{Matrix{ComplexF64}}, T::Real, algebra::Algebra, stor::Storage, k::Int, ϕ::Real, time_weight::Real)
+function cost(U::Vector{Matrix{ComplexF64}}, T::Real, algebra::Algebra, stor::Storage, k::Int, ϕ::Float64, time_weight::Real)
     N = algebra.n_particles
     ket = state_diag(U)
     cost_f = function (θ)
@@ -74,7 +74,7 @@ function cost(U::Vector{Matrix{ComplexF64}}, T::Real, algebra::Algebra, stor::St
     return res.minimum
 end
 
-function cost_grad!(grad::Vector{Float64}, algebra::Algebra, phase_opt::Float64, tracker::PropagationOutput, k::Int, ϕ::Real, time_weight::Real)
+function cost_grad!(grad::Vector{Float64}, algebra::Algebra, phase_opt::Float64, tracker::PropagationOutput, k::Int, ϕ::Float64, time_weight::Real)
     N = algebra.n_particles
     d = length(algebra.lie_basis)
     bra = target_diag(phase_opt, k, ϕ, N)          # length N + 1, index 1 is the dark state

@@ -210,31 +210,31 @@ function Storage(n_particles::Int, n_basis::Int)
     )
 end
 
-function build_tar(type, phi, n, algebra)
-    if type == "k0"
-        ryd_target = gate_k0(n, phi)
-    elseif type == "k1"
-        ryd_target = gate_k1(n, phi)
-    else
-        throw("unknown gate type")
-    end 
-    target = project_from_3_to_2_levels(ryd_target, algebra.ryd_to_logic_conv_mat)
-    return TargetContainer(target, type == "k1" ? 1 : 0, Float64(phi))
-end 
+# function build_tar(type, phi, n, algebra)
+#     if type == "k0"
+#         ryd_target = gate_k0(n, phi)
+#     elseif type == "k1"
+#         ryd_target = gate_k1(n, phi)
+#     else
+#         throw("unknown gate type")
+#     end 
+#     target = project_from_3_to_2_levels(ryd_target, algebra.ryd_to_logic_conv_mat)
+#     return TargetContainer(target, type == "k1" ? 1 : 0, Float64(phi))
+# end 
 
-function build_tar_ryd(type, phi, n)
-    if type == "k0"
-        ryd_target = gate_k0(n, phi)
-    elseif type == "k1"
-        ryd_target = gate_k1(n, phi)
-    else
-        throw("unknown gate type")
-    end 
-    return TargetContainer(ryd_target, type == "k1" ? 1 : 0, Float64(phi))
-end 
+# function build_tar_ryd(type, phi, n)
+#     if type == "k0"
+#         ryd_target = gate_k0(n, phi)
+#     elseif type == "k1"
+#         ryd_target = gate_k1(n, phi)
+#     else
+#         throw("unknown gate type")
+#     end 
+#     return TargetContainer(ryd_target, type == "k1" ? 1 : 0, Float64(phi))
+# end 
 
-struct TargetContainer
-    target::AbstractMatrix
-    k::Int        # CkPhase order: k = 1 (all-ones state gets the phase) or k = 0 (all-zeros)
-    ϕ::Float64    # controlled phase
-end 
+# struct TargetContainer
+#     target::AbstractMatrix
+#     k::Int        # CkPhase order: k = 1 (all-ones state gets the phase) or k = 0 (all-zeros)
+#     ϕ::Float64    # controlled phase
+# end 
