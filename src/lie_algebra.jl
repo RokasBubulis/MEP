@@ -4,8 +4,8 @@ commutes(x, y; tol = 1e-6) = maximum(abs.(br(x, y))) < tol
 
 T = ComplexF64
 
-function try_add_orthonormal!(basis::Vector{SparseMatrixCSC{T,Int}}, 
-                        candidate:: SparseMatrixCSC{T,Int};
+function try_add_orthonormal!(basis::Vector{<:AbstractMatrix{<:Number}}, 
+                        candidate:: AbstractMatrix{<:Number};
                         tol = 1e-6)
     
     for element in basis
@@ -174,3 +174,53 @@ function apply_λth_isometry_transformation!(res, operator, isometry, tmp)
     tmp .= 0
     return nothing
 end 
+
+function construct_compr_eff_subspaces_bases(lie_basis, isometries)
+    N = length(isometries)
+    d = length(lie_basis)
+    candidate = Matrix{ComplexF64}(undef, 2, 2)
+    tmp = Matrix{ComplexF64}(undef, 2, 3^N)
+    eff_subspaces_bases = [Vector{Matrix{ComplexF64}}() for _ ∈ 1:N]
+    for λ ∈ 1:N 
+        for μ ∈ 1:d 
+            apply_λth_isometry_transformation!(candidate, lie_basis[μ], isometries[λ], tmp)
+            try_add_orthonormal!(eff_subspaces_bases[λ], copy(candidate))
+        end 
+    end 
+    return eff_subspaces_bases
+end 
+
+function construct_maps_lie_to_compr_eff_subspace(lie_basis, compr_eff_subspaces_bases, isometries)
+    N = length(isometries)
+    d = length(lie_basis)
+    maps = Vector{Matrix{Float64}}(undef, N)
+    restricted = Matrix{ComplexF64}(undef, 2, 2)
+    tmp = Matrix{ComplexF64}(undef, 2, size(isometries[1], 1))
+    for λ ∈ 1:N 
+        d_eff = length(compr_eff_subspaces_bases[λ])
+        A_λ = Matrix{Float64}(undef, d_eff, d)
+        for μ ∈ 1:d 
+            apply_λth_isometry_transformation!(restricted, lie_basis[μ], isometries[λ], tmp)
+            for ν ∈ 1:d_eff
+                A_λ[ν, μ] = real(tr(compr_eff_subspaces_bases[λ][ν]' * restricted))
+            end 
+        end 
+        maps[λ] = A_λ 
+    end 
+    return maps
+end 
+
+# λ-th restriction of Σ_μ h_μ L_μ, assembled in 2 x 2 without forming the full operator:
+# A^(λ) maps h to the coefficients of L̃^(λ)_ν = V_λ' L_ν V_λ, coeff is a scratch of length ≥ d_eff
+function assemble_invariant!(res, coeff::AbstractVector{Float64}, A::Matrix{Float64},
+                            basis::AbstractVector{<:AbstractMatrix}, h::AbstractVector)
+    d_eff = length(basis)
+    mul!(view(coeff, 1:d_eff), A, h)
+    fill!(res, zero(eltype(res)))
+    @inbounds for ν in 1:d_eff
+        c = coeff[ν]
+        c == 0 && continue
+        axpy!(c, basis[ν], res)
+    end
+    return nothing
+end

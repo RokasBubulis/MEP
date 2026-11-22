@@ -84,22 +84,20 @@ function cost_grad!(grad::Vector{Float64}, algebra::Algebra, phase_opt::Float64,
     z = dot(bra, ket)
     da = -conj(z) / abs(z) / 2^N .* conj.(bra)
 
-    op_full, op_λ, tmp = tracker.op_full, tracker.op_λ, tracker.iso_tmp
+    op_λ = tracker.op_λ
+    B_row = tracker.b_row
 
     # dΦ/dm^μ
     for μ ∈ 1:d
         # the dark |0…0⟩ row stays 0: every Lie element annihilates it, so da[1] has nothing to act on
         ket_dm = zeros(ComplexF64, N + 1)
-        # B_μ = Σ_ν B_t[μ,ν] L_ν ∈ g, assembled in the full 3^N representation
-        fill!(op_full, zero(ComplexF64))
-        @inbounds for ν ∈ 1:d
-            c = tracker.B_t_star[μ, ν]
-            c == 0 && continue
-            axpy!(c, algebra.lie_basis[ν], op_full)
-        end
+
+        # B_μ^(λ) = Σ_ν (A^(λ) b_μ)_ν L̃^(λ)_ν ∈ gl(C^2), then dU^(λ)/dm^μ = B_μ^(λ) U^(λ)
         for λ ∈ 1:N
-            # B_μ^(λ) = V_λ' B_μ V_λ ∈ gl(C^2), then dU^(λ)/dm^μ = B_μ^(λ) U^(λ)
-            apply_λth_isometry_transformation!(op_λ, op_full, algebra.isometries[λ], tmp)
+            copyto!(B_row, view(tracker.B_t_star, μ, :))
+            assemble_invariant!(op_λ, tracker.tmp_coeff,
+                                algebra.maps_lie_to_compr_eff_subspace[λ],
+                                algebra.compr_eff_subspaces_bases[λ], B_row)
             ket_dm[λ + 1] = (op_λ * tracker.U_t_star[λ])[1, 1]
         end
         grad[μ] = real(sum(da .* ket_dm))   # plain product: dot would conjugate da
@@ -107,14 +105,10 @@ function cost_grad!(grad::Vector{Float64}, algebra::Algebra, phase_opt::Float64,
 
     # dΦ/dt
     ket_dt = zeros(ComplexF64, N + 1)
-    fill!(op_full, zero(ComplexF64))
-    @inbounds for ν ∈ 1:d
-        c = tracker.H_t_star[ν]
-        c == 0 && continue
-        axpy!(c, algebra.lie_basis[ν], op_full)
-    end
     for λ ∈ 1:N
-        apply_λth_isometry_transformation!(op_λ, op_full, algebra.isometries[λ], tmp)
+        assemble_invariant!(op_λ, tracker.tmp_coeff,
+                            algebra.maps_lie_to_compr_eff_subspace[λ],
+                            algebra.compr_eff_subspaces_bases[λ], tracker.H_t_star)
         ket_dt[λ + 1] = (op_λ * tracker.U_t_star[λ])[1, 1]
     end
     grad[d + 1] = real(sum(da .* ket_dt)) + time_weight

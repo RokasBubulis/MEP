@@ -37,7 +37,9 @@ struct Algebra{T}
     im_control_vec_3levels::Vector{T}
     im_single_qubit_phase_vec::Vector{T}   # i·(number of qubits in |1⟩) per logical basis state: Z(θ)⊗…⊗Z(θ) = Diagonal(exp.(θ .* this))
     KrylovSubspace::KrylovSubspace{Float64, Float64, Float64, Matrix{Float64}, Matrix{Float64}}
-    isometries::Vector{Matrix{T}}                        # V_λ: 3^N x 2, spans the λ-th invariant subspace (λ = 1 … N)
+    isometries::Vector{Matrix{T}}
+    compr_eff_subspaces_bases::Vector{Vector{Matrix{T}}}
+    maps_lie_to_compr_eff_subspace::Vector{Matrix{Float64}}                    
 end
 
 function Algebra(im_control::SparseMatrixCSC{T, Int}, im_drift::SparseMatrixCSC{T, Int})
@@ -73,12 +75,15 @@ function Algebra(im_control::SparseMatrixCSC{T, Int}, im_drift::SparseMatrixCSC{
 
     isometries = build_Rydberg_isometries(n_particles)
 
+    compr_eff_subspaces_bases = construct_compr_eff_subspaces_bases(lie_basis, isometries)
+    maps_lie_to_compr_eff_subspace = construct_maps_lie_to_compr_eff_subspace(lie_basis, compr_eff_subspaces_bases, isometries)
+
     return Algebra{T}(
         n_particles, n_levels, im_control, im_drift,
         lie_basis, p_basis, depths, structure_tensor, adj_repr_map, im_control_lie, neg_im_drift_lie,
         ryd_to_logic_conv_mat, adj_ryd_to_logic_conv_mat, 
         im_control_vec_2levels, im_control_vec_3levels, im_single_qubit_phase_vec, KrylovSubspace,
-        isometries
+        isometries, compr_eff_subspaces_bases, maps_lie_to_compr_eff_subspace
     )
 end
 
@@ -109,11 +114,10 @@ mutable struct PropagationOutput
     target_ϕ::Float64                      # controlled phase
 
 
-    # scratch of cost_grad!: the full 3^N operator Σ_ν c_ν L_ν, its λ-th restriction and the
-    # 2 x 3^N buffer of apply_λth_isometry_transformation!
-    op_full::Matrix{ComplexF64}
+    # scratch of cost_grad!: the λ-th restriction, its coefficient vector A^(λ) b_μ and the row b_μ
     op_λ::Matrix{ComplexF64}
-    iso_tmp::Matrix{ComplexF64}
+    tmp_coeff::Vector{Float64}
+    b_row::Vector{Float64}
 end
 
 Base.@kwdef mutable struct Storage{T, R, C}
@@ -125,13 +129,11 @@ Base.@kwdef mutable struct Storage{T, R, C}
     # N inequivalent two-level systems, Hilbert representation
     U::Vector{Matrix{T}}                       # reduced propagators U^(λ) on the invariant subspaces
     dU::Vector{Matrix{T}}                      # exp(dt H_mid^(λ)) for the λ-th subspace
-    H_opt::Matrix{T}                           # H_opt(t) in the full 3^N x 3^N representation
-    H_opt_t_minus_dt::Matrix{T}
     H_opt_invariant::Vector{Matrix{T}}         # H_opt(t) restricted to V_λ
     H_opt_t_minus_dt_invariant::Vector{Matrix{T}}
     H_opt_lie::Vector{R}                       # H_opt(t) in the Lie basis
     H_opt_t_minus_dt_lie::Vector{R}
-    tmp_for_isometry::Matrix{T}                # scratch of apply_λth_isometry_transformation! (2 x 3^N)
+    tmp_coeff::Vector{R}                       # scratch of assemble_invariant! (length ≥ d_eff)
 
     # target amplitudes on the invariant subspaces: index 1 is the dark |0…0⟩ state (r = 0 … N)
     target_amplitude::Vector{T}
@@ -165,7 +167,6 @@ function Storage(n_particles::Int, n_basis::Int)
     T = ComplexF64
     R = real(T)
     log_dim = 2^n_particles
-    full_dim = 3^n_particles
 
     # the propagated objects are 2 x 2 (one per invariant subspace)
     exp_cache = ExponentialUtilities.alloc_mem(
@@ -177,13 +178,11 @@ function Storage(n_particles::Int, n_basis::Int)
         phase_opt     = zero(R),
         U = [Matrix{T}(undef, 2, 2) for _ in 1:n_particles],
         dU = [Matrix{T}(undef, 2, 2) for _ in 1:n_particles],
-        H_opt = Matrix{T}(undef, full_dim, full_dim),
-        H_opt_t_minus_dt = Matrix{T}(undef, full_dim, full_dim),
         H_opt_invariant = [Matrix{T}(undef, 2, 2) for _ in 1:n_particles],
         H_opt_t_minus_dt_invariant = [Matrix{T}(undef, 2, 2) for _ in 1:n_particles],
         H_opt_lie = Vector{R}(undef, n_basis),
         H_opt_t_minus_dt_lie = Vector{R}(undef, n_basis),
-        tmp_for_isometry = Matrix{T}(undef, 2, full_dim),
+        tmp_coeff = Vector{R}(undef, n_basis),   # d_eff ≤ n_basis: the map A^(λ) is n_basis-wide
 
         target_amplitude = Vector{T}(undef, n_particles + 1),
 

@@ -44,11 +44,15 @@ function manual_unitary_propagation!(M_lie::Vector{Float64}, integrator, algebra
     # midpoint propagation on every invariant subspace separately, through the isometries:
     # U^(λ)_{k+1} = exp(dt/2 (H^(λ)(t_k) + H^(λ)(t_{k+1}))) U^(λ)_k ,
     # H^(λ) = V_λ' H V_λ with V_λ the 3^N x 2 isometry spanning the λ-th invariant subspace
-    Lie_to_Hilbert!(stor.H_opt, stor.H_opt_lie, algebra)
-    Lie_to_Hilbert!(stor.H_opt_t_minus_dt, stor.H_opt_t_minus_dt_lie, algebra)
+
     @inbounds for λ in 1:algebra.n_particles
-        apply_λth_isometry_transformation!(stor.H_opt_invariant[λ], stor.H_opt, algebra.isometries[λ], stor.tmp_for_isometry)
-        apply_λth_isometry_transformation!(stor.H_opt_t_minus_dt_invariant[λ], stor.H_opt_t_minus_dt, algebra.isometries[λ], stor.tmp_for_isometry)
+        assemble_invariant!(stor.H_opt_invariant[λ], stor.tmp_coeff,
+                            algebra.maps_lie_to_compr_eff_subspace[λ],
+                            algebra.compr_eff_subspaces_bases[λ], stor.H_opt_lie)
+        assemble_invariant!(stor.H_opt_t_minus_dt_invariant[λ], stor.tmp_coeff,
+                            algebra.maps_lie_to_compr_eff_subspace[λ],
+                            algebra.compr_eff_subspaces_bases[λ], stor.H_opt_t_minus_dt_lie)
+
         copyto!(stor.dU[λ], stor.H_opt_invariant[λ])
         axpy!(1.0, stor.H_opt_t_minus_dt_invariant[λ], stor.dU[λ])
         lmul!(1/2, stor.dU[λ])
@@ -85,14 +89,13 @@ function propagate(m0::Vector{Float64}, algebra::Algebra, solver::SolverParams, 
     prob = ODEProblem(ode_problem!, x0, (0.0, T), params)
 
     # setup optimal point tracker
-    full_dim = 3^N
     tracker = PropagationOutput(Inf, 0.0, [Matrix{ComplexF64}(I, 2, 2) for _ in 1:N],
                                 zeros(Float64, d, d), copy(m0), Matrix{Float64}(I, d, d),
                                 copy(stor.H_opt_lie), zeros(ComplexF64, N + 1), copy(stor.target_amplitude),
                                 zero(Float64), k, ϕ,
-                                Matrix{ComplexF64}(undef, full_dim, full_dim),
                                 Matrix{ComplexF64}(undef, 2, 2),
-                                Matrix{ComplexF64}(undef, 2, full_dim))
+                                Vector{Float64}(undef, maximum(length, algebra.compr_eff_subspaces_bases)),
+                                Vector{Float64}(undef, d))
 
     update_tracker!(tracker, stor, sol_t=nothing) = nothing
     function save_state!(tracker, stor, u, t)

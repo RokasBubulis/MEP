@@ -19,15 +19,15 @@ using Plots, LaTeXStrings, Random, Printf, JLD2
 @isdefined(phase)        || (phase = float(π))                                # target controlled phase Φ
 @isdefined(n_random)     || (n_random = 48)                            # number of random starts
 @isdefined(generator_fn) || (generator_fn = construct_HJB_generators)   # returns (control, drift)
-@isdefined(n_qubits)     || (n_qubits = 3)                             # number of effective TLSs
+@isdefined(n_qubits)     || (n_qubits = 2)                             # number of effective TLSs
 success_tol = 1e-8     # a start is successful if its polished infidelity is below this
 descend_tol = 1e-8     # infidelity that still counts as a gate while T is lowered
 n_descend   = 4        # number of shortest distinct gates from which T is lowered
 time_weight = 1e-3     # time penalty at Φ = π (scaled with Φ below)
 T_step      = 0.1      # step by which T is lowered before bisection
 n_bisect    = 11       # final T resolution T_step / 2^n_bisect ≈ 5e-5
-tstar_min   = 12.0     # T window of the random starts (excludes the T → 0 identity trap)
-tstar_max   = 18.0
+tstar_min   = 5.0     # T window of the random starts (excludes the T → 0 identity trap)
+tstar_max   = 10.0
 dt          = 1e-2
 seed        = 1
 
