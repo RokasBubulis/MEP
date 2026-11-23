@@ -1,0 +1,36 @@
+# C-Φ control search, k = 1 control qubits (n_qubits = 2), Φ = 1.0π
+# generator_fn = construct_HJB_generators, dt = 0.01, T window [5.0, 10.0], n_random = 16, seed = 1
+# success_tol = 1.0e-8 (a random start counts as a gate), refine_tol = 1.0e-10 (threshold of the descent)
+
+# ── 1. random starts (in parallel), per run: wall time, final time, infidelity
+# run   wall/s      T        infidelity   gate
+   3      13.74     9.7505    7.392e-13  yes
+   7      14.47     7.6114   -5.206e-12  yes
+  14      14.86     7.6114   -5.004e-12  yes
+  12      15.03    10.0000    3.808e-02  no
+  10      15.08    10.0000    2.404e-01  no
+  11      15.17    10.0000    2.423e-01  no
+   2      15.51     7.6114   -4.972e-12  yes
+   5      15.62    10.0000    1.864e-02  no
+   6      15.69    10.0000    1.864e-02  no
+  16      15.98    10.0000    1.864e-02  no
+  13      16.03    10.0000    2.420e-02  no
+  15      16.74     9.9996    2.071e-01  no
+   1      16.81     5.0000    2.927e-01  no
+   9      16.83     5.0003    2.928e-01  no
+   8      17.16     8.9897    4.773e-13  yes
+   4      17.33     9.7569    2.755e-01  no
+
+# random starts: 5/16 = 31.2% reached φ < 1e-08   [wall 18.1 s, sum of runs 252.0 s]
+
+# ── 2. descent: lower T from the 3 shortest distinct gates until the gate fails at refine_tol = 1.0e-10
+# start T    T*        infidelity   passes refine_tol
+   7.6114     7.6114    4.705e-10  no
+   8.9897     7.6116    7.326e-11  yes
+   9.7505     7.6114    7.776e-11  yes
+# descent wall 12.7 s
+
+# ── 3. result
+k = 1, Φ = 1.0000π:  T* = 7.6114   infidelity = 7.78e-11   threshold 1e-10: met
+# success chance of the random starts: 5/16 = 31.2% (φ < 1e-08, T window [5, 10])
+# 763 α samples on [0, 7.6114], α(0) = -0.819544, α(T) - α(0) = 0.625446

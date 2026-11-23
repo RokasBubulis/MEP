@@ -34,28 +34,10 @@ function state_sensitivity_drift!(res, algebra::Algebra, stor::Storage)
     return nothing
 end
 
-# The target amplitudes on the invariant subspaces, indexed by r = 0 … N:
-#   r = 0 is the dark |0…0⟩ state (a_0 = 1 identically: every Lie element annihilates it)
-#   r ≥ 1 is the weight-r subspace |1…1⟩|0…0⟩, whose propagator acts as e^{-irθ} under
-#          Z(θ)⊗…⊗Z(θ) = exp(iθ Σ_j |1⟩⟨1|_j), and which carries C(N, r) logical states
-# The gate is 1 on the all-ones class (k = 1) or the all-zeros class (k = 0) and e^{-iϕ} elsewhere.
-#
-# The dark amplitude is kept even though it is constant: it is what makes the error
-# non-degenerate. Without it the free θ can rephase every term of z, |z| saturates the
-# normaliser at U = I, and the identity scores a perfect gate.
 function target_diag(θ::Real, k::Int, ϕ::Float64, N::Int)
-    return [binomial(N, r) * exp(-im * r * θ) * ((k == 1 ? r == N : r == 0) ? 1.0 : exp(-im * ϕ))
+    return [binomial(N, r) * exp(-im * r * θ) * (r == 0 ? 1.0 : exp(-im * ϕ))
             for r ∈ 0:N]
 end
-
-# # τ_r of the target, from N, k and ϕ alone (index 1 is the dark |0…0⟩ state)
-# function target_amplitudes!(stor::Storage, algebra::Algebra, tar::TargetContainer)
-#     N = algebra.n_particles
-#     @inbounds for r in 0:N
-#         stor.target_amplitude[r + 1] = ((tar.k == 1 ? r == N : r == 0) ? 1.0 + 0im : cis(-tar.ϕ))
-#     end
-#     return nothing
-# end
 
 # a_r = (U^(r))[1,1] on the N invariant subspaces, preceded by a_0 = 1 for the dark |0…0⟩ state
 state_diag(U::Vector{Matrix{ComplexF64}}) = [1.0 + 0im; [U[λ][1, 1] for λ ∈ eachindex(U)]]

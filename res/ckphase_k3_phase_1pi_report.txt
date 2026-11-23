@@ -1,0 +1,67 @@
+# C-Φ control search, k = 3 control qubits (n_qubits = 4), Φ = 1.0π
+# generator_fn = construct_HJB_generators, dt = 0.01, T window [10.0, 20.0], n_random = 48, seed = 1
+# success_tol = 1.0e-8 (a random start counts as a gate), refine_tol = 1.0e-10 (threshold of the descent)
+
+# ── 1. random starts (in parallel), per run: wall time, final time, infidelity
+# run   wall/s      T        infidelity   gate
+  16      10.68    10.0001    1.252e-01  no
+  22      11.64    10.0000    1.254e-01  no
+  19      15.69    19.8834    2.211e-02  no
+  25      16.33    10.0000    1.250e-01  no
+   7      19.48    10.0048    1.250e-01  no
+   4      20.12    10.0056    1.250e-01  no
+  13      20.18    11.4271    2.398e-02  no
+  28      21.69    10.0034    1.253e-01  no
+   1      22.43    15.9273    2.304e-11  yes
+  40      11.80    10.0000    1.260e-01  no
+  46      24.93    14.7901    2.030e-03  no
+  10      25.23    12.1009    3.127e-03  no
+  43      25.80    12.1019    3.127e-03  no
+  37      26.87    14.7900    2.030e-03  no
+  17      14.34    10.0001    1.251e-01  no
+   5      12.01    16.9796    2.417e-02  no
+  20      18.02    14.4743    7.951e-02  no
+  29      15.43    10.0000    1.255e-01  no
+   8      17.84    10.0002    1.255e-01  no
+  47      14.46    10.0004    1.254e-01  no
+  11      17.39    10.0000    1.251e-01  no
+  18      11.60    10.0000    1.254e-01  no
+  23      27.44    10.0003    1.250e-01  no
+  14      25.59    14.7900    2.030e-03  no
+  44      17.87    10.0000    1.272e-01  no
+  12       9.85    10.0000    1.275e-01  no
+  21      20.90    10.0000    1.250e-01  no
+  41      30.28    12.1290    3.127e-03  no
+  26      36.55    14.7900    2.030e-03  no
+  24       9.72    10.0000    1.251e-01  no
+   2      33.61    10.0726    1.250e-01  no
+  15      15.06    10.0000    1.250e-01  no
+   6      27.12    12.1043    3.127e-03  no
+  48      25.23    10.0000    1.250e-01  no
+  30      26.75    19.3783    6.292e-04  no
+  42      11.79    10.0000    1.250e-01  no
+   9      24.13    14.7900    2.030e-03  no
+   3      11.07    10.0000    1.250e-01  no
+  31      71.16    18.1603    9.614e-04  no
+  38      25.80    12.0939    3.128e-03  no
+  45      20.74    12.1078    3.127e-03  no
+  27      20.08    14.7900    2.030e-03  no
+  34      65.69    18.1606    9.625e-04  no
+  39       8.14    19.6905    1.125e-02  no
+  35      11.27    17.2237    1.175e-03  no
+  36       5.34    10.0019    1.254e-01  no
+   9     376.05    14.2499    1.222e-01  no
+  32      47.40    10.0007    1.250e-01  no
+  33       9.93    10.0039    1.250e-01  no
+
+# random starts: 1/48 = 2.1% reached φ < 1e-08   [wall 128.6 s, sum of runs 1384.4 s]
+
+# ── 2. descent: lower T from the 1 shortest distinct gates until the gate fails at refine_tol = 1.0e-10
+# start T    T*        infidelity   passes refine_tol
+  15.9273    15.9148    7.818e-11  yes
+# descent wall 34.9 s
+
+# ── 3. result
+k = 3, Φ = 1.0000π:  T* = 15.9148   infidelity = 7.82e-11   threshold 1e-10: met
+# success chance of the random starts: 1/48 = 2.1% (φ < 1e-08, T window [10, 20])
+# 1594 α samples on [0, 15.9148], α(0) = -11.093588, α(T) - α(0) = -5.228881
