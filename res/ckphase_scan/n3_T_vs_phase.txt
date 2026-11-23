@@ -1,0 +1,32 @@
+# C-Φ, n_qubits = 3 (k = 2 control qubits): Φ/π  T*Ω  infidelity  gate  random starts needed (of 32; 32+1 = none, the warm start delivered the gate)  random starts that reached the gate
+1.0000  10.9630  3.39e-10  true   21  1
+0.9500  10.9586  5.31e-09  true   32  0
+0.9000  10.9467  6.27e-09  true   32  0
+0.8500  10.9259  6.51e-09  true   32  0
+0.8000  10.8958  9.89e-09  true   32  0
+0.7500  10.8569  9.82e-09  true   5  1
+0.7000  10.8079  9.41e-09  true   32  0
+0.6500  10.7483  9.94e-09  true   32  0
+0.6000  10.6774  8.26e-09  true   32  0
+0.5500  10.5941  8.50e-09  true   32  0
+0.5000  10.4968  9.26e-09  true   32  0
+0.4500  10.3839  9.90e-09  true   32  0
+0.4000  10.2522  9.87e-09  true   13  1
+0.3500  10.0979  9.81e-09  true   32  0
+0.3000  9.9158  9.77e-09  true   31  1
+0.2500  9.6968  9.83e-09  true   28  2
+0.2000  9.4267  9.08e-09  true   28  2
+0.1500  9.0795  7.40e-09  true   28  1
+0.1000  8.6026  6.46e-10  true   31  1
+0.0800  8.3394  2.34e-09  true   31  1
+0.0500  7.8053  3.57e-09  true   32  0
+0.0300  7.2608  1.59e-10  true   32  0
+0.0200  6.8393  1.45e-09  true   32  0
+0.0100  6.2539  6.30e-12  true   32  0
+# ── provenance of the Φ = π point (cold search, no warm start)
+# obtained blind: no warm start, no seeded costate; random m, T ~ U(2.3, 12.7)
+# 4 batch(es) of 32 random starts (fresh RNG seed each); accepted on attempt 4: 1 start(s) gated
+# winning random start: T_start = 11.3528, φ_raw = 1.99e-03
+# polishing: stage 1c, BFGS at w = 0 → φ = -1.53e-12 (status ok)
+# descent: stage 2, T lowered in 0.1 steps + 11 bisections → T* = 10.9630, φ = 3.39e-10
+# cold search wall 111 s
