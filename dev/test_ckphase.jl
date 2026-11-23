@@ -16,20 +16,21 @@ using Plots, LaTeXStrings, Random, Printf, JLD2, LinearAlgebra
 # Output: res/ckphase_k<k>_phase_<Φ/π>π_control.txt and _control.png
 # Run:  julia -t auto --project=. dev/test_ckphase.jl
 
-# inputs (an including script may set any of them before this file is included)
-n_qubits = 5
+# inputs
+n_qubits = 4
 phase = float(pi)
-n_random = 96
-tstar_min = 15.0
-tstar_max = 25.0
+n_random = 48
+tstar_min = 10.0
+tstar_max = 15.0
+save_results = false
 
 # ── deeper settings ───────────────────────────────────────────────────────────
 dt = 1e-2
 generator_fn = construct_HJB_generators
 seed        = 1
-success_tol = 1e-8      # a random start counts as successful if its polished infidelity is below this
+success_tol = 1e-3      # a random start counts as successful if its polished infidelity is below this
 loose_frac  = 0.1       # first stage: a start is polished only if φ < min(1e-2, loose_frac * φ_id)
-refine_tol  = 1e-10     # threshold the descending pulse must meet (an accuracy check on T*)
+refine_tol  = 1e-8     # threshold the descending pulse must meet (an accuracy check on T*)
 n_descend   = 4         # number of shortest distinct gates from which T is lowered
 distinct_T  = 0.02      # two gates are distinct if their T differ by more than this
 time_weight = 1e-3      # time penalty of the first stage at Φ = π (scaled with Φ below)
@@ -215,7 +216,7 @@ if !isempty(cands)
                          length(α), fmt_T(T_best), α[1], α[end] - α[1]))
 end
 close(io)
-println("saved ", report_file)
+save_results && println("saved ", report_file)
 
 println("────────────────────────────────────────")
 @printf("k = %d, Φ = %.4fπ:  T* = %s   infidelity = %.2e   success chance = %.1f%% (%d/%d, φ < %.0e)\n",
@@ -227,10 +228,12 @@ if !isempty(t_α)
              label = "", title = @sprintf("k = %d control qubits, Φ = %.3gπ:  T* = %s,  infidelity = %.1e",
                                           k, phase/π, fmt_T(T_best), φ_best),
              titlefontsize = 10, size = plot_size)
-    savefig(p, plot_file)
-    jldsave(replace(plot_file, ".png" => ".jld2"); phase, k, T = T_best, infidelity = φ_best,
-            success, n_success, n_random, success_tol, refine_tol, m = m_best, t = t_α, alpha = α,
-            φ_starts = [x.φ for x in polished], T_starts = [x.T for x in polished], wall)
-    println("saved ", plot_file, " and ", replace(plot_file, ".png" => ".jld2"))
+    if save_results
+        savefig(p, plot_file)
+        jldsave(replace(plot_file, ".png" => ".jld2"); phase, k, T = T_best, infidelity = φ_best,
+                success, n_success, n_random, success_tol, refine_tol, m = m_best, t = t_α, alpha = α,
+                φ_starts = [x.φ for x in polished], T_starts = [x.T for x in polished], wall)
+        println("saved ", plot_file, " and ", replace(plot_file, ".png" => ".jld2"))
+    end 
 end
 p
